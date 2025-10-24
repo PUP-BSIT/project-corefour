@@ -22,20 +22,25 @@ public class User {
     public void setEmail(String email) { this.email = email; }
 
     public String getPassword_hash() { return password_hash; }
-    public void setPassword_hash(String password_hash) { this.password_hash = password_hash; }
+    public void setPassword_hash(String password_hash) {
+        this.password_hash = password_hash; }
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
     public String getProfile_picture() { return profile_picture; }
-    public void setProfile_picture(String profile_picture) { this.profile_picture = profile_picture; }
+    public void setProfile_picture(String profile_picture) {
+        this.profile_picture = profile_picture; }
 
     public String getPhone_number() { return phone_number; }
-    public void setPhone_number(String phone_number) { this.phone_number = phone_number; }
+    public void setPhone_number(String phone_number) {
+        this.phone_number = phone_number; }
 
     public String getCreated_at() { return created_at; }
-    public void setCreated_at(String created_at) { this.created_at = created_at; }
+    public void setCreated_at(String created_at) {
+        this.created_at = created_at; }
 
     public String getDeleted_at() { return deleted_at; }
-    public void setDeleted_at(String deleted_at) { this.deleted_at = deleted_at; }
+    public void setDeleted_at(String deleted_at) {
+        this.deleted_at = deleted_at; }
 }
