@@ -1,5 +1,6 @@
 package com.recorever.recorever_backend.model;
 
+import java.time.LocalDateTime;
 public class User {
     private int user_id;
     private String name;
@@ -9,6 +10,8 @@ public class User {
     private String profile_picture;
     private String phone_number;
     private String created_at;
+    private String refresh_token;
+    private LocalDateTime refresh_token_expiry;
     private boolean is_deleted;
 
     // Getters and Setters
@@ -38,4 +41,10 @@ public class User {
 
     public boolean getIs_deleted() { return is_deleted; }
     public void setIs_deleted(boolean is_deleted) { this.is_deleted = is_deleted; }
+
+    public String getRefresh_token() { return refresh_token; }
+    public void setRefresh_token(String refresh_token) { this.refresh_token = refresh_token; }
+
+    public LocalDateTime getRefresh_token_expiry() { return refresh_token_expiry; }
+    public void setRefresh_token_expiry(LocalDateTime refresh_token_expiry) { this.refresh_token_expiry = refresh_token_expiry; }
 }
