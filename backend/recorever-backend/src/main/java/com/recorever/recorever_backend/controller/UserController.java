@@ -6,7 +6,9 @@ import com.recorever.recorever_backend.service.UserService;
 import com.recorever.recorever_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -23,6 +25,7 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
+
     @PostMapping("/register-user")
     public ResponseEntity<?> registerUser(@RequestBody Map<String, String> body) {
         String name = body.get("name");
@@ -37,33 +40,32 @@ public class UserController {
     }
 
     @PostMapping("/login-user")
-    public ResponseEntity<?> loginUser(@RequestParam String email,
-                                       @RequestParam String password) {
+    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String password = body.get("password");
+
         Map<String, Object> result = service.login(email, password);
+
         if (result.containsKey("error")) {
-            return ResponseEntity.status(401).body(result.get("error"));
+            return ResponseEntity.status(401).body(result);
         }
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/get-user-data")
-    public ResponseEntity<?> getUser(@RequestParam int id) {
-        User user = repo.findById(id);
-        if (user == null)
-            return ResponseEntity.status(404).body("User not found");
-        return ResponseEntity.ok(user);
+    public ResponseEntity<?> getUser(Authentication authentication) {
+        User authenticatedUser = (User) authentication.getPrincipal();
+        
+        return ResponseEntity.ok(authenticatedUser);
     }
 
     @PutMapping("/update-user-data")
-    public ResponseEntity<?> updateUser(@RequestParam int id,
+    public ResponseEntity<?> updateUser(Authentication authentication,
                                         @RequestParam(required = false) String name,
                                         @RequestParam(required = false) String phone_number,
                                         @RequestParam(required = false) String profile_picture) {
-
-        User user = repo.findById(id);
-        if (user == null) {
-            return ResponseEntity.status(404).body("User not found");
-        }
+        
+        User user = (User) authentication.getPrincipal();
 
         if (name != null && !name.isEmpty()) {
             user.setName(name);
@@ -84,10 +86,14 @@ public class UserController {
     }
 
     @DeleteMapping("/delete-user")
-    public ResponseEntity<?> deleteUser(@RequestParam int id) {
-        boolean deleted = repo.deleteUser(id);
+    public ResponseEntity<?> deleteUser(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        int userId = user.getUser_id();
+
+        boolean deleted = repo.deleteUser(userId);
         if (!deleted)
-            return ResponseEntity.status(404).body("User not found.");
+            return ResponseEntity.status(404).body("User not found or already deleted.");
+        
         return ResponseEntity.ok(Map.of("success", true, "message", "User account deactivated."));
     }
 
