@@ -1,11 +1,13 @@
 package com.recorever.recorever_backend.controller;
 
+import com.recorever.recorever_backend.config.JwtUtil;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.service.UserService;
 import com.recorever.recorever_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -17,6 +19,9 @@ public class UserController {
 
     @Autowired
     private UserRepository repo;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/register-user")
     public ResponseEntity<?> registerUser(@RequestBody Map<String, String> body) {
@@ -60,7 +65,6 @@ public class UserController {
             return ResponseEntity.status(404).body("User not found");
         }
 
-        // Only update if provided
         if (name != null && !name.isEmpty()) {
             user.setName(name);
         }
@@ -85,5 +89,25 @@ public class UserController {
         if (!deleted)
             return ResponseEntity.status(404).body("User not found.");
         return ResponseEntity.ok(Map.of("success", true, "message", "User account deactivated."));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refresh(@RequestBody Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+
+        User user = repo.findByRefreshToken(refreshToken);
+        if (user == null || user.getRefresh_token_expiry().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.status(401).body(Map.of("error_message", "Invalid or expired refresh token"));
+        }
+
+        String accessToken = jwtUtil.generateToken(user.getUser_id(), user.getName());
+
+        return ResponseEntity.ok(Map.of(
+            "access_token", accessToken,
+            "token_type", "Bearer",
+            "expires_in", 3600,
+            "user_id", user.getUser_id(),
+            "user_name", user.getName()
+        ));
     }
 }
