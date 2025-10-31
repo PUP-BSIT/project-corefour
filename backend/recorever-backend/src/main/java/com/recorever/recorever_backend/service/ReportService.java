@@ -13,9 +13,18 @@ public class ReportService {
 
     @Autowired
     private ReportRepository repo;
+    
+    @Autowired
+    private MatchService matchService;
 
     public Map<String, Object> create(int userId, String type, String itemName, String location, String description) {
         int id = repo.createReport(userId, type, itemName, location, description);
+
+        Report newReport = repo.getReportById(id);
+        if (newReport != null) {
+            matchService.findAndCreateMatch(newReport);
+        }
+
         return Map.of(
                 "report_id", id,
                 "status", "pending",
