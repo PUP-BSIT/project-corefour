@@ -27,7 +27,11 @@ public class UserRepository {
         u.setName(rs.getString("name"));
         u.setEmail(rs.getString("email"));
         u.setPassword_hash(rs.getString("password_hash"));
-        u.setRole(rs.getString("role"));
+        
+        // Ensure the role is never null or empty; default to 'user' for security.
+        String role = rs.getString("role");
+        u.setRole(role != null && !role.isEmpty() ? role : "user");
+
         u.setProfile_picture(rs.getString("profile_picture"));
         u.setPhone_number(rs.getString("phone_number"));
         u.setCreated_at(rs.getString("created_at"));
@@ -46,7 +50,7 @@ public class UserRepository {
         if (exists > 0) return -1;
 
         String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
-        String sql = "INSERT INTO users (name, email, password_hash, is_deleted) VALUES (?, ?, ?, 0)";
+        String sql = "INSERT INTO users (name, email, password_hash, role, is_deleted) VALUES (?, ?, ?, 'user', 0)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(conn -> {
