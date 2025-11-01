@@ -82,21 +82,9 @@ public class ReportController {
 
     @PutMapping("/report/{id}/codes")
     public ResponseEntity<?> updateCodes(Authentication authentication,
-                                          @PathVariable int id,
-                                          @RequestParam String surrender_code,
-                                          @RequestParam String claim_code) {
-        Report report = service.getById(id);
-        if (report == null) {
-             return ResponseEntity.status(404).body("Report not found");
-        }
-        
-        User authenticatedUser = (User) authentication.getPrincipal();
-        if (report.getUser_id() != authenticatedUser.getUser_id()) {
-            return ResponseEntity.status(403).body("You are not authorized to update codes for this report.");
-        }
-
-        boolean updated = service.updateCodes(id, surrender_code, claim_code);
-        if (!updated) return ResponseEntity.badRequest().body("Failed to update codes");
-        return ResponseEntity.ok(Map.of("success", true, "message", "Codes updated successfully."));
+                                         @PathVariable int id,
+                                         @RequestParam String surrender_code,
+                                         @RequestParam String claim_code) {
+        return ResponseEntity.status(403).body("This endpoint is deprecated. Use the /api/admin endpoints for code management.");
     }
 }
