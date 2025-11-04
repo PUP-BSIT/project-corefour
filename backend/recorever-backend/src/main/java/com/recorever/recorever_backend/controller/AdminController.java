@@ -28,21 +28,26 @@ public class AdminController {
         return ResponseEntity.ok(reportService.listByStatus("pending")); 
     }
 
-    @PutMapping("/report/{id}/surrender")
-    public ResponseEntity<?> surrenderReport(@PathVariable int id, 
-                                             @RequestBody Map<String, String> body) {
-        String surrenderCode = body.get("surrender_code");
-        
-        if (surrenderCode == null || surrenderCode.isEmpty()) {
-             return ResponseEntity.badRequest().body("Surrender code is required for handover verification.");
+    @PutMapping("/report/{id}/approve")
+    public ResponseEntity<?> approveReport(@PathVariable int id) {
+        Report report = reportService.getById(id);
+        if (report == null) {
+            return ResponseEntity.status(404).body("Report not found.");
+        }
+        if (!"pending".equalsIgnoreCase(report.getStatus())) {
+            return ResponseEntity.badRequest().body("Report status is not 'pending'. Only pending reports can be approved.");
         }
 
-        boolean updated = reportService.handleSurrender(id, surrenderCode); 
-        
-        if (!updated) {
-            return ResponseEntity.badRequest().body("Surrender failed: Report not found, status is not pending, or code is invalid.");
+        boolean approved = reportService.approveAndPost(id); 
+
+        if (!approved) {
+             return ResponseEntity.badRequest().body("Report approval failed.");
         }
-        return ResponseEntity.ok(Map.of("success", true, "message", "Item received and report officially posted (status: approved)."));
+        
+        return ResponseEntity.ok(Map.of("success", true, "message", 
+            report.getType().equals("lost") 
+                ? "Lost report approved and posted." 
+                : "Found report manually approved and posted."));
     }
 
     // --- CLAIM MANAGEMENT ENDPOINTS ---
