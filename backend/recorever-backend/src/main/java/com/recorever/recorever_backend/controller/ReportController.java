@@ -19,10 +19,10 @@ public class ReportController {
 
     @PostMapping("/report")
     public ResponseEntity<?> createReport(Authentication authentication,
-                                          @RequestParam String type,
-                                          @RequestParam String item_name,
-                                          @RequestParam String location,
-                                          @RequestParam String description) {
+                                             @RequestParam String type,
+                                             @RequestParam String item_name,
+                                             @RequestParam String location,
+                                             @RequestParam String description) {
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();
 
@@ -44,9 +44,11 @@ public class ReportController {
 
     @PutMapping("/report/{id}")
     public ResponseEntity<?> updateReport(Authentication authentication,
-                                          @PathVariable int id,
-                                          @RequestParam String status,
-                                          @RequestParam(required = false) String date_resolved) {
+                                             @PathVariable int id,
+                                             @RequestParam(required = false) String item_name,
+                                             @RequestParam(required = false) String location,
+                                             @RequestParam(required = false) String description) {
+        
         Report report = service.getById(id);
         if (report == null) {
              return ResponseEntity.status(404).body("Report not found");
@@ -57,8 +59,20 @@ public class ReportController {
             return ResponseEntity.status(403).body("You are not authorized to update this report.");
         }
 
-        boolean updated = service.update(id, status, date_resolved);
-        if (!updated) return ResponseEntity.badRequest().body("Invalid update");
+        // Check: User cannot edit an approved, matched, or claimed report.
+        if (report.getStatus().equalsIgnoreCase("approved") || 
+            report.getStatus().equalsIgnoreCase("matched") || 
+            report.getStatus().equalsIgnoreCase("claimed")) {
+            return ResponseEntity.status(403).body("Cannot update a report that has already been approved, matched, or claimed.");
+        }
+
+        boolean updated = service.updateEditableFields(
+            id, 
+            item_name, 
+            location, 
+            description
+        );
+        if (!updated) return ResponseEntity.badRequest().body("Invalid update or no fields provided.");
         return ResponseEntity.ok(Map.of("success", true, "message", "Report updated successfully."));
     }
 
@@ -82,9 +96,9 @@ public class ReportController {
 
     @PutMapping("/report/{id}/codes")
     public ResponseEntity<?> updateCodes(Authentication authentication,
-                                         @PathVariable int id,
-                                         @RequestParam String surrender_code,
-                                         @RequestParam String claim_code) {
+                                             @PathVariable int id,
+                                             @RequestParam String surrender_code,
+                                             @RequestParam String claim_code) {
         return ResponseEntity.status(403).body("This endpoint is deprecated. Use the /api/admin endpoints for code management.");
     }
 }

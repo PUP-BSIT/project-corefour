@@ -21,14 +21,13 @@ public class ReportService {
     public Map<String, Object> create(int userId, String type, String itemName, String location, String description) {
         int id = repo.createReport(userId, type, itemName, location, description);
         
-        // Generate and set SURRENDER CODE (only for found items that need to be surrendered)
+        // Generate and set SURRENDER CODE (only for found items)
         String surrenderCode = null;
         if ("found".equalsIgnoreCase(type)) {
             surrenderCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             repo.setInitialSurrenderCode(id, surrenderCode);
         }
         
-        // Matching is SKIPPED here, as the report is not yet approved/posted.
         return Map.of(
                 "report_id", id,
                 "status", "pending",
@@ -38,8 +37,8 @@ public class ReportService {
         );
     }
 
-    public boolean handleSurrender(int reportId, String providedCode) {
-        boolean updated = repo.handleSurrender(reportId, providedCode);
+    public boolean approveAndPost(int reportId) {
+        boolean updated = repo.updateReport(reportId, "approved", null); 
         
         if (updated) {
             Report postedReport = repo.getReportById(reportId);
@@ -54,13 +53,16 @@ public class ReportService {
         return repo.getAllReports();
     }
     
-    // List reports by status (used by AdminController)
     public List<Report> listByStatus(String status) {
         return repo.getReportsByStatus(status);
     }
 
     public Report getById(int id) {
         return repo.getReportById(id);
+    }
+
+    public boolean updateEditableFields(int id, String itemName, String location, String description) {
+        return repo.updateEditableReportFields(id, itemName, location, description);
     }
 
     public boolean update(int id, String status, String dateResolved) {
