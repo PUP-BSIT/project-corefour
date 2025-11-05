@@ -26,7 +26,7 @@ public class ClaimService {
         String itemName = reportRepo.getReportById(reportId).getItem_name();
         
         int id = repo.createClaim(reportId, userId, proofDescription, itemName);
-        
+        notificationService.create(0, id, "New claim submitted for admin review (Claim #" + id + ").");
         return Map.of(
             "claim_id", id,
             "report_id", reportId,
@@ -35,36 +35,39 @@ public class ClaimService {
         );
     }
 
-    public List<Claim> listAllClaims() {
-        return repo.getAllClaims();
-    }
+    public List<Claim> listAllClaims() { return repo.getAllClaims(); }
     
-    public List<Claim> listClaimsByUserId(int userId) {
-        return repo.getClaimsByUserId(userId);
-    }
+    public List<Claim> listClaimsByUserId(int userId) { 
+        return repo.getClaimsByUserId(userId); }
 
-    public Claim getById(int claimId) {
-        return repo.getClaimById(claimId);
-    }
+    public Claim getById(int claimId) { return repo.getClaimById(claimId); }
 
     public boolean updateStatus(int claimId, String status) {
+        Claim claim = repo.getClaimById(claimId);
+        if (claim == null) return false;
+
         boolean updated = repo.updateClaimStatus(claimId, status);
+        if (!updated) return false;
         
-        if (updated && status.equals("approved")) {
-            String surrenderCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        if (status.equals("approved")) {
             String claimCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             
-            Claim claim = repo.getClaimById(claimId); 
-            reportRepo.setClaimCodes(claim.getReport_id(), surrenderCode, claimCode);
+            reportRepo.setClaimCodes(claim.getReport_id(), null, claimCode); 
             
-            String msg = String.format("Claim #%d approved! Your claim code is: %s. Please use this to claim your item.", 
+            String msg = String.format("Claim #%d approved! Your claim code is: **%s**. Please use this to claim your item.", 
                                        claimId, claimCode);
             notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
-        } else if (updated && status.equals("rejected")) {
-             Claim claim = repo.getClaimById(claimId);
-             String msg = String.format("Claim #%d for %s has been rejected by the administrator.", 
+        
+        } else if (status.equals("claimed")) {
+            reportRepo.updateStatus(claim.getReport_id(), "claimed"); 
+            
+            String msg = String.format("Item collected! The item for Claim #%d has been successfully claimed.", claimId);
+            notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
+            
+        } else if (status.equals("rejected")) {
+            String msg = String.format("Claim #%d for %s has been rejected by the administrator.", 
                                        claimId, claim.getItem_name());
-             notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
+            notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
         }
         
         return updated;
