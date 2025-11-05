@@ -42,6 +42,10 @@ public class MatchService {
                 continue;
             }
 
+            if (!"approved".equalsIgnoreCase(existingReport.getStatus())) {
+                 continue;
+            }
+
             boolean isNameMatch = checkNameSimilarity(newReport, existingReport);
             if (isNameMatch) {
                 boolean isLocationMatch = checkLocationProximity(newReport, existingReport);
@@ -65,6 +69,9 @@ public class MatchService {
                 int foundId = newType.equals("found") ? newReport.getReport_id() : existingReport.getReport_id();
                 
                 matchRepo.createMatch(lostId, foundId);
+
+                reportRepo.updateReport(lostId, "matched", null); 
+                reportRepo.updateReport(foundId, "matched", null);
 
                 String notificationMessage = String.format("%s found: Your %s has been linked to report #%d. Detail: %s", 
                                                         confidenceLevel, newReport.getItem_name(), lostId, detailMessage);
