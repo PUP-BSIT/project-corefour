@@ -51,6 +51,11 @@ public class AdminController {
     }
 
     // --- CLAIM MANAGEMENT ENDPOINTS ---
+    @GetMapping("/claims")
+    public ResponseEntity<?> getAllClaims() {
+        return ResponseEntity.ok(claimService.listAllClaims());
+    }
+
     @PutMapping("/claim/{id}/approve")
     public ResponseEntity<?> approveClaim(@PathVariable int id) {
         boolean updated = claimService.updateStatus(id, "approved");
