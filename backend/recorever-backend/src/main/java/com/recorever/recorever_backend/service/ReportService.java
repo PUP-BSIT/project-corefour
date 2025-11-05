@@ -18,6 +18,11 @@ public class ReportService {
     @Autowired
     private MatchService matchService;
 
+    @Autowired
+    private NotificationService notificationService;
+
+    private static final int ADMIN_USER_ID = 1; // temporary admin user ID
+
     public Map<String, Object> create(int userId, String type, String itemName, String location, String description) {
         int id = repo.createReport(userId, type, itemName, location, description);
         
@@ -27,6 +32,9 @@ public class ReportService {
             surrenderCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             repo.setInitialSurrenderCode(id, surrenderCode);
         }
+
+        notificationService.create(ADMIN_USER_ID, id, 
+            String.format("New PENDING report (ID #%d) submitted: %s.", id, itemName));
         
         return Map.of(
                 "report_id", id,
@@ -44,36 +52,33 @@ public class ReportService {
             Report postedReport = repo.getReportById(reportId);
             if (postedReport != null) {
                 matchService.findAndCreateMatch(postedReport);
+
+                notificationService.create(postedReport.getUser_id(), reportId, 
+                    String.format("Your report (%s) has been APPROVED and posted to the public board.", postedReport.getItem_name()));
             }
         }
         return updated;
     }
 
-    public List<Report> listAll() {
-        return repo.getAllReports();
-    }
-    
+    public List<Report> listAll() { return repo.getAllReports(); }
+
     public List<Report> listByStatus(String status) {
-        return repo.getReportsByStatus(status);
-    }
+        return repo.getReportsByStatus(status); }
 
     public Report getById(int id) {
-        return repo.getReportById(id);
-    }
-
-    public boolean updateEditableFields(int id, String itemName, String location, String description) {
-        return repo.updateEditableReportFields(id, itemName, location, description);
-    }
+        return repo.getReportById(id); }
+    
+    public boolean updateEditableFields(int id, 
+                                        String itemName,
+                                        String location,
+                                        String description) {
+        return repo.updateEditableReportFields(id, itemName, location, description); }
 
     public boolean update(int id, String status, String dateResolved) {
-        return repo.updateReport(id, status, dateResolved);
-    }
-
-    public boolean delete(int id) {
-        return repo.deleteReport(id);
-    }
+        return repo.updateReport(id, status, dateResolved); }
+    
+    public boolean delete(int id) { return repo.deleteReport(id); }
 
     public boolean updateCodes(int id, String surrenderCode, String claimCode) {
-        return repo.setClaimCodes(id, surrenderCode, claimCode);
-    }
+        return repo.setClaimCodes(id, surrenderCode, claimCode); }
 }

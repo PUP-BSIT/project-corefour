@@ -1,6 +1,7 @@
 package com.recorever.recorever_backend.service;
 
 import com.recorever.recorever_backend.model.Claim;
+import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.repository.ClaimRepository;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +23,22 @@ public class ClaimService {
     @Autowired
     private NotificationService notificationService; 
 
+    private static final int ADMIN_USER_ID = 1; // temporary admin user ID
+
     public Map<String, Object> create(int reportId, int userId, String proofDescription) {
-        String itemName = reportRepo.getReportById(reportId).getItem_name();
+        Report targetReport = reportRepo.getReportById(reportId);
+        
+        if (targetReport == null) {
+            throw new RuntimeException("Target Report ID " + reportId + " not found or is invalid for claim creation.");
+        }
+        
+        String itemName = targetReport.getItem_name();
         
         int id = repo.createClaim(reportId, userId, proofDescription, itemName);
-        notificationService.create(0, id, "New claim submitted for admin review (Claim #" + id + ").");
+
+        notificationService.create(ADMIN_USER_ID, reportId, 
+                String.format("New PENDING claim (Claim #%d) submitted for item name: %s.", id, itemName));
+
         return Map.of(
             "claim_id", id,
             "report_id", reportId,
