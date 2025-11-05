@@ -1,1 +1,30 @@
-<p>header works!</p>
+<header class="app-header">
+  <div class="logo-container">
+    <img src="../../assets/temporary_logo.png" class="app-logo">
+    <div class="text-stack">
+      <div class="app-name">
+        ReCorever
+      </div>
+      <div class="tagline">
+        Secure. Reliable. Connected.
+      </div>
+    </div>
+  </div>
+
+  @if (!isLoggedIn) {
+  <div class="auth-buttons">
+    <button class="btn login-btn" (click)="onLogin()">
+      Log-in
+    </button>
+
+    <button class="btn register-btn" (click)="onRegister()">
+      Register
+    </button>
+  </div>
+  }
+
+  @if (isLoggedIn) {
+  <div class="user-info">
+  </div>
+  }
+</header>
