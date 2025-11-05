@@ -100,13 +100,18 @@ public class ReportRepository {
         return jdbcTemplate.update(sql, status, dateResolved, id) > 0;
     }
 
+    public boolean updateStatus(int reportId, String status) {
+        String sql = "UPDATE reports SET status = ? WHERE report_id = ?";
+        return jdbcTemplate.update(sql, status, reportId) > 0;
+    }
+
     public boolean deleteReport(int id) {
         String sql = "UPDATE reports SET is_deleted = 1 WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, id) > 0;
     }
 
     public boolean setClaimCodes(int id, String surrenderCode, String claimCode) {
-        String sql = "UPDATE reports SET surrender_code=?, claim_code=?, status='claimed' WHERE report_id=? AND is_deleted = 0";
+        String sql = "UPDATE reports SET surrender_code=?, claim_code=? WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, surrenderCode, claimCode, id) > 0;
     }
 }
