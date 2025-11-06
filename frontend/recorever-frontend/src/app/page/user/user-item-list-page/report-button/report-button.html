@@ -1,1 +1,11 @@
-<p>report-button works!</p>
+<button class="report-btn" [class.lost]="theme === 'lost'" [class.found]="theme === 'found'" (click)="onClick()">
+
+  <span class="report-label">
+    {{ label }}
+  </span>
+
+  <div class="report-icon-container">
+    <img [src]="'../../../../../assets/report-found.png' + iconName" class="button-icon">
+  </div>
+
+</button>
