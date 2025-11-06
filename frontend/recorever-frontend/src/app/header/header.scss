@@ -1,0 +1,74 @@
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #ccc;
+  height: 40px;
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+
+    .app-logo {
+      height: 35px;
+      margin-right: 10px;
+    }
+
+    .text-stack {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .app-name {
+      color: #000;
+      font-family: "Bruno Ace SC";
+      font-size: 20px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: normal;
+    }
+
+    .tagline {
+      font-size: 10px;
+      color: #666;
+      margin-top: 0;
+    }
+  }
+
+  .auth-buttons {
+    display: flex;
+    gap: 10px;
+
+    .btn {
+      padding: 5px 40px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .login-btn {
+      background-color: black;
+      color: white;
+    }
+
+    .login-btn:hover {
+      background-color: #646363;
+      border-color: #a0a0a0;
+    }
+
+    .register-btn {
+      background-color: #fff;
+      color: #333;
+    }
+
+    .register-btn:hover {
+      background-color: #f0f0f0;
+      border-color: #716f6f;
+    }
+  }
+}
