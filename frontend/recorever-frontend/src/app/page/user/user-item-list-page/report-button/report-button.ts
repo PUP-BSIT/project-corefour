@@ -20,7 +20,7 @@ export class ReportButton {
   @Input() label = 'Report';
 
   get iconName(): string {
-    return this.theme === 'lost' ? 'reported-lost.png' : 'reported-found.png';
+    return this.theme === 'lost' ? 'report-lost.png' : 'report-found.png';
   }
 
   onClick() {
