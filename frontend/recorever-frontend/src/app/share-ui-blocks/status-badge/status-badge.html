@@ -1,1 +1,6 @@
-<p>status-badge works!</p>
+<span class="status-badge"
+    [class.verified]="status === 'Verified'"
+    [class.claimed]="status === 'Claimed'"
+    [class.pending]="status === 'Pending'">
+  {{ status }}
+</span>
