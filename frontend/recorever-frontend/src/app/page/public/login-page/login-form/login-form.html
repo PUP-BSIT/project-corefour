@@ -1,1 +1,70 @@
-<p>login-form works!</p>
+<form
+  [formGroup]="loginForm"
+  (ngSubmit)="submitForm()"
+  class="login-form-card"
+>
+  <h2>Login</h2>
+
+  <div class="form-field">
+    <label for="email">Email</label>
+    <input id="email" type="email" formControlName="email" />
+
+    @if (emailControl?.invalid && (emailControl?.touched ||
+                    emailControl?.dirty)) {
+      <div class="error-message">
+        @if (emailControl?.hasError('required')) {
+          <span>Email is required.</span>
+        }
+        @if (emailControl?.hasError('email')) {
+          <span>Please enter a valid email.</span>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="form-field">
+    <label for="password">Password</label>
+    <div class="password-wrapper">
+      <input
+        id="password"
+        [type]="isPasswordVisible ? 'text' : 'password'"
+        formControlName="password"
+        class="password-input"
+      />
+      <img
+        [src]="isPasswordVisible ? 'assets/eye-open.png' :
+               'assets/eye-close.png'"
+        alt="Toggle password visibility"
+        class="password-eye-icon"
+        (click)="togglePasswordVisibility()"
+      />
+    </div>
+
+    @if (passwordControl?.invalid && (passwordControl?.touched ||
+                    passwordControl?.dirty)) {
+      <div class="error-message">
+        @if (passwordControl?.hasError('required')) {
+          <span>Password is required.</span>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="button-group">
+  <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="loginForm.invalid"
+    >
+      Sign In
+    </button>
+
+    <button type="button" class="btn btn-secondary" routerLink="/signup">
+      Sign Up
+    </button>
+  </div>
+
+  <a routerLink="/forgot-password" class="forgot-password-link">
+    forget Password ?
+  </a>
+</form>

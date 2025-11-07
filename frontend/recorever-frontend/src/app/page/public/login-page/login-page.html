@@ -1,1 +1,9 @@
-<p>login-page works!</p>
+<main class="login-page-container">
+  <section class="login-page-graphic">
+    <div class="graphic-placeholder"></div>
+  </section>
+
+  <section class="login-page-form">
+    <app-login-form (loginSubmit)="onLogin($event)" />
+  </section>
+</main>
