@@ -1,0 +1,55 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  background-color: #f7f7f7;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-logo {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  height: 20px;
+}
+
+.login-page-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 80px;
+}
+
+.login-page-graphic {
+  flex-basis: 500px;
+
+  .graphic-placeholder {
+    width: 100%;
+    height: 350px;
+    border: 2px solid #e0e0e0;
+    background: linear-gradient(
+        to bottom right,
+        transparent 49.5%,
+        #e0e0e0 49.5%,
+        #e0e0e0 50.5%,
+        transparent 50.5%
+      ),
+      linear-gradient(
+        to top right,
+        transparent 49.5%,
+        #e0e0e0 49.5%,
+        #e0e0e0 50.5%,
+        transparent 50.5%
+      );
+    background-color: #f4f4f4;
+  }
+}
+
+.login-page-form {
+  flex-basis: 400px;
+  display: flex;
+  justify-content: center;
+}
