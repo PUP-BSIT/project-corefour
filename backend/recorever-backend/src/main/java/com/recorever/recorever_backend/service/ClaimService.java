@@ -6,6 +6,8 @@ import com.recorever.recorever_backend.repository.ClaimRepository;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 import java.util.List;
 import java.util.Map;
@@ -22,10 +24,13 @@ public class ClaimService {
     
     @Autowired
     private NotificationService notificationService; 
+    
+    @Autowired
+    private ImageService imageService; 
 
     private static final int ADMIN_USER_ID = 1; // temporary admin user ID
 
-    public Map<String, Object> create(int reportId, int userId, String proofDescription) {
+    public Map<String, Object> create(int reportId, int userId, String proofDescription, MultipartFile file) {
         Report targetReport = reportRepo.getReportById(reportId);
         
         if (targetReport == null) {
@@ -35,6 +40,13 @@ public class ClaimService {
         String itemName = targetReport.getItem_name();
         
         int id = repo.createClaim(reportId, userId, proofDescription, itemName);
+        if (file != null && !file.isEmpty()) {
+            try {
+                imageService.uploadClaimImage(id, file);
+            } catch (IOException e) {
+                System.err.println("Failed to upload proof image for claim " + id + ": " + e.getMessage());
+            }
+        }
 
         notificationService.create(ADMIN_USER_ID, reportId, 
                 String.format("New PENDING claim (Claim #%d) submitted for item name: %s.", id, itemName));
