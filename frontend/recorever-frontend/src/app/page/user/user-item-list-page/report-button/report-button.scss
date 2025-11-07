@@ -12,9 +12,10 @@
   transition: all 0.3s ease-in-out;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   font-family: "inter";
-  width: 190px;
-  height: 70px;
+  width: 180px;
+  height: 65px;
   border-radius: 8px;
+  font-family: Arial, Helvetica, sans-serif;
 
   &:hover {
     transform: translateY(-3px);
@@ -31,7 +32,7 @@
     align-items: center;
 
     .button-icon {
-      height: 30px;
+      height: 35px;
       width: auto;
     }
   }
