@@ -1,11 +1,30 @@
-@if (showButtons) {
-<div class="auth-buttons">
-  <a routerLink="/login" class="btn login-btn">
-    Log-in
-  </a>
+<header class="app-header">
+  <div class="logo-container">
+    <img src="../../../assets/temp_logo.png" class="app-logo">
+    <div class="text-stack">
+      <div class="app-name">
+        ReCorever
+      </div>
+      <div class="tagline">
+        Secure. Reliable. Connected.
+      </div>
+    </div>
+  </div>
 
-  <a routerLink="/register" class="btn register-btn">
-    Register
-  </a>
-</div>
-}
+  @if (showButtons) {
+  <div class="auth-buttons">
+    <a routerLink="/login" class="btn login-btn">
+      Log-in
+    </a>
+
+    <a routerLink="/register" class="btn register-btn">
+      Register
+    </a>
+  </div>
+  }
+
+  @if (!showButtons) {
+  <div class="user-info">
+  </div>
+  }
+</header>
