@@ -1,0 +1,19 @@
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.layout-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.page-content {
+  flex-grow: 1;
+}
+
+app-header,
+app-footer {
+  flex-shrink: 0;
+}
