@@ -1,6 +1,15 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+type ReportItem = {
+  userInitials: string;
+  userName: string;
+  postDate: string;
+  title: string;
+  location: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-report-item-card',
   standalone: true,
@@ -10,7 +19,7 @@ import { CommonModule } from '@angular/common';
 })
 export class ReportItemCard {
 
-  @Input() item: any = {
+  @Input() item: ReportItem = {
     userInitials: 'A',
     userName: 'User Name',
     postDate: 'Date',
@@ -24,6 +33,5 @@ export class ReportItemCard {
 
   onTicketClick(): void {
     this.ticketClicked.emit();
-    console.log('Ticket button clicked on the card.');
   }
 }
