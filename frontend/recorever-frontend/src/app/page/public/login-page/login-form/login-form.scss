@@ -1,0 +1,138 @@
+/* UPDATED: Styles to match mockup inputs and buttons */
+
+// Use a serif font stack
+$font-serif: "Times New Roman", Times, serif;
+// Use a sans-serif font stack
+$font-sans: Arial, Helvetica, sans-serif;
+
+:host {
+  display: block;
+  width: 100%;
+  max-width: 380px; // The form card's max width
+}
+
+.login-form-card {
+  width: 100%;
+  padding: 30px;
+  border: 1px solid #e0e0e0; // Faint border
+  border-radius: 8px;
+  background-color: #ffffff;
+  font-family: $font-serif;
+  box-shadow: none; // Remove shadow
+}
+
+h2 {
+  text-align: left;
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 25px;
+  font-family: $font-serif;
+}
+
+.form-field {
+  margin-bottom: 25px;
+
+  label {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 8px;
+    font-family: $font-serif;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 10px;
+    font-size: 16px;
+    font-family: $font-sans; // Input text is sans-serif
+    box-sizing: border-box; // Fix padding issues
+
+    /* NEW STYLES: Gray, filled inputs */
+    border: 1px solid #dcdcdc; // Default border
+    background-color: #f7f7f7; // Light gray fill
+    border-radius: 4px;
+
+    // Style for the red border from error mockup
+    &.ng-invalid.ng-touched {
+      border-color: #ff0000;
+      outline: none;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #333; // Darker border on focus
+    }
+  }
+
+  .password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .password-input {
+      padding-right: 40px;
+    }
+
+    .password-eye-icon {
+      position: absolute;
+      right: 12px;
+      cursor: pointer;
+      color: #777;
+      width: 20px;
+    }
+  }
+}
+
+.error-message {
+  font-size: 13px;
+  color: #ff0000;
+  margin-top: 6px;
+  font-family: $font-sans; // Error text is sans-serif
+  font-weight: 400;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: $font-sans;
+
+  &.btn-secondary {
+    background-color: #e0e0e0;
+    color: #333;
+    border: 1px solid #ccc;
+
+    &:hover {
+      background-color: #d0d0d0;
+    }
+  }
+
+  &:disabled {
+    background-color: #f0f0f0;
+    color: #aaa;
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+  }
+}
+
+.forgot-password-link {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+  font-family: $font-serif;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
