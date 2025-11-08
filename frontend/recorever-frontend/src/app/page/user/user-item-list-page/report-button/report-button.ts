@@ -1,6 +1,7 @@
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { AppRoutePaths } from '../../../../app.routes';
 
 export type ReportButtonTheme = 'lost' | 'found';
 
@@ -24,11 +25,9 @@ export class ReportButton {
   }
 
   onClick() {
-    const route = this.theme === 'lost' ? '/user/report-lost-page' :
-        '/user/report-found-page';
+    const route = this.theme === 'lost' ? AppRoutePaths.REPORT_LOST :
+        AppRoutePaths.REPORT_FOUND;
 
     this.router.navigate([route]);
-
-    console.log(`Navigating to the ${this.theme} item report page at ${route}`);
   }
 }
