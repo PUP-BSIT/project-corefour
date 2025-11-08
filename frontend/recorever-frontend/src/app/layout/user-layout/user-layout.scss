@@ -1,0 +1,15 @@
+.user-layout-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: rgb(248, 245, 248);
+
+  .sidebar-area {
+    flex-shrink: 0;
+  }
+
+  .content-area {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+}
