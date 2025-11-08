@@ -1,0 +1,33 @@
+$verified-color: #4CAF50;
+$claimed-color: #D32F2F;
+$pending-color: #e3cf14;
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease;
+  font-family: Arial, Helvetica, sans-serif;
+
+  &.verified {
+    background-color: $verified-color;
+    color: white;
+    box-shadow: 0 2px 5px rgba($verified-color, 0.4);
+  }
+
+  &.claimed {
+    background-color: $claimed-color;
+    color: white;
+    box-shadow: 0 2px 5px rgba($claimed-color, 0.4);
+  }
+
+  &.pending {
+    background-color: $pending-color;
+    color: white;
+    box-shadow: 0 2px 5px rgba($pending-color, 0.4);
+  }
+}
