@@ -1,5 +1,3 @@
-import { User } from './user-model';
-
 export type LoginRequest = {
   email: string;
   password: string;
@@ -12,6 +10,9 @@ export type RegisterRequest = {
 };
 
 export type LoginResponse = {
-  token: string;
-  user: User;
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user_id: number;
+  user_name: string;
 };
