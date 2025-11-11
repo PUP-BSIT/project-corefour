@@ -21,12 +21,12 @@ public class UserService {
     private JwtUtil jwtUtil;
 
 
-    public Map<String, Object> register(String name, String email, String password) {
-        int result = repo.registerUser(name, email, password);
+    public Map<String, Object> register(String name, String phoneNumber, String email, String password) {
+        int result = repo.registerUser(name, email, password, phoneNumber);
         if (result == -1) {
             return Map.of("error", "Email already exists");
         }
-        return Map.of("user_id", result, "name", name, "email", email);
+        return Map.of("user_id", result, "phone_number", phoneNumber, "name", name, "email", email);
     }
 
     public Map<String, Object> login(String email, String password) {
