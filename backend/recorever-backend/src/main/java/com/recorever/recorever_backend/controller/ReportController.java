@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
@@ -22,11 +23,14 @@ public class ReportController {
                                              @RequestParam String type,
                                              @RequestParam String item_name,
                                              @RequestParam String location,
-                                             @RequestParam String description) {
+                                             @RequestParam String description,
+                                             @RequestParam(value = "file", required = false) MultipartFile file) { 
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();
 
-        Map<String, Object> result = service.create(userId, type, item_name, location, description);
+        // Call the modified service method, passing the file
+        Map<String, Object> result = service.create(userId, type, item_name, location, description, file); 
+        
         return ResponseEntity.status(201).body(result);
     }
 
@@ -34,7 +38,7 @@ public class ReportController {
     public ResponseEntity<List<Report>> getAllReports() {
         return ResponseEntity.ok(service.listAll());
     }
-
+    
     @GetMapping("/report/{id}")
     public ResponseEntity<?> getReport(@PathVariable int id) {
         Report report = service.getById(id);

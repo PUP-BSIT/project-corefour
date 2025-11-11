@@ -4,7 +4,9 @@ import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,12 +23,27 @@ public class ReportService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private ImageService imageService;
+
     private static final int ADMIN_USER_ID = 1; // temporary admin user ID
 
-    public Map<String, Object> create(int userId, String type, String itemName, String location, String description) {
+    public Map<String, Object> create(int userId, String type, String itemName, String location, String description, MultipartFile file) {
+            
+        // Create the Report (Metadata only)
         int id = repo.createReport(userId, type, itemName, location, description);
         
-        // Generate and set SURRENDER CODE (only for found items)
+        // Only upload if a file is present
+        if (file != null && !file.isEmpty()) {
+            try {
+                // Call ImageService to save the file and image metadata
+                imageService.uploadReportImage(id, file);
+            } catch (IOException e) {
+                System.err.println("Failed to upload image for report " + id + ": " + e.getMessage());
+            }
+        }
+        
+        // Set Surrender Code and Notify Admin
         String surrenderCode = null;
         if ("found".equalsIgnoreCase(type)) {
             surrenderCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
