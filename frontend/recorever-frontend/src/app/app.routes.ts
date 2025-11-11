@@ -28,6 +28,14 @@ import { AdminDashboardPage } from './page/admin/admin-dashboard-page/admin-dash
 import { ManageItemsPage } from './page/admin/manage-items-page/manage-items-page';
 import { AdminItemListPage } from './page/admin/admin-item-list-page/admin-item-list-page';
 
+export const AppRoutePaths = {
+  REPORT_LOST: '/app/report-lost',
+  REPORT_FOUND: '/app/report-found',
+  LOST_ITEMS: '/app/lost-items',
+  FOUND_ITEMS: '/app/found-items',
+  PROFILE: '/app/profile',
+};
+
 export const routes: Routes = [
   {
     path: '',
@@ -54,12 +62,14 @@ export const routes: Routes = [
       component: UserLayout,
       canActivate: [authGuard],
       children: [
-        { path: 'lost-items', component: UserItemListPage, data: { itemType: 'lost' } },
-        { path: 'found-items', component: UserItemListPage, data: { itemType: 'found' } },
+        { path: 'lost-items', component: UserItemListPage,
+            data: { itemType: 'lost' } },
+        { path: 'found-items', component: UserItemListPage,
+            data: { itemType: 'found' } },
         { path: 'report-lost', component: ReportLostPage },
         { path: 'report-found', component: ReportFoundPage },
         { path: 'profile', component: ProfilePage },
-        { path: 'about-us', component: AboutUsPage }, 
+        { path: 'about-us', component: AboutUsPage },
         { path: '', redirectTo: 'lost-items', pathMatch: 'full' },
       ],
   },
