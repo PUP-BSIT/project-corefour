@@ -30,10 +30,11 @@ public class UserController {
     @PostMapping("/register-user")
     public ResponseEntity<?> registerUser(@RequestBody Map<String, String> body) {
         String name = body.get("name");
+        String phoneNumber = body.get("phone_number");
         String email = body.get("email");
         String password = body.get("password");
 
-        Map<String, Object> result = service.register(name, email, password);
+        Map<String, Object> result = service.register(name, phoneNumber, email, password);
         if (result.containsKey("error")) {
             return ResponseEntity.badRequest().body(result.get("error"));
         }

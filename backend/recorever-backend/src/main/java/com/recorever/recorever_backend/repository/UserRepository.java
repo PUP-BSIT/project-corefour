@@ -44,18 +44,19 @@ public class UserRepository {
         return u;
     };
     
-    public int registerUser(String name, String email, String password) {
+    public int registerUser(String name, String phoneNumber, String email, String password) {
         String checkSql = "SELECT COUNT(*) FROM users WHERE email = ?";
         int exists = jdbcTemplate.queryForObject(checkSql, Integer.class, email);
         if (exists > 0) return -1;
 
         String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
-        String sql = "INSERT INTO users (name, email, password_hash, role, is_deleted) VALUES (?, ?, ?, 'user', 0)";
+        String sql = "INSERT INTO users (name, phone_number, email, password_hash, role, is_deleted) VALUES (?, ?, ?, ?, 'user', 0)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(conn -> {
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, name);
+            ps.setString(4, phoneNumber);
             ps.setString(2, email);
             ps.setString(3, hashed);
             return ps;
