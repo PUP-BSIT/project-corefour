@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginForm} from './login-form/login-form';
 import { LoginRequest } from '../../../models/auth-model';
+import { User } from '../../../models/user-model';
 import { AuthService } from '../../../core/auth/auth-service';
 
 @Component({
@@ -23,15 +24,17 @@ export class LoginPage {
     this.hasLoginError = false;
 
     this.authService.login(credentials).subscribe({
-      next: (response) => {
-        // SUCCESS!
+      next: (user: User) => {
         this.isLoading = false;
-        this.router.navigate(['/app']);
+        if (user.role === 'admin') {
+          this.router.navigate(['/admin']);
+        } else {
+          this.router.navigate(['/app']);
+        }
       },
       error: (err) => {
-        // FAILURE!
         this.isLoading = false;
-        this.hasLoginError = true; // This will make the error message appear
+        this.hasLoginError = true;
         console.error('Login failed:', err);
       },
     });
