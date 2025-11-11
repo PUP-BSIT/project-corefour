@@ -56,9 +56,9 @@ public class UserRepository {
         jdbcTemplate.update(conn -> {
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, name);
-            ps.setString(4, phoneNumber);
-            ps.setString(2, email);
-            ps.setString(3, hashed);
+            ps.setString(2, phoneNumber);
+            ps.setString(3, email);
+            ps.setString(4, hashed);
             return ps;
         }, keyHolder);
 
