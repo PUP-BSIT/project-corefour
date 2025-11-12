@@ -25,19 +25,19 @@
 
   <!-- Phone Number Field -->
   <div class="form-field">
-    <label for="phone">Phone Number</label>
+    <label for="phone_number">Phone Number</label>
     <input
-      id="phone"
+      id="phone_number"
       type="tel"
-      formControlName="phone"
+      formControlName="phone_number"
       placeholder="09xxxxxxxx"
     />
-    @if (phone?.invalid && (phone?.dirty || phone?.touched)) {
+    @if (phone_number?.invalid && (phone_number?.dirty || phone_number?.touched)) {
       <div class="error-message">
-        @if (phone?.errors?.['required']) {
+        @if (phone_number?.errors?.['required']) {
           <span>Phone number is required.</span>
         }
-        @if (phone?.errors?.['pattern']) {
+        @if (phone_number?.errors?.['pattern']) {
           <span>Please enter a valid PH phone number.</span>
         }
       </div>
@@ -179,9 +179,13 @@
   <button
     type="submit"
     class="submit-button"
-    [disabled]="registerForm.invalid"
+    [disabled]="registerForm.invalid || isLoading"
   >
-    Register
+    @if (isLoading) {
+      Processing...
+    } @else {
+        Register
+    }
   </button>
 
   <p class="signin-link">

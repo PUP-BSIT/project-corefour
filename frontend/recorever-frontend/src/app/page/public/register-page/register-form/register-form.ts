@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import {
   AbstractControl,
@@ -9,7 +9,8 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { RegisterRequest } from '../../../../models/auth-model';
 
 type PasswordFieldType = 'password' | 'text';
 type PasswordStrength = 'none' | 'weak' | 'medium' | 'strong';
@@ -73,9 +74,12 @@ export function strongPasswordValidator(): ValidatorFn {
 })
 export class RegisterFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
-  private router = inject(Router);
 
   registerForm!: FormGroup;
+
+  @Output() formSubmit = new EventEmitter<RegisterRequest>();
+  @Input() isLoading: boolean = false;
+  @Input() errorMessage: string | null = null;
 
   passwordFieldType: PasswordFieldType = 'password';
   confirmPasswordFieldType: PasswordFieldType = 'password';
@@ -85,7 +89,7 @@ export class RegisterFormComponent implements OnInit {
     this.registerForm = this.formBuilder.group(
       {
         name: ['', { validators: [Validators.required] }],
-        phone: [
+        phone_number: [
           '',
           {
             validators: [
@@ -120,8 +124,8 @@ export class RegisterFormComponent implements OnInit {
   get name() {
     return this.registerForm.get('name');
   }
-  get phone() {
-    return this.registerForm.get('phone');
+  get phone_number() {
+    return this.registerForm.get('phone_number');
   }
   get email() {
     return this.registerForm.get('email');
@@ -166,11 +170,10 @@ export class RegisterFormComponent implements OnInit {
       this.confirmPasswordFieldType === 'password' ? 'text' : 'password';
   }
 
-  onSubmit(): void {
+onSubmit(): void {
+    this.errorMessage = null;
     if (this.registerForm.valid) {
-      // TODO: Implement registration call to auth service
-      console.log('Form Submitted!', this.registerForm.value);
-
+      this.formSubmit.emit(this.registerForm.getRawValue() as RegisterRequest);
     } else {
       this.registerForm.markAllAsTouched();
     }
