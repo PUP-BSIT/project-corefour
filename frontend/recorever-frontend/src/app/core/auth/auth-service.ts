@@ -1,9 +1,9 @@
 import { Injectable, inject, Injector } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap, of, catchError, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, of, catchError, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type { LoginRequest, LoginResponse } from '../../models/auth-model';
+import type { LoginRequest, LoginResponse, RegisterRequest } from '../../models/auth-model';
 import type { User } from '../../models/user-model';
 import { UserService } from '../services/user-service';
 
@@ -53,8 +53,17 @@ export class AuthService {
       );
   }
 
-  register(userInfo: any): Observable<any> {
-    return this.http.post(`${this.API_BASE_URL}/register-user`, userInfo);
+  register(request: RegisterRequest): Observable<User> {
+    return this.http
+      .post<User>(`${this.API_BASE_URL}/register-user`, request)
+      .pipe(
+        tap((response: User) => {
+          console.log('Registration successful:', response);
+        }),
+        catchError((err) => {
+          return throwError(() => err); 
+        })
+      );
   }
 
   logout(): void {
