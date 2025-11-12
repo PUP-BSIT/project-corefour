@@ -5,6 +5,9 @@
   </div>
 
   <div class="form-container">
-    <app-register-form></app-register-form>
+    <app-register-form
+      (formSubmit)="onRegisterSubmit($event)"  
+      [isLoading]="isLoading"
+      [errorMessage]="errorMessage"></app-register-form>
   </div>
 </div>
