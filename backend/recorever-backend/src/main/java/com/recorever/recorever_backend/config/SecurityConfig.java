@@ -28,7 +28,8 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/login-user",
                     "/api/register-user",
-                    "/api/refresh-token"
+                    "/api/refresh-token",
+                    "/error"
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN") 
                 .anyRequest().authenticated()
