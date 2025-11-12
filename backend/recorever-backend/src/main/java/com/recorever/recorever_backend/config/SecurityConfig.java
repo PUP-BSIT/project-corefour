@@ -17,8 +17,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> {})
+        .cors(cors -> {})
+        .csrf(csrf -> csrf.disable())
+
+            // Stateless session — we use JWTs instead of sessions
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
@@ -28,6 +30,7 @@ public class SecurityConfig {
                     "/api/register-user",
                     "/api/refresh-token"
                 ).permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN") 
                 .anyRequest().authenticated()
             )
             .httpBasic(httpBasic -> httpBasic.disable())
