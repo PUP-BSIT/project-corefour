@@ -1,0 +1,154 @@
+$primary-purple: #5d50d0;
+$light-grey-bg: #f5f5f5;
+$border-color: #eee;
+$text-color: #333;
+$secondary-text: #666;
+
+.item-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 300px;
+  margin: 20px;
+  border: 1px solid $border-color;
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: $light-grey-bg;
+    border-bottom: 1px solid $border-color;
+
+    .avatar {
+      background-color: $primary-purple;
+      color: white;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      margin-right: 10px;
+      text-align: center;
+      line-height: 35px;
+      font-size: 14px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .info-text {
+      .item-name {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: $text-color;
+      }
+
+      .post-date {
+        margin: 0;
+        font-size: 12px;
+        color: $secondary-text;
+      }
+    }
+  }
+
+  .item-image-area {
+    position: relative;
+    height: 180px;
+    background-color: $light-grey-bg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    .main-item-photo {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      padding: 5px;
+      z-index: 10;
+
+      .arrow-icon {
+        width: 24px;
+        height: 24px;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        display: block;
+      }
+
+      &:hover .arrow-icon {
+        opacity: 1;
+      }
+
+      &.left-arrow {
+        left: 5px;
+      }
+
+      &.right-arrow {
+        right: 5px;
+      }
+    }
+  }
+
+  .card-body {
+    padding: 15px;
+
+    .item-title {
+      margin-top: 0;
+      margin-bottom: 5px;
+      font-size: 18px;
+      font-weight: 600;
+      color: $text-color;
+    }
+
+    .item-location {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: $secondary-text;
+    }
+
+    .item-description {
+      font-size: 14px;
+      color: $text-color;
+      line-height: 1.4;
+      margin-bottom: 20px;
+    }
+
+    .card-footer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+
+      .verified-label {
+        font-size: 14px;
+        color: #ccc;
+        font-weight: 500;
+        visibility: hidden;
+      }
+    }
+
+    .ticket-btn {
+      background-color: $primary-purple;
+      color: white;
+      padding: 8px 18px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: darken($primary-purple, 5%);
+      }
+    }
+  }
+}

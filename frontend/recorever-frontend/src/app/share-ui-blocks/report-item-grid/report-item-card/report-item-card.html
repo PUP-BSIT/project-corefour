@@ -1,1 +1,38 @@
-<p>report-item-card works!</p>
+<div class="item-card">
+
+  <div class="card-header">
+    <div class="avatar">{{ item.userInitials }}</div>
+    <div class="info-text">
+      <h4 class="item-name">{{ item.userName }}</h4>
+      <p class="post-date">{{ item.postDate }}</p>
+    </div>
+  </div>
+
+  <div class="item-image-area">
+    <div class="arrow left-arrow">
+      <img src="assets/arrow-left.png" alt="Previous" class="arrow-icon">
+    </div>
+
+    <img src="assets/temp-photo-item.png" alt="Item Placeholder Image" class="main-item-photo">
+
+    <div class="arrow right-arrow">
+      <img src="assets/arrow-right.png" alt="Next" class="arrow-icon">
+    </div>
+  </div>
+
+  <div class="card-body">
+    <h3 class="item-title">{{ item.title }}</h3>
+    <p class="item-location">{{ item.location }}</p>
+
+    <p class="item-description">
+      {{ item.description }}
+    </p>
+
+    <div class="card-footer-actions">
+      <span class="verified-label"></span>
+      <button class="ticket-btn" (click)="onTicketClick()">
+        Ticket
+      </button>
+    </div>
+  </div>
+</div>
