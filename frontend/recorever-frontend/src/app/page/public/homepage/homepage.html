@@ -1,1 +1,22 @@
-<p>homepage works!</p>
+<div class="homepage-content">
+
+  <div class="main-message">
+    <h1>Lost and found, simplified</h1>
+    <p class="tagline">Connecting people to their
+        missing belongings with ease.</p>
+  </div>
+
+  <div class="action-buttons-container">
+    <app-report-button theme="lost" label="Lost"
+        (buttonClicked)="navigateToLost()" />
+
+    <app-report-button theme="found" label="Found"
+        (buttonClicked)="navigateToFound()" />
+
+    <div class="image-box-placeholder">
+      <img src="assets/temp-photo-main.png"
+          alt="Placeholder graphic for Lost and Found"
+          class="placeholder-image">
+    </div>
+  </div>
+</div>
