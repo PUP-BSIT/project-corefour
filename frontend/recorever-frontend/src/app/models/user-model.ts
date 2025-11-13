@@ -6,3 +6,9 @@ export type User = {
   profile_picture: string;
   role: 'user' | 'admin';
 };
+
+export type NavItem = {
+  label: string;
+  route: string;
+  iconPath: string;
+};
