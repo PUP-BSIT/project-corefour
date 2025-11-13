@@ -20,13 +20,9 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
-
-    public Map<String, Object> register(String name, String email, String password) {
-        int result = repo.registerUser(name, email, password);
-        if (result == -1) {
-            return Map.of("error", "Email already exists");
-        }
-        return Map.of("user_id", result, "name", name, "email", email);
+    public int register(String name, String phoneNumber, String email, String password) {
+        int result = repo.registerUser(name, phoneNumber, email, password);
+        return result;
     }
 
     public Map<String, Object> login(String email, String password) {
@@ -45,7 +41,7 @@ public class UserService {
 
         String refreshToken = UUID.randomUUID().toString();
         LocalDateTime expiry = LocalDateTime.now().plusDays(7);
-        
+
         repo.saveRefreshToken(user.getUser_id(), refreshToken, expiry);
 
         return Map.of(

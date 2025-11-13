@@ -1,14 +1,22 @@
 package com.recorever.recorever_backend.controller;
 
+// Service & Repository Imports
 import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.service.ReportService;
+
+//DTO imports
+import com.recorever.recorever_backend.dto.ReportCreationDTO;
+import com.recorever.recorever_backend.dto.ReportResponseDTO;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -17,37 +25,64 @@ public class ReportController {
     @Autowired
     private ReportService service;
 
+    private ReportResponseDTO mapToReportResponseDTO(Report report) {
+        ReportResponseDTO dto = new ReportResponseDTO();
+        dto.setReport_id(report.getReport_id());
+        dto.setUser_id(report.getUser_id());
+        dto.setType(report.getType());
+        dto.setItem_name(report.getItem_name()); 
+        dto.setLocation(report.getLocation());
+        dto.setDate_reported(report.getDate_reported());
+        dto.setDate_resolved(report.getDate_resolved());
+        dto.setDescription(report.getDescription());
+        dto.setStatus(report.getStatus());
+        dto.setSurrender_code(report.getSurrender_code());
+        dto.setClaim_code(report.getClaim_code());
+        return dto;
+    }
+
     @PostMapping("/report")
-    public ResponseEntity<?> createReport(Authentication authentication,
-                                             @RequestParam String type,
-                                             @RequestParam String item_name,
-                                             @RequestParam String location,
-                                             @RequestParam String description) {
+    public ResponseEntity<?> createReport( Authentication authentication,
+            @Valid @RequestBody ReportCreationDTO reportDto) {
+            
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();
 
-        Map<String, Object> result = service.create(userId, type, item_name, location, description);
+        Map<String, Object> result = service.create(
+            userId, 
+            reportDto.getType(), 
+            reportDto.getItem_name(), 
+            reportDto.getLocation(), 
+            reportDto.getDescription()
+        );
         return ResponseEntity.status(201).body(result);
     }
 
     @GetMapping("/reports")
-    public ResponseEntity<List<Report>> getAllReports() {
-        return ResponseEntity.ok(service.listAll());
+    public ResponseEntity<List<ReportResponseDTO>> getAllReports() {
+        List<Report> reports = service.listAll();
+
+        List<ReportResponseDTO> responseList = reports.stream()
+            .map(this::mapToReportResponseDTO)
+            .collect(Collectors.toList());
+            
+        return ResponseEntity.ok(responseList);
     }
 
     @GetMapping("/report/{id}")
     public ResponseEntity<?> getReport(@PathVariable int id) {
         Report report = service.getById(id);
         if (report == null) return ResponseEntity.status(404).body("Report not found");
-        return ResponseEntity.ok(report);
+
+        ReportResponseDTO responseDto = mapToReportResponseDTO(report);
+        return ResponseEntity.ok(responseDto);
     }
 
     @PutMapping("/report/{id}")
-    public ResponseEntity<?> updateReport(Authentication authentication,
-                                             @PathVariable int id,
-                                             @RequestParam(required = false) String item_name,
-                                             @RequestParam(required = false) String location,
-                                             @RequestParam(required = false) String description) {
+    public ResponseEntity<?> updateReport(
+            Authentication authentication,
+            @PathVariable int id,
+            @RequestBody ReportCreationDTO reportDto) {
         
         Report report = service.getById(id);
         if (report == null) {
@@ -68,12 +103,15 @@ public class ReportController {
 
         boolean updated = service.updateEditableFields(
             id, 
-            item_name, 
-            location, 
-            description
+            reportDto.getItem_name(), 
+            reportDto.getLocation(), 
+            reportDto.getDescription()
         );
+
         if (!updated) return ResponseEntity.badRequest().body("Invalid update or no fields provided.");
-        return ResponseEntity.ok(Map.of("success", true, "message", "Report updated successfully."));
+        
+        Report updatedReport = service.getById(id);
+        return ResponseEntity.ok(mapToReportResponseDTO(updatedReport));
     }
 
     @DeleteMapping("/report/{id}")

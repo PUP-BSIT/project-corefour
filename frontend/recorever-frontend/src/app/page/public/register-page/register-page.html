@@ -1,1 +1,13 @@
-<p>register-page works!</p>
+<div class="page-container">
+  <div class="image-container">
+    <div class="image-placeholder">
+    </div>
+  </div>
+
+  <div class="form-container">
+    <app-register-form
+      (formSubmit)="onRegisterSubmit($event)"  
+      [isLoading]="isLoading"
+      [errorMessage]="errorMessage"></app-register-form>
+  </div>
+</div>

@@ -1,0 +1,70 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 90vh;
+  width: 100%;
+  background-color: #f9fafb;
+  box-sizing: border-box;
+}
+
+.page-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  gap: 3rem;
+}
+
+.image-container {
+  flex: 1;
+  display: none;
+
+  @media (min-width: 768px) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+.image-placeholder {
+  width: 100%;
+  max-width: 500px;
+  height: 500px;
+  background-color: #e5e7eb;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  background-image: linear-gradient(
+      to top right,
+      transparent 49.5%,
+      #d1d5db 49.5%,
+      #d1d5db 50.5%,
+      transparent 50.5%
+    ),
+    linear-gradient(
+      to top left,
+      transparent 49.5%,
+      #d1d5db 49.5%,
+      #d1d5db 50.5%,
+      transparent 50.5%
+    );
+}
+
+.form-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    justify-content: flex-start;
+  }
+
+  ::ng-deep app-register-form {
+    width: 100%;
+    max-width: 450px;
+  }
+}

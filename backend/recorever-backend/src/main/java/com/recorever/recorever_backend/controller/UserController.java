@@ -1,13 +1,22 @@
 package com.recorever.recorever_backend.controller;
 
+// Service & Repository Imports
 import com.recorever.recorever_backend.config.JwtUtil;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.service.UserService;
 import com.recorever.recorever_backend.repository.UserRepository;
+
+// DTO Imports
+import com.recorever.recorever_backend.dto.UserRegistrationDTO; 
+import com.recorever.recorever_backend.dto.UserLoginDTO;    
+import com.recorever.recorever_backend.dto.UserResponseDTO;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -25,24 +34,43 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    /* This prevents exposing internal database or security fields.*/
+    private UserResponseDTO mapToUserResponseDTO(User user) {
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setUser_id(user.getUser_id());
+        dto.setName(user.getName());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+        dto.setProfile_picture(user.getProfile_picture());
+        dto.setPhone_number(user.getPhone_number());
+        dto.setCreated_at(user.getCreated_at());
+        return dto;
+    }
 
     @PostMapping("/register-user")
-    public ResponseEntity<?> registerUser(@RequestBody Map<String, String> body) {
-        String name = body.get("name");
-        String email = body.get("email");
-        String password = body.get("password");
-
-        Map<String, Object> result = service.register(name, email, password);
-        if (result.containsKey("error")) {
-            return ResponseEntity.badRequest().body(result.get("error"));
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationDTO registrationDto) {
+        int userId = service.register(
+            registrationDto.getName(), 
+            registrationDto.getPhone_number(),
+            registrationDto.getEmail(),
+            registrationDto.getPassword()
+        );
+        
+        if (userId == -1) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email already exists"));
         }
-        return ResponseEntity.status(201).body(result);
+
+        User newUser = repo.findById(userId);
+        UserResponseDTO responseDto = mapToUserResponseDTO(newUser);
+
+        return ResponseEntity.status(201).body(responseDto);
     }
 
     @PostMapping("/login-user")
-    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        String password = body.get("password");
+    public ResponseEntity<?> loginUser(@Valid @RequestBody UserLoginDTO loginDto) {
+        
+        String email = loginDto.getEmail();
+        String password = loginDto.getPassword();
 
         Map<String, Object> result = service.login(email, password);
 
@@ -53,10 +81,10 @@ public class UserController {
     }
 
     @GetMapping("/get-user-data")
-    public ResponseEntity<?> getUser(Authentication authentication) {
+    public ResponseEntity<UserResponseDTO> getUser(Authentication authentication) {
         User authenticatedUser = (User) authentication.getPrincipal();
-        
-        return ResponseEntity.ok(authenticatedUser);
+        UserResponseDTO responseDto = mapToUserResponseDTO(authenticatedUser);
+        return ResponseEntity.ok(responseDto);
     }
 
     @PutMapping("/update-user-data")
@@ -82,7 +110,10 @@ public class UserController {
             return ResponseEntity.badRequest().body("Failed to update user.");
         }
 
-        return ResponseEntity.ok(Map.of("success", true, "message", "Profile updated successfully."));
+        User updatedUser = repo.findById(user.getUser_id());
+        UserResponseDTO responseDto = mapToUserResponseDTO(updatedUser);
+        
+        return ResponseEntity.ok(responseDto);
     }
 
     @DeleteMapping("/delete-user")

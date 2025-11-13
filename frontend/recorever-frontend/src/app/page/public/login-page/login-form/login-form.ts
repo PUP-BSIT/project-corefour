@@ -4,19 +4,13 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-
-export type LoginFormValue = {
-  email: string | null;
-  password: string | null;
-};
+import { LoginRequest } from '../../../../models/auth-model';
 
 @Component({
   selector: 'app-login-form',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterLink,
   ],
@@ -26,7 +20,7 @@ export type LoginFormValue = {
 export class LoginForm {
   private fb = inject(FormBuilder);
 
-  @Output() loginSubmit = new EventEmitter<LoginFormValue>();
+  @Output() loginSubmit = new EventEmitter<LoginRequest>();
 
   isPasswordVisible = false;
 
@@ -46,7 +40,7 @@ export class LoginForm {
 
   submitForm(): void {
     if (this.loginForm.valid) {
-      this.loginSubmit.emit(this.loginForm.getRawValue());
+      this.loginSubmit.emit(this.loginForm.getRawValue() as LoginRequest);
     } else {
       this.loginForm.markAllAsTouched();
     }

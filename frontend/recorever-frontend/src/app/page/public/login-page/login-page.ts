@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
-// UPDATED PATH: Uses a relative path to the child component
-import { LoginForm, LoginFormValue } from './login-form/login-form';
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { LoginForm} from './login-form/login-form';
+import { LoginRequest } from '../../../models/auth-model';
+import { User } from '../../../models/user-model';
+import { AuthService } from '../../../core/auth/auth-service';
 
 @Component({
   selector: 'app-login-page',
@@ -10,14 +13,30 @@ import { LoginForm, LoginFormValue } from './login-form/login-form';
   styleUrl: './login-page.scss'
 })
 export class LoginPage {
-  isLoading = false;
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  onLogin(credentials: LoginFormValue): void {
+  isLoading = false;
+  hasLoginError = false;
+
+  onLogin(credentials: LoginRequest): void {
     this.isLoading = true;
-    console.log('Form submitted:', credentials);
-    // TODO(YourName, YourName): Add auth logic
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 1000);
+    this.hasLoginError = false;
+
+    this.authService.login(credentials).subscribe({
+      next: (user: User) => {
+        this.isLoading = false;
+        if (user.role === 'admin') {
+          this.router.navigate(['/admin']);
+        } else {
+          this.router.navigate(['/app']);
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.hasLoginError = true;
+        console.error('Login failed:', err);
+      },
+    });
   }
 }

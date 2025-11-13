@@ -1,1 +1,194 @@
-<p>register-form works!</p>
+<form
+  [formGroup]="registerForm"
+  (ngSubmit)="onSubmit()"
+  class="register-form"
+>
+  <h2 class="form-title">Register</h2>
+
+  <!-- Name Field -->
+  <div class="form-field">
+    <label for="name">Name</label>
+    <input
+      id="name"
+      type="text"
+      formControlName="name"
+      placeholder="Enter your full name"
+    />
+    @if (name?.invalid && (name?.dirty || name?.touched)) {
+      <div class="error-message">
+        @if (name?.errors?.['required']) {
+          <span>Name is required.</span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Phone Number Field -->
+  <div class="form-field">
+    <label for="phone_number">Phone Number</label>
+    <input
+      id="phone_number"
+      type="tel"
+      formControlName="phone_number"
+      placeholder="09xxxxxxxx"
+    />
+    @if (phone_number?.invalid && (phone_number?.dirty || phone_number?.touched)) {
+      <div class="error-message">
+        @if (phone_number?.errors?.['required']) {
+          <span>Phone number is required.</span>
+        }
+        @if (phone_number?.errors?.['pattern']) {
+          <span>Please enter a valid PH phone number.</span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Email Field -->
+  <div class="form-field">
+    <label for="email">Email</label>
+    <input
+      id="email"
+      type="email"
+      formControlName="email"
+      placeholder="example@mail.com"
+    />
+    @if (email?.invalid && (email?.dirty || email?.touched)) {
+      <div class="error-message">
+        @if (email?.errors?.['required']) {
+          <span>Email is required.</span>
+        }
+        @if (email?.errors?.['email']) {
+          <span>Please enter a valid email address.</span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Password Field -->
+  <div class="form-field">
+    <label for="password">Password</label>
+    <div class="password-wrapper">
+      <input
+        id="password"
+        [type]="passwordFieldType"
+        formControlName="password"
+        placeholder="••••••••••"
+      />
+      <button
+        type="button"
+        class="toggle-visibility"
+        (click)="togglePasswordVisibility()"
+      >
+        @if (passwordFieldType === 'password') {
+          <img
+            src="assets/eye-close.png"
+            alt="Show password"
+            class="eye-icon"
+          />
+        } @else {
+          <img
+            src="assets/eye-open.png"
+            alt="Hide password"
+            class="eye-icon"
+          />
+        }
+      </button>
+    </div>
+
+    <!-- Password Strength Meter -->
+    @if (passwordStrength !== 'none' && password?.value) {
+      <div class="strength-meter">
+        <span class="strength-text">Strength:</span>
+        <div class="strength-bar-container">
+          <div class="strength-bar" [ngClass]="passwordStrength"></div>
+        </div>
+        <span class="strength-label" [ngClass]="passwordStrength">
+          {{ passwordStrength }}
+        </span>
+      </div>
+    }
+
+    @if (password?.invalid && (password?.dirty || password?.touched)) {
+      <div class="error-message">
+        @if (password?.errors?.['required']) {
+          <span>Password is required.</span>
+        }
+        @if (password?.errors?.['minlength']) {
+          <span>Password must be at least 8 characters long. </span>
+        }
+        @if (password?.errors?.['passwordStrength']?.hasNumber) {
+          <span>Must contain at least one number. </span>
+        }
+        @if (password?.errors?.['passwordStrength']?.hasSpecialChar) {
+          <span>Must contain at least one special character.</span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Confirm Password Field -->
+  <div class="form-field">
+    <label for="confirmPassword">Confirm Password</label>
+    <div class="password-wrapper">
+      <input
+        id="confirmPassword"
+        [type]="confirmPasswordFieldType"
+        formControlName="confirmPassword"
+        placeholder="••••••••••"
+      />
+      <button
+        type="button"
+        class="toggle-visibility"
+        (click)="toggleConfirmPasswordVisibility()"
+      >
+        @if (confirmPasswordFieldType === 'password') {
+          <img
+            src="assets/eye-close.png"
+            alt="Show password"
+            class="eye-icon"
+          />
+        } @else {
+          <img
+            src="assets/eye-open.png"
+            alt="Hide password"
+            class="eye-icon"
+          />
+        }
+      </button>
+    </div>
+    @if (
+      confirmPassword?.invalid &&
+      (confirmPassword?.dirty || confirmPassword?.touched)
+    ) {
+      <div class="error-message">
+        @if (confirmPassword?.errors?.['required']) {
+          <span>Please confirm your password.</span>
+        }
+        @if (
+          confirmPassword?.errors?.['passwordMismatch'] &&
+          !confirmPassword?.errors?.['required']
+        ) {
+          <span>Passwords do not match.</span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Submit Button -->
+  <button
+    type="submit"
+    class="submit-button"
+    [disabled]="registerForm.invalid || isLoading"
+  >
+    @if (isLoading) {
+      Processing...
+    } @else {
+        Register
+    }
+  </button>
+
+  <p class="signin-link">
+    Already have an account? <a routerLink="/login">Log in</a>
+  </p>
+</form>
