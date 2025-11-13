@@ -1,6 +1,6 @@
 $sidebar-width: 250px;
 $primary-text: #333;
-$secondary-text: #666;
+$secondary-text: #777777;
 $active-bg: #f0f0f0;
 $border-color: #e0e0e0;
 $search-bg: #e6e6e6;
@@ -13,15 +13,15 @@ $search-bg: #e6e6e6;
   padding: 10px 0;
   display: flex;
   flex-direction: column;
-
   overflow-y: auto;
   overflow-x: hidden;
 
   .user-profile-header {
     display: flex;
     align-items: center;
-    padding: 10px 15px;
+    padding: 15px 15px;
     margin-bottom: 10px;
+    border-bottom: 1px solid $border-color;
 
     .profile-click-area {
       display: flex;
@@ -44,11 +44,17 @@ $search-bg: #e6e6e6;
       width: 30px;
       height: 30px;
       margin-right: 10px;
+      border-radius: 50%;
     }
 
     .profile-info {
       display: flex;
       align-items: center;
+
+      .profile-name {
+        font-weight: bold;
+        color: $primary-text;
+      }
 
       .profile-dropdown-arrow {
         margin-left: 5px;
@@ -58,57 +64,48 @@ $search-bg: #e6e6e6;
       }
     }
 
-    .notification-icon-img {
-      width: 20px;
-      height: 20px;
-      margin-left: auto;
-    }
+      .notification-click-area {
+        cursor: pointer;
+        padding: 8px;
+        margin: -8px;
+        border-radius: 50%;
+        transition: background-color 0.1s ease;
+
+        &:hover {
+          background-color: $active-bg;
+        }
+
+        &:active {
+          background-color: darken($active-bg, 5%);
+        }
+      }
+
+      .notification-icon-img {
+        width: 20px;
+        height: 20px;
+      }
 
     .profile-click-area.dropdown-open .profile-dropdown-arrow {
       transform: rotate(180deg);
     }
   }
 
-  .search-area {
-    padding: 0 15px 15px;
-
-    .search-input-container {
-      display: flex;
-      align-items: center;
-      background-color: $search-bg;
-      border-radius: 8px;
-      padding: 5px 10px;
-
-      .search-icon {
-        width: 18px;
-        height: 18px;
-        margin-right: 8px;
-        opacity: 0.6;
-      }
-
-      .search-input {
-        flex-grow: 1;
-        border: none;
-        background: transparent;
-        padding: 5px 0;
-        font-size: 14px;
-        color: $secondary-text;
-
-        &:focus {
-          outline: none;
-        }
-
-        &::placeholder {
-          color: $secondary-text;
-        }
-      }
-    }
-  }
 
   .section-title {
     font-weight: bold;
     color: $secondary-text;
     font-size: 14px;
+  }
+
+  .section-title-link {
+    font-weight: bold;
+    color: $secondary-text;
+    font-size: 14px;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   .section-header {
@@ -134,7 +131,7 @@ $search-bg: #e6e6e6;
     align-items: center;
     text-decoration: none;
     color: $primary-text;
-    padding: 12px 15px;
+    padding: 10px 15px;
     transition: background-color 0.1s ease;
     cursor: pointer;
 
@@ -145,20 +142,30 @@ $search-bg: #e6e6e6;
       object-fit: contain;
     }
 
+    .tracking-icon-sm {
+      width: 18px;
+      height: 18px;
+      margin-right: 18px;
+    }
+
     &.active,
     &:hover {
       background-color: $active-bg;
     }
+
+    &[aria-current="page"] {
+      background-color: $active-bg;
+      font-weight: bold;
+    }
   }
 
-  .nav-divider {
-    border: 0;
+  .nav-divider-mock {
     height: 1px;
     background: $border-color;
     margin: 10px 0;
   }
 
-  .about-us-link {
+  .help-link {
     margin-top: auto;
     padding: 15px;
     text-align: right;

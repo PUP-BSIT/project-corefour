@@ -1,10 +1,8 @@
 <div class="user-side-bar">
 
   <div class="user-profile-header">
-
     <div class="profile-click-area" (click)="toggleProfileDropdown()"
         [class.dropdown-open]="isProfileDropdownOpen">
-
       <img src="assets/profile-avatar.png" alt="Profile Avatar"
           class="profile-avatar-img">
       <div class="profile-info">
@@ -12,43 +10,33 @@
         <span class="profile-dropdown-arrow">▿</span>
       </div>
     </div>
-
-    <img src="assets/notification.png" alt="Notifications"
-        class="notification-icon-img">
-  </div>
-
-  <div class="search-area">
-    <div class="search-input-container">
-      <img src="assets/search-icon.png" alt="Search Icon" class="search-icon">
-      <input type="text" placeholder="Search Item" class="search-input">
+    <div class="notification-click-area">
+      <img src="assets/notification.png" alt="Notifications"
+         class="notification-icon-img">
     </div>
   </div>
 
-  <div class="nav-section general-nav">
-    @for (item of generalNav; track item.label) {
+  <div class="nav-section main-nav">
+    @for (item of mainNav; track item.label) {
     <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
       <img [src]="item.iconPath" alt="{{ item.label }} Icon" class="nav-icon">
       <div class="nav-label">{{ item.label }}</div>
     </a>
     }
-    <hr class="nav-divider">
   </div>
 
-  <div class="nav-section reporting-nav">
-    @for (item of reportingNav; track item.label) {
-    <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
-      <img [src]="item.iconPath" alt="{{ item.label }} Icon" class="nav-icon">
-      <div class="nav-label">{{ item.label }}</div>
-    </a>
-    }
-    <hr class="nav-divider">
-  </div>
+  <div class="nav-divider-mock"></div>
 
   <div class="nav-section tracking-nav">
 
     <div class="section-header" (click)="toggleTracking()"
         [attr.aria-expanded]="isTrackingOpen">
-      <div class="section-title">Tracking</div>
+
+      <a [routerLink]="profileRoute" class="section-title-link"
+          (click)="$event.stopPropagation()">
+        Tracking
+      </a>
+
       <div class="toggle-icon">▼</div>
     </div>
 
@@ -57,8 +45,8 @@
       @for (item of trackingNav; track item.label) {
       <a [routerLink]="item.route" routerLinkActive="active"
           class="nav-item tracking-item">
-        <img [src]="item.iconPath" alt="{{ item.label }} Icon"
-            class="nav-icon">
+        <img src="assets/tracking-item.png" alt="{{ item.label }} Icon"
+            class="nav-icon tracking-icon-sm">
         <div class="nav-label">{{ item.label }}</div>
       </a>
       }
@@ -66,7 +54,7 @@
     }
   </div>
 
-  <div class="about-us-link">
-    <a [routerLink]="aboutUsRoute">About Us</a>
+  <div class="help-link">
+    <a [routerLink]="">Help & Support</a>
   </div>
 </div>
