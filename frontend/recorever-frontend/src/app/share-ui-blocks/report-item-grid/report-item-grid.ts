@@ -1,16 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReportItemCard } from './report-item-card/report-item-card';
-
-type ReportItem = {
-  id: string | number;
-  userInitials: string;
-  userName: string;
-  postDate: string;
-  title: string;
-  location: string;
-  description: string;
-};
+import { ReportItem } from '../../models/item-model';
 
 @Component({
   selector: 'app-report-item-grid',
