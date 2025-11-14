@@ -4,6 +4,7 @@ import { RegisterFormComponent } from './register-form/register-form';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth-service';
 import { RegisterRequest } from '../../../models/auth-model';
+import { AppRoutePaths } from '../../../app.routes';
 
 @Component({
   selector: 'app-register-page',
@@ -26,10 +27,19 @@ export class RegisterPage {
 
     this.authService.register(request).subscribe({
       next: (response) => {
-        this.isLoading = false;
-        console.log('Registration Success:', response);
+        this.authService.login(request).subscribe({
+          next: () => {
+            this.isLoading = false;
+            console.log('Registration Success:', response);
 
-        this.router.navigate(['/login'], { queryParams: { registered: true } });
+            this.router.navigate([AppRoutePaths.PROFILE], { queryParams: { registered: true } });
+          },
+          error: (loginError) => {
+            this.isLoading = false;
+            console.error('Login after registration failed:', loginError);
+            this.router.navigate(['/login'], { queryParams: { registered: true, loginError: true } });
+          }
+        });
       },
       error: (error) => {
         this.isLoading = false;
