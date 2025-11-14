@@ -31,11 +31,17 @@ public class NotificationRepository {
         jdbcTemplate.update(sql, userId, reportId, message);
         
         return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
-    }   
+    }
 
-    public List<Notification> getNotificationsByUserId(int userId) {
-        String sql = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC";
-        return jdbcTemplate.query(sql, notificationMapper, userId);
+    public List<Notification> getNotificationsByUserId(int userId, int limit, int offset) {
+        String sql = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, notificationMapper, userId, limit, offset);
+    }
+
+    public int countNotificationsByUserId(int userId) {
+        String sql = "SELECT COUNT(*) FROM notifications WHERE user_id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
+        return (count != null) ? count : 0;
     }
 
     public boolean markAsRead(int notifId) {

@@ -19,12 +19,17 @@ public class NotificationController {
     private NotificationService service;
 
     @GetMapping("/notifications")
-    public ResponseEntity<List<Notification>> listNotifications(Authentication authentication) {
+    public ResponseEntity<Map<String, Object>> listNotifications(
+        Authentication authentication,
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();
+
+        Map<String, Object> paginatedResponse = service.listByUserId(userId, page, size);
         
-        List<Notification> notifications = service.listByUserId(userId);
-        return ResponseEntity.ok(notifications);
+        return ResponseEntity.ok(paginatedResponse);
     }
 
     @PutMapping("/notifications/{id}/read")
