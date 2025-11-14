@@ -1,30 +1,41 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReportItem } from '../../../models/item-model';
+import { Component, Input, computed } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import type { Report } from '../../../models/item-model';
+import {
+  StatusBadge,
+  ItemStatus,
+} from '../../status-badge/status-badge';
 
 @Component({
   selector: 'app-report-item-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, StatusBadge, DatePipe],
   templateUrl: './report-item-card.html',
   styleUrl: './report-item-card.scss',
 })
-
 export class ReportItemCard {
+  @Input({ required: true }) report!: Report;
 
-  @Input() item: ReportItem = {
-    userInitials: 'A',
-    userName: 'User Name',
-    postDate: 'Date',
-    title: 'Title',
-    location: 'Location',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit,' +
-        ' sed do eiusmod tempor',
-  };
 
-  @Output() ticketClicked = new EventEmitter<void>();
+  displayStatus = computed<ItemStatus>(() => {
+    switch (this.report.status) {
+      case 'pending':
+        return 'Pending';
+      case 'claimed':
+        return 'Claimed';
+      case 'approved':
+      case 'matched':
+        return 'Verified';
+      default:
+        return 'Pending';
+    }
+  });
+
+  // TODO: Implement user fetching to display name
+  // For now, userInitials and userName are hardcoded.
 
   onTicketClick(): void {
-    this.ticketClicked.emit();
+    // TODO: Implement ticket/claim logic
+    console.log('Ticket clicked for report:', this.report.report_id);
   }
 }
