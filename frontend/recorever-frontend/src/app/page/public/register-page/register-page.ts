@@ -32,12 +32,15 @@ export class RegisterPage {
             this.isLoading = false;
             console.log('Registration Success:', response);
 
-            this.router.navigate([AppRoutePaths.PROFILE], { queryParams: { registered: true } });
+            this.router.navigate([AppRoutePaths.PROFILE], { queryParams: {
+                 registered: true } });
           },
           error: (loginError) => {
             this.isLoading = false;
             console.error('Login after registration failed:', loginError);
-            this.router.navigate(['/login'], { queryParams: { registered: true, loginError: true } });
+
+            this.router.navigate(['/login'], { queryParams: {
+                  registered: true, loginError: true } });
           }
         });
       },
@@ -48,7 +51,8 @@ export class RegisterPage {
         if (error.error && error.error.error) {
           this.errorMessage = error.error.error;
         } else {
-          this.errorMessage = 'Registration failed. Check your connection or data.';
+          this.errorMessage = 'Registration failed.',
+              'Check your connection or data.';
         }
       },
     });
