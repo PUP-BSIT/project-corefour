@@ -23,8 +23,21 @@ public class NotificationService {
         );
     }
 
-    public List<Notification> listByUserId(int userId) {
-        return repo.getNotificationsByUserId(userId);
+    public Map<String, Object> listByUserId(int userId, int page, int size) {
+        int offset = (page - 1) * size;
+
+        List<Notification> notifications = repo.getNotificationsByUserId(userId, size, offset);
+
+        int totalItems = repo.countNotificationsByUserId(userId);
+
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+
+        return Map.of(
+            "items", notifications,
+            "currentPage", page,
+            "totalPages", totalPages,
+            "totalItems", totalItems
+        );
     }
 
     public boolean markAsRead(int notifId) {
