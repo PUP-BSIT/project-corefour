@@ -1,1 +1,57 @@
-<p>report-found-page works!</p>
+<div class="found-page">
+  <header class="found-page__header">
+    <h1 class="found-page__title">Found Items</h1>
+
+    <div class="found-page__search-wrapper">
+      <app-search-bar (search)="onSearchSubmit($event)"></app-search-bar>
+    </div>
+
+    <div class="found-page__report-wrapper">
+      <app-report-button theme="found"></app-report-button>
+    </div>
+  </header>
+
+  <nav class="filters">
+    <button
+      type="button"
+      class="filters__button"
+      [class.filters__button--active]="activeFilter() === 'all'"
+      (click)="selectFilter('all')"
+    >
+      All
+    </button>
+
+    <button
+      type="button"
+      class="filters__button"
+      [class.filters__button--active]="activeFilter() === 'az'"
+      (click)="selectFilter('az')"
+    >
+      A-Z ↑
+    </button>
+
+    <button
+      type="button"
+      class="filters__button filters__button--dropdown-label"
+      [class.filters__button--active]="activeFilter() === 'date'"
+      (click)="selectFilter('date')"
+    >
+      <span>Date Found</span>
+      <span class="filters__dropdown-arrow">↓</span>
+    </button>
+
+    <button
+      type="button"
+      class="filters__button filters__button--dropdown-label"
+      [class.filters__button--active]="activeFilter() === 'location'"
+      (click)="selectFilter('location')"
+    >
+      <span>Location Found</span>
+      <span class="filters__dropdown-arrow">↓</span>
+    </button>
+  </nav>
+
+  <div class="found-page__content-placeholder">
+    <p>Found items will be displayed here.</p>
+  </div>
+</div>
