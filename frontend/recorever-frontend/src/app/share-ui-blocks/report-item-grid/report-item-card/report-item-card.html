@@ -1,38 +1,40 @@
 <div class="item-card">
-
   <div class="card-header">
-    <div class="avatar">{{ item.userInitials }}</div>
+    <div class="avatar">FN</div>
     <div class="info-text">
-      <h4 class="item-name">{{ item.userName }}</h4>
-      <p class="post-date">{{ item.postDate }}</p>
+      <h4 class="item-name">Finder</h4>
+      <p class="post-date">{{ report.date_reported | date: 'mediumDate' }}</p>
     </div>
   </div>
 
   <div class="item-image-area">
     <div class="arrow left-arrow">
-      <img src="assets/arrow-left.png" alt="Previous" class="arrow-icon">
+      <img src="assets/arrow-left.png" alt="Previous" class="arrow-icon" />
     </div>
 
-    <img src="assets/temp-photo-item.png" alt="Item Placeholder Image" class="main-item-photo">
+    <!-- TODO: Implement image fetching -->
+    <img
+      src="assets/temp-photo-item.png"
+      alt="Item Placeholder Image"
+      class="main-item-photo"
+    />
 
     <div class="arrow right-arrow">
-      <img src="assets/arrow-right.png" alt="Next" class="arrow-icon">
+      <img src="assets/arrow-right.png" alt="Next" class="arrow-icon" />
     </div>
   </div>
 
   <div class="card-body">
-    <h3 class="item-title">{{ item.title }}</h3>
-    <p class="item-location">{{ item.location }}</p>
-
+    <h3 class="item-title">{{ report.item_name }}</h3>
+    <p class="item-location">{{ report.location }}</p>
     <p class="item-description">
-      {{ item.description }}
+      {{ report.description }}
     </p>
 
     <div class="card-footer-actions">
-      <span class="verified-label"></span>
-      <button class="ticket-btn" (click)="onTicketClick()">
-        Ticket
-      </button>
+      <app-status-badge [status]="displayStatus()"></app-status-badge>
+
+      <button class="ticket-btn" (click)="onTicketClick()">Ticket</button>
     </div>
   </div>
 </div>
