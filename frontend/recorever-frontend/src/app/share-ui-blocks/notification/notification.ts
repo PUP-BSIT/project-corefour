@@ -1,11 +1,123 @@
-import { Component } from '@angular/core';
+import { Component,
+          inject,
+          OnDestroy,
+          OnInit,
+          ChangeDetectorRef
+} from '@angular/core';
+import { Router } from '@angular/router';
+import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
+import { NotificationService } from '../../core/services/notification-service';
+import type { UserNotification } from '../../models/notification-model';
+import { AppRoutePaths } from '../../app.routes';
+import { Subscription, tap, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-notification',
-  imports: [],
+  standalone: true,
+  imports: [TimeAgoPipe],
   templateUrl: './notification.html',
   styleUrl: './notification.scss',
 })
-export class Notification {
+export class Notification implements OnInit, OnDestroy {
+  private notificationService = inject(NotificationService);
+  private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
+  notifications: UserNotification[] = [];
+  currentPage = 1;
+  totalPages = 1;
+  isLoading = false;
+  isDropdownOpen = false;
+
+  hasUnreadNotifications = false;
+  private pollingInterval: any;
+  private notificationSub!: Subscription;
+
+  ngOnInit(): void {
+    this.loadPage(1);
+    this.pollingInterval = setInterval(() => {
+      if (!this.isDropdownOpen) {
+        this.loadPage(1, true);
+      }
+    }, 30000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
+    if (this.notificationSub) {
+      this.notificationSub.unsubscribe();
+    }
+  }
+
+  loadPage(page: number, silentLoad = false): void {
+    if (this.isLoading && !silentLoad) return;
+
+    if (this.isLoading) return;
+
+    if (!silentLoad) {
+      this.isLoading = true;
+    }
+
+    if (this.notificationSub) {
+      this.notificationSub.unsubscribe();
+    }
+
+    this.notificationSub = this.notificationService
+      .getNotifications(page, 5)
+      .pipe(
+        tap((response) => {
+          if (page === 1) {
+            this.notifications = response.items;
+          } else {
+            this.notifications = [...this.notifications, ...response.items];
+          }
+
+          this.currentPage = response.currentPage;
+          this.totalPages = response.totalPages;
+          this.hasUnreadNotifications = this.notifications.some(
+            (notif) => notif.status === 'unread'
+          );
+
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
+        catchError((err) => {
+          console.error('Failed to load notifications', err);
+          this.isLoading = false;
+          this.cdr.markForCheck();
+          return of(null);
+        })
+      )
+      .subscribe();
+  }
+
+  toggleDropdown(): void {
+    this.isDropdownOpen = !this.isDropdownOpen;
+    if (this.isDropdownOpen) {
+      this.currentPage = 1;
+      this.loadPage(1);
+    }
+  }
+
+  onViewMore(): void {
+    this.loadPage(this.currentPage + 1);
+  }
+
+  onNotificationClick(notification: UserNotification): void {
+    if (notification.status === 'unread') {
+      this.notificationService.markAsRead(notification.notif_id).subscribe({
+        next: () => {
+          this.loadPage(1); 
+        },
+        error: (err) => {
+          console.error('Failed to mark notification as read', err);
+        }
+      });
+    }
+    // TODO(Florido, Maydelyn): Add navigation logic when the viewing
+    //                          notification feature is implemented.
+    this.isDropdownOpen = false;
+  }
 }

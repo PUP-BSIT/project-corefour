@@ -1,0 +1,17 @@
+.item-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding: 10px 0;
+
+  app-report-item-card {
+    display: block;
+  }
+
+  .empty-message {
+    grid-column: 1 / -1;
+    padding: 40px;
+    color: #777;
+    font-style: italic;
+  }
+}

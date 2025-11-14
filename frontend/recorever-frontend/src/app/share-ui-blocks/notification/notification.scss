@@ -1,0 +1,142 @@
+.notification-wrapper {
+  position: relative;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  
+  &:hover {
+    background-color: #f3f4f6;
+  }
+  img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.notification-dot {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 9px;
+  height: 9px;
+  background-color: #111827;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  width: 320px;
+  max-height: 400px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  border: 1px solid #e5e7eb;
+}
+
+.dropdown-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+  }
+}
+
+.dropdown-list {
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+.notification-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background-color: #f9fafb;
+  }
+  
+  .message {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.4;
+
+    &.unread {
+      color: #374151;
+      font-weight: 600;
+
+      ::ng-deep b, ::ng-deep strong {
+        color: #111827;
+      }
+    }
+  }
+  
+  .date {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.dropdown-footer {
+  padding: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+  background-color: #f9fafb;
+
+  .view-more-btn {
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    width: 100%;
+    
+    &:hover {
+      background-color: #e5e7eb;
+    }
+  }
+
+  .loading-spinner {
+    padding: 0.5rem;
+    font-style: italic;
+    color: #6b7280;
+    text-align: center;
+  }
+}

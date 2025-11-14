@@ -1,3 +1,5 @@
+@use "sass:color";
+
 $sidebar-width: 250px;
 $primary-text: #333;
 $secondary-text: #777777;
@@ -76,7 +78,7 @@ $search-bg: #e6e6e6;
         }
 
         &:active {
-          background-color: darken($active-bg, 5%);
+          background-color: color.adjust($active-bg, $lightness: -5%);
         }
       }
 
