@@ -13,6 +13,7 @@ import { ReportItem } from '../../../models/item-model';
 export class ReportItemCard {
 
   @Input() item: ReportItem = {
+    id: 0,
     userInitials: 'A',
     userName: 'User Name',
     postDate: 'Date',

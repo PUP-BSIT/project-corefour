@@ -1,3 +1,5 @@
+@use "sass:color";
+
 $primary-purple: #5d50d0;
 $light-grey-bg: #f5f5f5;
 $border-color: #eee;
@@ -147,7 +149,7 @@ $secondary-text: #666;
       transition: background-color 0.15s ease;
 
       &:hover {
-        background-color: darken($primary-purple, 5%);
+        background-color: color.adjust($primary-purple, $lightness: -5%);
       }
     }
   }
