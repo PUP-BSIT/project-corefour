@@ -34,6 +34,7 @@ export const AppRoutePaths = {
   LOST_ITEMS: '/app/lost-items',
   FOUND_ITEMS: '/app/found-items',
   PROFILE: '/app/profile',
+  ABOUT_US: '/app/about-us',
 };
 
 export const routes: Routes = [
@@ -75,15 +76,15 @@ export const routes: Routes = [
   },
 
   {
-    path: 'admin', 
-    component: AdminLayout, 
+    path: 'admin',
+    component: AdminLayout,
     canActivate: [authGuard, adminGuard],
     children: [
       { path: 'dashboard', component: AdminDashboardPage },
       { path: 'manage-items', component: ManageItemsPage },
       { path: 'lost-items', component: AdminItemListPage, data: { itemType: 'lost' } },
       { path: 'found-items', component: AdminItemListPage, data: { itemType: 'found' } },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }, 
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
 ];
