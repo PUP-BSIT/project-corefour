@@ -15,8 +15,7 @@ $search-bg: #e6e6e6;
   padding: 10px 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
+  position: relative;
 
   .user-profile-header {
     display: flex;
