@@ -12,3 +12,10 @@ export type NavItem = {
   route: string;
   iconPath: string;
 };
+
+export type ProfileNavItem = {
+  label: string;
+  iconPath: string;
+  action: 'navigate' | 'emit' | 'addAccount' | 'logout';
+  route?: string;
+};

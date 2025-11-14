@@ -5,11 +5,16 @@ $primary-text: #333;
 $secondary-text: #777777;
 $active-bg: #f0f0f0;
 $border-color: #e0e0e0;
-$search-bg: #e6e6e6;
+
+$dropdown-bg: #333;
+$dropdown-text: #fff;
+$dropdown-separator: #555;
+$dropdown-hover: lighten($dropdown-bg, 10%);
+
 
 .user-side-bar {
   width: $sidebar-width;
-  height: 100vh;
+  height: 95vh;
   background-color: white;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
   padding: 10px 0;
@@ -23,6 +28,8 @@ $search-bg: #e6e6e6;
     padding: 15px 15px;
     margin-bottom: 10px;
     border-bottom: 1px solid $border-color;
+    position: relative;
+    overflow: visible;
 
     .profile-click-area {
       display: flex;
@@ -65,29 +72,96 @@ $search-bg: #e6e6e6;
       }
     }
 
-      .notification-click-area {
-        cursor: pointer;
-        padding: 8px;
-        margin: -8px;
-        border-radius: 50%;
-        transition: background-color 0.1s ease;
+    .notification-click-area {
+      cursor: pointer;
+      padding: 8px;
+      margin: -8px;
+      border-radius: 50%;
+      transition: background-color 0.1s ease;
 
-        &:hover {
-          background-color: $active-bg;
-        }
-
-        &:active {
-          background-color: color.adjust($active-bg, $lightness: -5%);
-        }
+      &:hover {
+        background-color: $active-bg;
       }
 
-      .notification-icon-img {
-        width: 20px;
-        height: 20px;
+      &:active {
+        background-color: color.adjust($active-bg, $lightness: -5%);
       }
+    }
+
+    .notification-icon-img {
+      width: 20px;
+      height: 20px;
+    }
 
     .profile-click-area.dropdown-open .profile-dropdown-arrow {
       transform: rotate(180deg);
+    }
+
+    .profile-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 15px;
+      width: 350px;
+      left: -5px;
+      background-color: $dropdown-bg;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      padding: 10px 0;
+      margin-top: 5px;
+      color: $dropdown-text;
+
+      .dropdown-user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid $dropdown-separator;
+
+        .dropdown-avatar-img {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          margin-bottom: 5px;
+        }
+
+        .dropdown-name {
+          font-weight: bold;
+          font-size: 16px;
+        }
+
+        .dropdown-email {
+          font-size: 12px;
+          color: lighten($dropdown-text, 20%);
+        }
+      }
+
+      .dropdown-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        cursor: pointer;
+        text-decoration: none;
+        color: $dropdown-text;
+        transition: background-color 0.1s ease;
+
+        &:hover {
+          background-color: $dropdown-hover;
+        }
+
+        .dropdown-item-icon {
+          width: 20px;
+          height: 20px;
+          margin-right: 10px;
+        }
+      }
+
+      .dropdown-divider {
+        height: 1px;
+        background-color: $dropdown-separator;
+        margin: 5px 0;
+      }
     }
   }
 
