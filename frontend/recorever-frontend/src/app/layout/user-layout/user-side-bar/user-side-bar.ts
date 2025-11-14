@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NavItem } from '../../../models/user-model';
 import { AppRoutePaths } from '../../../app.routes';
+import { Notification } from '../../../share-ui-blocks/notification/notification';
 
 
 @Component({
   selector: 'app-user-side-bar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, Notification],
   templateUrl: './user-side-bar.html',
   styleUrl: './user-side-bar.scss',
 })
