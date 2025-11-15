@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReportItemCard } from './report-item-card/report-item-card';
-import { ReportItem } from '../../models/item-model';
+import { Report } from '../../models/item-model';
 
 @Component({
   selector: 'app-report-item-grid',
@@ -12,11 +12,11 @@ import { ReportItem } from '../../models/item-model';
 })
 export class ReportItemGrid {
 
-  @Input() items: ReportItem[] = [];
+  @Input() items: Report[] = [];
 
-  @Output() cardTicketClicked = new EventEmitter<ReportItem>();
+  @Output() cardTicketClicked = new EventEmitter<Report>();
 
-  handleTicketClick(itemData: ReportItem): void {
+  handleTicketClick(itemData: Report): void {
     this.cardTicketClicked.emit(itemData);
   }
 }
