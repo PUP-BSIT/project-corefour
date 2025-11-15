@@ -1,10 +1,12 @@
-<div class="user-layout-container">
+<div class="main-viewport-container">
+  <app-header />
+  <div class="user-layout-container">
+    <aside class="sidebar-area">
+      <app-user-side-bar />
+    </aside>
 
-  <aside class="sidebar-area">
-    <app-user-side-bar />
-  </aside>
-
-  <main class="content-area">
-    <router-outlet />
-  </main>
+    <main class="content-area">
+      <router-outlet />
+    </main>
+  </div>
 </div>
