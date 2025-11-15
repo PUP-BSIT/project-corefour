@@ -9,7 +9,7 @@ import {
 @Component({
   selector: 'app-report-item-card',
   standalone: true,
-  imports: [CommonModule, StatusBadge, DatePipe],
+  imports: [CommonModule, DatePipe],
   templateUrl: './report-item-card.html',
   styleUrl: './report-item-card.scss',
 })
