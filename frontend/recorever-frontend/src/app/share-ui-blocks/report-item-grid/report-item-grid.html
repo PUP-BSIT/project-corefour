@@ -1,8 +1,8 @@
 <div class="item-grid-container">
 
-  @for (item of items; track item.id) {
-  <app-report-item-card [item]="item"
-      (ticketClicked)="handleTicketClick(item)"/>
+  @for (item of items; track item.report_id) {
+  <app-report-item-card [report]="item"
+      (ticketClicked)="handleTicketClick(item)" />
   } @empty {
   <p class="empty-message">No items found matching the current filter.</p>
   }

@@ -9,18 +9,19 @@ $border-color: #e0e0e0;
 $dropdown-bg: #333;
 $dropdown-text: #fff;
 $dropdown-separator: #555;
-$dropdown-hover: lighten($dropdown-bg, 10%);
+$dropdown-hover: color.adjust($dropdown-bg, $lightness: 10%);
 
 
 .user-side-bar {
   width: $sidebar-width;
-  height: 95vh;
+  height: 90vh;
   background-color: white;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
   padding: 10px 0;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: visible;
 
   .user-profile-header {
     display: flex;
@@ -133,7 +134,7 @@ $dropdown-hover: lighten($dropdown-bg, 10%);
 
         .dropdown-email {
           font-size: 12px;
-          color: lighten($dropdown-text, 20%);
+          color: color.adjust($dropdown-text, $lightness: 20%);
         }
       }
 
