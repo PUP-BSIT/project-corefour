@@ -44,22 +44,19 @@
   <div class="profile-page__tabs">
     <button type="button" 
             class="profile-page__tab-btn"
-            [class.profile-page__tab-btn--active]="(activeTab$ | async) 
-                    === 'all'"
+            [class.profile-page__tab-btn--active]="(activeTab$ | async) === 'all'"
             (click)="setActiveTab('all')">
       All
     </button>
     <button type="button" 
             class="profile-page__tab-btn"
-            [class.profile-page__tab-btn--active]="(activeTab$ | async) 
-                    === 'found'"
+            [class.profile-page__tab-btn--active]="(activeTab$ | async) === 'found'"
             (click)="setActiveTab('found')">
       Found
     </button>
     <button type="button" 
             class="profile-page__tab-btn"
-            [class.profile-page__tab-btn--active]="(activeTab$ | async) 
-                    === 'lost'"
+            [class.profile-page__tab-btn--active]="(activeTab$ | async) === 'lost'"
             (click)="setActiveTab('lost')">
       Lost
     </button>
@@ -68,10 +65,10 @@
   <div class="profile-page__content">
     @if (displayedItems$ | async; as items) {
       <app-report-item-grid 
-        [items]="items"
-        [currentUserId]="(currentUser$ | async)?.user_id ?? null"
-        (cardDeleteClicked)="onDeleteItem($any($event))"
-        (cardEditClicked)="onEditItem($any($event))">
+          [items]="items"
+          [currentUserId]="(currentUser$ | async)?.user_id ?? null"
+          (cardDeleteClicked)="onDeleteItem($any($event))"
+          (cardEditClicked)="onEditItem($any($event))">
       </app-report-item-grid>
 
       @if (items.length === 0) {

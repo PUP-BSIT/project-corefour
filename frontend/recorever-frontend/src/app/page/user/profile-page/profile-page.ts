@@ -66,12 +66,12 @@ export class ProfilePage implements OnInit {
           return this.itemService.getReports({ type: tab });
         }
       }),
-      switchMap(reports =>
+      switchMap(reports => 
         combineLatest([of(reports), this.currentUser$])
       ),
       map(([reports, user]) => {
         if (!user) return [];
-        return reports.filter(report => report.user_id === user.user_id);
+        return reports.filter(r => r.user_id === user.user_id);
       })
     );
   }
@@ -82,16 +82,15 @@ export class ProfilePage implements OnInit {
 
   handleSaveProfile(event: { user: User, file: File | null }): void {
     const { user, file } = event;
-
+    
     this.userService.updateProfile(user, file).subscribe({
-      next: (updatedUser: User) => {
-        console.log('Profile Updated:', updatedUser);
+      next: () => {
         this.showEditModal = false;
-        this.refreshUser$.next();
+        this.refreshUser$.next(); 
       },
       error: (err: unknown) => {
         console.error('Update failed', err);
-        this.showEditModal = false;
+        this.showEditModal = false; 
       }
     });
   }
