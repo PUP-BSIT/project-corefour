@@ -1,1 +1,84 @@
-<p>profile-page works!</p>
+<div class="profile-page">
+  <div class="profile-page__header">
+    @if (currentUser$ | async; as user) {
+      <div class="card-container">
+        <div class="profile-content">
+          
+          <div class="avatar-wrapper">
+            <div class="avatar-circle">
+              <img [src]="user.profile_picture || 'assets/profile-avatar.png'" 
+                   alt="Profile Avatar" 
+                   class="avatar-img">
+            </div>
+          </div>
+    
+          <div class="info-wrapper">
+            <h2 class="user-name">{{ user.name }}</h2>
+            
+            <div class="details">
+              <p class="user-detail email">{{ user.email }}</p>
+              <p class="user-detail phone">{{ user.phone_number }}</p>
+            </div>
+          </div>
+        </div>
+    
+        <div class="action-buttons">
+          <button type="button" 
+                  class="edit-btn"
+                  (click)="showEditModal = true">
+            Edit Profile
+          </button>
+        </div>
+      </div>
+
+      @if (showEditModal) {
+        <app-edit-profile-modal 
+            [user]="user" 
+            (close)="showEditModal = false"
+            (save)="handleSaveProfile($any($event))">
+        </app-edit-profile-modal>
+      }
+    }
+  </div>
+
+  <div class="profile-page__tabs">
+    <button type="button" 
+            class="profile-page__tab-btn"
+            [class.profile-page__tab-btn--active]="(activeTab$ | async) 
+                    === 'all'"
+            (click)="setActiveTab('all')">
+      All
+    </button>
+    <button type="button" 
+            class="profile-page__tab-btn"
+            [class.profile-page__tab-btn--active]="(activeTab$ | async) 
+                    === 'found'"
+            (click)="setActiveTab('found')">
+      Found
+    </button>
+    <button type="button" 
+            class="profile-page__tab-btn"
+            [class.profile-page__tab-btn--active]="(activeTab$ | async) 
+                    === 'lost'"
+            (click)="setActiveTab('lost')">
+      Lost
+    </button>
+  </div>
+
+  <div class="profile-page__content">
+    @if (displayedItems$ | async; as items) {
+      <app-report-item-grid 
+        [items]="items"
+        [currentUserId]="(currentUser$ | async)?.user_id ?? null"
+        (cardDeleteClicked)="onDeleteItem($any($event))"
+        (cardEditClicked)="onEditItem($any($event))">
+      </app-report-item-grid>
+
+      @if (items.length === 0) {
+        <div class="profile-page__empty">
+          <p>No items found.</p>
+        </div>
+      }
+    }
+  </div>
+</div>
