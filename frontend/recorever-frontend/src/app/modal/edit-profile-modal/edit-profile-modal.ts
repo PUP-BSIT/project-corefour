@@ -4,7 +4,9 @@ import {
   Input, 
   OnInit, 
   Output, 
-  inject 
+  inject,
+  ViewChild,
+  ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { 
@@ -29,6 +31,8 @@ export class EditProfileModal implements OnInit {
   @Output() close = new EventEmitter<void>();
   
   @Output() save = new EventEmitter<{ user: User, file: File | null }>();
+
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   editForm!: FormGroup;
   isSubmitting = false;
@@ -85,10 +89,6 @@ export class EditProfileModal implements OnInit {
   }
 
   triggerFileInput(): void {
-    const fileInput =
-            document.getElementById('avatar-upload') as HTMLInputElement;
-    if (fileInput) {
-        fileInput.click();
-    }
+    this.fileInput.nativeElement.click();
   }
 }
