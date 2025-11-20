@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://api.recorever.com'
+  apiUrl: 'https://recorever.site/api' 
 };
