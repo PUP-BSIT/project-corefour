@@ -84,9 +84,27 @@ public class UserRepository {
         }
     }
 
-    public boolean updateUser(int id, String name, String phone, String picture) {
-        String sql = "UPDATE users SET name=?, phone_number=?, profile_picture=? WHERE user_id=? AND is_deleted = 0";
-        return jdbcTemplate.update(sql, name, phone, picture, id) > 0;
+    public boolean isNameTaken(String name, int currentUserId) {
+        String sql = "SELECT COUNT(*) FROM users WHERE name = ? AND user_id != ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, name, currentUserId);
+        return count != null && count > 0;
+    }
+
+    public boolean isPhoneNumberTaken(String phoneNumber, int currentUserId) {
+        String sql = "SELECT COUNT(*) FROM users WHERE phone_number = ? AND user_id != ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, phoneNumber, currentUserId);
+        return count != null && count > 0;
+    }
+    
+    public boolean isEmailTaken(String email, int currentUserId) {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ? AND user_id != ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email, currentUserId);
+        return count != null && count > 0;
+    }
+
+    public boolean updateUser(int id, String name, String phone, String email, String picture) {
+        String sql = "UPDATE users SET name=?, phone_number=?, email = ?, profile_picture=? WHERE user_id=? AND is_deleted = 0";
+        return jdbcTemplate.update(sql, name, phone, email, picture, id) > 0;
     }
 
     public boolean deleteUser(int id) {

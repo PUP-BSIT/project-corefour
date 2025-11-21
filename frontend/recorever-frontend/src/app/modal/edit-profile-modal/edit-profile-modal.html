@@ -42,9 +42,13 @@
                  formControlName="name"
                  placeholder="name">
 
-          @if (editForm.get('name')?.hasError('required') &&
-               editForm.get('name')?.touched) {
-            <small class="error-text">Name is required.</small>
+          @if (editForm.get('name')?.touched || editForm.get('name')?.dirty) {
+            @if (editForm.get('name')?.hasError('required')) {
+              <small class="error-text">Name is required.</small>
+            }
+            @if (editForm.get('name')?.hasError('notUnique')) {
+              <small class="error-text">This name is already taken.</small>
+            }
           }
         </div>
 
@@ -57,17 +61,21 @@
                  maxlength="11"
                  (input)="onPhoneInput($event)">
 
-          @if (editForm.get('phone_number')?.hasError('required') &&
-               editForm.get('phone_number')?.touched) {
-            <small class="error-text">Phone number is required.</small>
-          }
-          
-          @if (editForm.get('phone_number')?.hasError('invalidPhNumber') &&
-               (editForm.get('phone_number')?.touched || 
-                editForm.get('phone_number')?.dirty)) {
-            <small class="error-text">
-              Must start with 09 and contain exactly 11 digits.
-            </small>
+          @if (editForm.get('phone_number')?.touched ||
+              editForm.get('phone_number')?.dirty) {
+            @if (editForm.get('phone_number')?.hasError('required')) {
+              <small class="error-text">Phone number is required.</small>
+            }
+            @if (editForm.get('phone_number')?.hasError('invalidPhNumber')) {
+              <small class="error-text">
+                Must start with 09 and contain exactly 11 digits.
+              </small>
+            }
+            @if (editForm.get('phone_number')?.hasError('notUnique')) {
+              <small class="error-text">
+                This phone number is already in use.
+              </small>
+            }
           }
         </div>
 
@@ -78,9 +86,19 @@
                  formControlName="email"
                  placeholder="example@gmail.com">
 
-          @if (editForm.get('email')?.invalid &&
-               editForm.get('email')?.touched) {
-            <small class="error-text">Valid email is required.</small>
+          @if (editForm.get('email')?.touched ||
+              editForm.get('email')?.dirty) {
+            @if (editForm.get('email')?.hasError('required')) {
+              <small class="error-text">Email is required.</small>
+            }
+            @if (editForm.get('email')?.hasError('email')) {
+              <small class="error-text">
+                Please enter a valid email address.
+              </small>
+            }
+            @if (editForm.get('email')?.hasError('notUnique')) {
+              <small class="error-text">This email is already in use.</small>
+            }
           }
         </div>
 
@@ -89,10 +107,11 @@
                   class="btn btn-save"
                   [disabled]="editForm.invalid || 
                               (editForm.pristine && !selectedFile) || 
-                              isSubmitting"
+                              isSubmitting ||
+                              editForm.pending" 
                   (click)="onSave()">
-            @if (isSubmitting) {
-              Saving...
+            @if (isSubmitting || editForm.pending) {
+              Checking...
             } @else {
               Save
             }
