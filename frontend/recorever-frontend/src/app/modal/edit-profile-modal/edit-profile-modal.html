@@ -1,42 +1,48 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-container" (click)="$event.stopPropagation()">
-    
+
     <div class="modal-content">
       <div class="avatar-section">
         <div class="avatar-wrapper">
           <div class="avatar-circle">
-             <img [src]="previewImage || 'assets/profile-avatar.png'" 
-                  alt="Profile Avatar" 
-                  class="avatar-img">
+            <img [src]="previewImage || 'assets/profile-avatar.png'"
+                 alt="Profile Avatar"
+                 class="avatar-img">
           </div>
-          
-          <button type="button" 
-                  class="edit-icon-btn" 
+
+          <button type="button"
+                  class="edit-icon-btn"
                   (click)="triggerFileInput()">
             <img src="assets/profile-edit.png" alt="Edit Avatar">
           </button>
-          
-          <input type="file" 
+
+          <input type="file"
                  #fileInput
-                 id="avatar-upload" 
-                 accept="image/*" 
+                 id="avatar-upload"
+                 accept="image/*"
                  class="hidden-input"
                  (change)="onFileSelected($event)">
         </div>
       </div>
 
-      <form [formGroup]="editForm" 
-            (ngSubmit)="onSave()" 
+      <form [formGroup]="editForm"
+            (ngSubmit)="onSave()"
             class="form-section">
-        
+
+        @if (localError) {
+          <div class="global-error-message">
+            {{ localError }}
+          </div>
+        }
+
         <div class="form-group">
           <label for="name">Name</label>
-          <input id="name" 
-                 type="text" 
-                 formControlName="name" 
-                 placeholder="Jane Dee">
-          
-          @if (editForm.get('name')?.invalid && 
+          <input id="name"
+                 type="text"
+                 formControlName="name"
+                 placeholder="name">
+
+          @if (editForm.get('name')?.hasError('required') &&
                editForm.get('name')?.touched) {
             <small class="error-text">Name is required.</small>
           }
@@ -44,40 +50,56 @@
 
         <div class="form-group">
           <label for="phone">Contact Number</label>
-          <input id="phone" 
-                 type="text" 
-                 formControlName="phone_number" 
-                 placeholder="09xxxxxxxxx">
-           
-           @if (editForm.get('phone_number')?.invalid && 
-                editForm.get('phone_number')?.touched) {
+          <input id="phone"
+                 type="text"
+                 formControlName="phone_number"
+                 placeholder="09xxxxxxxxx"
+                 maxlength="11"
+                 (input)="onPhoneInput($event)">
+
+          @if (editForm.get('phone_number')?.hasError('required') &&
+               editForm.get('phone_number')?.touched) {
             <small class="error-text">Phone number is required.</small>
+          }
+          
+          @if (editForm.get('phone_number')?.hasError('invalidPhNumber') &&
+               (editForm.get('phone_number')?.touched || 
+                editForm.get('phone_number')?.dirty)) {
+            <small class="error-text">
+              Must start with 09 and contain exactly 11 digits.
+            </small>
           }
         </div>
 
         <div class="form-group">
           <label for="email">Email</label>
-          <input id="email" 
-                 type="email" 
-                 formControlName="email" 
-                 placeholder="username@gmail.com">
-           
-           @if (editForm.get('email')?.invalid && 
-                editForm.get('email')?.touched) {
+          <input id="email"
+                 type="email"
+                 formControlName="email"
+                 placeholder="example@gmail.com">
+
+          @if (editForm.get('email')?.invalid &&
+               editForm.get('email')?.touched) {
             <small class="error-text">Valid email is required.</small>
           }
         </div>
 
         <div class="button-group">
-          <button type="button" 
-                  class="btn btn-save" 
-                  [disabled]="isSubmitting"
+          <button type="button"
+                  class="btn btn-save"
+                  [disabled]="editForm.invalid || 
+                              (editForm.pristine && !selectedFile) || 
+                              isSubmitting"
                   (click)="onSave()">
-            Save
+            @if (isSubmitting) {
+              Saving...
+            } @else {
+              Save
+            }
           </button>
-          
-          <button type="button" 
-                  class="btn btn-cancel" 
+
+          <button type="button"
+                  class="btn btn-cancel"
                   (click)="onCancel()">
             Cancel
           </button>

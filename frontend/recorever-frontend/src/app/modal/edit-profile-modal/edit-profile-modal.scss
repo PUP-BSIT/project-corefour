@@ -37,7 +37,7 @@
 
     .avatar-section {
       flex-shrink: 0;
-      
+
       .avatar-wrapper {
         position: relative;
         width: 110px;
@@ -79,14 +79,14 @@
             width: 16px;
             height: 16px;
           }
-          
+
           &:hover {
             background-color: #f0f0f0;
           }
         }
-        
+
         .hidden-input {
-            display: none;
+          display: none;
         }
       }
     }
@@ -97,6 +97,16 @@
       display: flex;
       flex-direction: column;
       gap: 15px;
+
+      .global-error-message {
+        color: #dc3545;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 10px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        text-align: center;
+      }
 
       .form-group {
         display: flex;
@@ -115,12 +125,18 @@
           border: 1px solid #b0b0b0;
           border-radius: 4px;
           font-size: 1rem;
-          color: #555;
+          color: #000000;
 
           &:focus {
             outline: none;
             border-color: #666;
           }
+        }
+
+        .error-text {
+          color: #dc3545;
+          font-size: 0.8rem;
+          margin-top: 2px;
         }
       }
 
@@ -138,14 +154,21 @@
           font-size: 1rem;
           cursor: pointer;
           color: #fff;
-          text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+          text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #ccc !important;
+            border-color: #bbb !important;
+          }
 
           &.btn-save {
             background-color: #4ce600;
             color: #fff;
             border-color: #3cb800;
-            
-            &:hover {
+
+            &:hover:not(:disabled) {
               background-color: #42c900;
             }
           }
