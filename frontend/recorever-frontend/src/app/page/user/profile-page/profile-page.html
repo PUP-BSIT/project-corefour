@@ -66,12 +66,30 @@
   </div>
 
   <div class="profile-page__content">
-    @if (displayedItems$ | async; as items) {
+    @if (isItemsLoading()) {
+       <div class="profile-page__empty">
+          <p>Loading items...</p>
+       </div>
+    } @else {
       <app-report-item-grid
-        [items]="items"
+        [items]="displayedItems()"
+        [currentUserId]="(currentUser$ | async)?.user_id ?? null"
         (cardDeleteClicked)="onDeleteItem($any($event))"
         (cardEditClicked)="onEditItem($any($event))">
       </app-report-item-grid>
+
+      @if (displayedItems().length === 0) {
+        <div class="profile-page__empty">
+          <p>No items found.</p>
+        </div>
+      }
     }
   </div>
+
+  @if (showDeleteModal) {
+    <app-delete-report-modal
+      (confirm)="confirmDelete()"
+      (cancel)="cancelDelete()">
+    </app-delete-report-modal>
+  }
 </div>
