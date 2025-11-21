@@ -1,23 +1,32 @@
-import { Component, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Output, EventEmitter, inject } from '@angular/core';
+import { CommonModule, AsyncPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
-import { NavItem, ProfileNavItem } from '../../../models/user-model';
+import { Observable } from 'rxjs';
+import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
 import { AppRoutePaths } from '../../../app.routes';
 import { Notification } from '../../../share-ui-blocks/notification/notification';
-
+import { AuthService } from '../../../core/auth/auth-service';
 
 @Component({
   selector: 'app-user-side-bar',
   standalone: true,
-  imports: [CommonModule, RouterModule, Notification],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    Notification,
+    AsyncPipe
+  ], 
   templateUrl: './user-side-bar.html',
   styleUrl: './user-side-bar.scss',
 })
 export class UserSideBar {
+  private authService = inject(AuthService);
 
   @Output() openSettingsModal = new EventEmitter<void>();
   @Output() openLogoutModal = new EventEmitter<void>();
+
+  public currentUser$: Observable<User | null> = this.authService.currentUser$;
 
   protected isProfileDropdownOpen = false;
 
