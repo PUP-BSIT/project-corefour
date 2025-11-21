@@ -1,0 +1,25 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <h2 class="modal-title">Delete Report</h2>
+    
+    <p class="modal-message">
+      Are you sure you want to delete this report?
+    </p>
+    
+    <div class="button-group">
+      <button type="button" 
+              class="btn btn-yes" 
+              (click)="onConfirm()">
+        Yes
+      </button>
+      
+      <button type="button" 
+              class="btn btn-cancel" 
+              (click)="onCancel()">
+        Cancel
+      </button>
+    </div>
+
+  </div>
+</div>

@@ -1,10 +1,31 @@
-<div class="item-card">
+<div class="item-card" (click)="onBackdropClick()">
   <div class="card-header">
-    <div class="avatar">FN</div>
-    <div class="info-text">
-      <h4 class="item-name">Finder</h4>
-      <p class="post-date">{{ report.date_reported | date: 'mediumDate' }}</p>
+    <div class="header-left">
+      <div class="avatar">
+        {{ userName().charAt(0).toUpperCase() }}
+      </div>
+      <div class="info-text">
+        <h4 class="item-name">{{ userName() }}</h4>
+        <p class="post-date">{{ report().date_reported | 
+            date: 'mediumDate' }}</p>
+      </div>
     </div>
+
+    @if (isOwner()) {
+      <div class="action-menu-container">
+        <button type="button" class="menu-btn" (click)="toggleMenu($event)">
+          <img src="assets/menu.png" alt="Options"> 
+        </button>
+  
+        @if (isMenuOpen()) {
+          <div class="dropdown-menu">
+            <button class="dropdown-item" (click)="onEdit($event)">Edit</button>
+            <button class="dropdown-item delete" 
+                (click)="onDelete($event)">Delete</button>
+          </div>
+        }
+      </div>
+    }
   </div>
 
   <div class="item-image-area">
@@ -12,7 +33,6 @@
       <img src="assets/Arrow-left.png" alt="Previous" class="arrow-icon" />
     </div>
 
-    <!-- TODO: Implement image fetching -->
     <img
       src="assets/temp-photo-item.png"
       alt="Item Placeholder Image"
@@ -25,13 +45,13 @@
   </div>
 
   <div class="card-body">
-    <h3 class="item-title">{{ report.item_name }}</h3>
-    <p class="item-location">{{ report.location }}</p>
+    <h3 class="item-title">{{ report().item_name }}</h3>
+    <p class="item-location">{{ report().location }}</p>
     <p class="item-description">
-      {{ report.description }}
+      {{ report().description }}
     </p>
 
-    <div class="card-footer-actions">
+    <div class="card-footer-actions">      
       <button class="ticket-btn" (click)="onTicketClick()">Ticket</button>
     </div>
   </div>

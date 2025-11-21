@@ -22,6 +22,10 @@ export class UserService {
     );
   }
 
+  getUserById(userId: number): Observable<User> {
+    return this.http.get<User>(`${this.API_BASE_URL}/user/${userId}`);
+  }
+
   updateProfile(user: User, file: File | null): Observable<User> {
     const formData = new FormData();
     
