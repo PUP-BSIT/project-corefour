@@ -2,8 +2,11 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { map, switchMap, catchError, shareReplay } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
+
 import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import { EditProfileModal } from '../../../modal/edit-profile-modal/edit-profile-modal';
+
 import { ItemService } from '../../../core/services/item-service';
 import { UserService } from '../../../core/services/user-service';
 import { Report } from '../../../models/item-model';
@@ -27,9 +30,10 @@ export class ProfilePage implements OnInit {
   private userService = inject(UserService);
 
   activeTab$ = new BehaviorSubject<TabType>('all');
-  
+
   showEditModal = false;
-  
+  updateError: string | null = null;
+
   currentUser$: Observable<User | null>;
   displayedItems$: Observable<Report[]> = of([]);
 
@@ -66,7 +70,7 @@ export class ProfilePage implements OnInit {
           return this.itemService.getReports({ type: tab });
         }
       }),
-      switchMap(reports => 
+      switchMap(reports =>
         combineLatest([of(reports), this.currentUser$])
       ),
       map(([reports, user]) => {
@@ -82,32 +86,28 @@ export class ProfilePage implements OnInit {
 
   handleSaveProfile(event: { user: User, file: File | null }): void {
     const { user, file } = event;
-    
+    this.updateError = null;
+
     this.userService.updateProfile(user, file).subscribe({
       next: () => {
         this.showEditModal = false;
-        this.refreshUser$.next(); 
+        this.refreshUser$.next();
       },
-      error: (err: unknown) => {
+      error: (err: HttpErrorResponse) => {
         console.error('Update failed', err);
-        this.showEditModal = false; 
+        if (err.error && err.error.error) {
+          this.updateError = err.error.error;
+        } else if (typeof err.error === 'string') {
+          this.updateError = err.error;
+        } else {
+          this.updateError = 'Failed to update. Please try again.';
+        }
       }
     });
   }
 
   onDeleteItem(item: Report): void {
-    const msg =
-      `Are you sure you want to delete this report: ${item.item_name}?`;
-      
-    if(confirm(msg)) {
-      this.itemService.deleteReport(item.report_id).subscribe({
-        next: () => {
-          console.log('Item deleted');
-          this.loadItems();
-        },
-        error: (err: unknown) => console.error('Failed to delete', err)
-      });
-    }
+    // TODO: Implement delete Modal
   }
 
   onEditItem(item: Report): void {
