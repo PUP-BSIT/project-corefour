@@ -11,7 +11,6 @@ import {
   SimpleChanges,
   OnDestroy
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
@@ -22,17 +21,19 @@ import {
   ValidatorFn
 } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { User } from '../../models/user-model';
+import type { User } from '../../models/user-model';
+import { UserService } from '../../core/services/user-service';
 
 @Component({
   selector: 'app-edit-profile-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './edit-profile-modal.html',
   styleUrl: './edit-profile-modal.scss'
 })
 export class EditProfileModal implements OnInit, OnChanges, OnDestroy {
   private fb = inject(FormBuilder);
+  private userService = inject(UserService);
 
   @Input() user: User | null = null;
   @Input() errorMessage: string | null = null;
@@ -52,23 +53,14 @@ export class EditProfileModal implements OnInit, OnChanges, OnDestroy {
 
   constructor() {
     this.editForm = this.fb.group({
-      name: ['', [Validators.required]],
-      phone_number: ['', [Validators.required, this.phPhoneNumberValidator()]],
-      email: ['', [Validators.required, Validators.email]]
+      name: [''],
+      phone_number: [''],
+      email: ['']
     });
   }
 
   ngOnInit(): void {
     this.initializeForm();
-    
-    const emailControl = this.editForm.get('email');
-    if (emailControl) {
-      this.sub = emailControl.valueChanges.subscribe(() => {
-        if (this.localError) {
-          this.localError = null;
-        }
-      });
-    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -111,13 +103,38 @@ export class EditProfileModal implements OnInit, OnChanges, OnDestroy {
   private initializeForm(): void {
     if (!this.user) return;
 
-    this.editForm.reset({
-      name: this.user.name,
-      phone_number: this.user.phone_number,
-      email: this.user.email
+    this.editForm = this.fb.group({
+      name: [
+        this.user.name, 
+        {
+          validators: [Validators.required],
+          asyncValidators: [this.userService.uniqueValidator('name', this.user.name)],
+        }
+      ],
+      phone_number: [
+        this.user.phone_number, 
+        {
+          validators: [Validators.required, this.phPhoneNumberValidator()],
+          asyncValidators: [this.userService.uniqueValidator('phone_number', this.user.phone_number)],
+        }
+      ],
+      email: [
+        this.user.email, 
+        {
+          validators: [Validators.required, Validators.email],
+          asyncValidators: [this.userService.uniqueValidator('email', this.user.email)],
+        }
+      ]
     });
 
-    this.editForm.markAsPristine();
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+    this.sub = this.editForm.valueChanges.subscribe(() => {
+      if (this.localError) {
+        this.localError = null;
+      }
+    });
 
     if (this.user.profile_picture) {
       this.previewImage = this.user.profile_picture;
