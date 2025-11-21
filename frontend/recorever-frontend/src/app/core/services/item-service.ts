@@ -68,4 +68,8 @@ export class ItemService {
       })
     );
   }
+
+  deleteReport(reportId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/report/${reportId}`);
+  }
 }
