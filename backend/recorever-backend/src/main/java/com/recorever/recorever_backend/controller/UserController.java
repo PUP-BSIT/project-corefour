@@ -119,6 +119,16 @@ public class UserController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable int id) {
+        User user = repo.findById(id);
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
+        UserResponseDTO responseDto = mapToUserResponseDTO(user);
+        return ResponseEntity.ok(responseDto);
+    }
+
     @PutMapping("/update-user-data")
     public ResponseEntity<?> updateUser(Authentication authentication,
                                         @RequestParam(required = false) String name,
