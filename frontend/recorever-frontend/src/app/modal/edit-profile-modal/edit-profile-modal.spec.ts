@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ProfileCard } from './profile-card';
+import { EditProfileModal } from './edit-profile-modal';
 
-describe('ProfileCard', () => {
-  let component: ProfileCard;
-  let fixture: ComponentFixture<ProfileCard>;
+describe('EditProfileModal', () => {
+  let component: EditProfileModal;
+  let fixture: ComponentFixture<EditProfileModal>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProfileCard]
+      imports: [EditProfileModal]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ProfileCard);
+    fixture = TestBed.createComponent(EditProfileModal);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

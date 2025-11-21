@@ -22,5 +22,22 @@ export class UserService {
     );
   }
 
-  // TODO(Durante, Stephanie V.): add the updateProfile() method here later
+  updateProfile(user: User, file: File | null): Observable<User> {
+    const formData = new FormData();
+    
+    formData.append('name', user.name);
+    formData.append('phone_number', user.phone_number);
+
+    if (file) {
+    }
+
+    return this.http.put<User>(
+      `${this.API_BASE_URL}/update-user-data`, 
+      formData
+    ).pipe(
+      tap(updatedUser => {
+        this.authService.updateCurrentUser(updatedUser);
+      })
+    );
+  }
 }
