@@ -9,16 +9,20 @@ import {
     StandardLocations,
     FinalReportSubmission
 } from '../../models/item-model';
+import { CustomLocation }
+from '../../modal/custom-location/custom-location';
 
 
 @Component({
   selector: 'app-item-report-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CustomLocation],
   templateUrl: './item-report-form.html',
   styleUrl: './item-report-form.scss',
 })
 export class ItemReportForm implements OnInit {
+
+  protected isCustomLocationModalOpen: boolean = false;
 
   private fb = inject(FormBuilder);
 
@@ -77,10 +81,18 @@ export class ItemReportForm implements OnInit {
   }
 
   openCustomLocationModal(): void {
-    console.log("Custom location modal requested (ModalService call" +
-        "required here).");
+    this.isCustomLocationModalOpen = true;
   }
 
+  handleCustomLocationSelected(location: string): void {
+    this.reportForm.controls.location.setValue(location);
+    this.isCustomLocationModalOpen = false;
+  }
+
+  handleCustomLocationClose(): void {
+    this.reportForm.controls.location.setValue(StandardLocations.ZONTA_PARK);
+    this.isCustomLocationModalOpen = false;
+  }
 
   onSubmit(): void {
     if (this.reportForm.valid) {

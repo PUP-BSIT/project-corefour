@@ -1,0 +1,25 @@
+<div class="modal-backdrop" (click)="onClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3 class="modal-title">Custom location:</h3>
+      <span class="close-icon" (click)="onClose()">x</span>
+    </div>
+
+    <form [formGroup]="locationForm" (ngSubmit)="onGo()" class="location-form">
+      <input type="text" formControlName="customLocation" placeholder="" class="custom-input" />
+
+      <div class="char-count">
+        {{ locationForm.controls.customLocation.value?.length || 0 }}/{{ maxChars }}
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-go">Go</button>
+      </div>
+    </form>
+
+    @if (locationForm.controls.customLocation.invalid && locationForm.controls.customLocation.touched) {
+    <div class="error-message">Location is required and must be under {{ maxChars }} characters.</div>
+    }
+  </div>
+</div>
