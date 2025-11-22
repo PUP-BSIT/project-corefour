@@ -1,1 +1,7 @@
-<p>report-lost-page works!</p>
+<div class="report-page-container">
+  <h1 class="page-title">Report Lost Item</h1>
+
+  <app-item-report-form [formType]="'lost'"
+      (formSubmitted)="handleSubmission($event)"
+      (formCancelled)="handleCancel()" />
+</div>

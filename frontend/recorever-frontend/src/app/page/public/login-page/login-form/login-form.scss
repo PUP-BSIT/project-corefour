@@ -1,65 +1,68 @@
-/* UPDATED: Styles to match mockup inputs and buttons */
-
-// Use a serif font stack
-$font-serif: "Times New Roman", Times, serif;
-// Use a sans-serif font stack
-$font-sans: Arial, Helvetica, sans-serif;
+$font-stack: Arial, Helvetica, sans-serif;
+$color-black: #000000;
+$color-dark-gray: #333333;
+$color-label-gray: #666666;
+$color-white: #ffffff;
+$color-border: #cccccc;
+$color-error: #d32f2f;
+$color-link-blue: #0056b3;
 
 :host {
   display: block;
   width: 100%;
-  max-width: 380px; // The form card's max width
+  max-width: 380px;
 }
 
 .login-form-card {
   width: 100%;
-  padding: 30px;
-  border: 1px solid #e0e0e0; // Faint border
+  padding: 40px 30px;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  background-color: #ffffff;
-  font-family: $font-serif;
-  box-shadow: none; // Remove shadow
+  background-color: $color-white;
+  box-sizing: border-box;
+  font-family: $font-stack;
 }
 
 h2 {
   text-align: left;
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 25px;
-  font-family: $font-serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 30px 0;
+  color: $color-black;
 }
 
 .form-field {
-  margin-bottom: 25px;
+  margin-bottom: 30px;
+  position: relative;
 
   label {
     display: block;
-    font-size: 16px;
+    font-size: 14px;
     margin-bottom: 8px;
-    font-family: $font-serif;
+    color: $color-label-gray;
+    font-weight: 400;
   }
 
   input {
     width: 100%;
-    padding: 12px 10px;
-    font-size: 16px;
-    font-family: $font-sans; // Input text is sans-serif
-    box-sizing: border-box; // Fix padding issues
-
-    /* NEW STYLES: Gray, filled inputs */
-    border: 1px solid #dcdcdc; // Default border
-    background-color: #f7f7f7; // Light gray fill
+    height: 45px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: $font-stack;
+    box-sizing: border-box;
+    border: 1px solid $color-border;
+    background-color: $color-white;
     border-radius: 4px;
+    color: $color-dark-gray;
 
-    // Style for the red border from error mockup
     &.ng-invalid.ng-touched {
-      border-color: #ff0000;
+      border-color: $color-error;
       outline: none;
     }
 
     &:focus {
       outline: none;
-      border-color: #333; // Darker border on focus
+      border-color: $color-black;
     }
   }
 
@@ -76,63 +79,94 @@ h2 {
       position: absolute;
       right: 12px;
       cursor: pointer;
-      color: #777;
-      width: 20px;
+      opacity: 0.5;
+      width: 18px;
+      height: 18px;
+
+      &:hover {
+        opacity: 0.8;
+      }
     }
   }
 }
 
 .error-message {
-  font-size: 13px;
-  color: #ff0000;
-  margin-top: 6px;
-  font-family: $font-sans; // Error text is sans-serif
-  font-weight: 400;
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  font-size: 12px;
+  color: $color-error;
+  white-space: nowrap;
 }
 
-.button-group {
+.login-error-alert {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.btn-sign-in {
+  width: 100%;
+  height: 45px;
+  margin-top: 10px;
   display: flex;
-  gap: 10px;
-  margin-top: 25px;
-}
-
-.btn {
-  flex: 1;
-  padding: 12px;
+  align-items: center;
+  justify-content: center;
   font-size: 16px;
   font-weight: 600;
   border-radius: 4px;
   cursor: pointer;
-  font-family: $font-sans;
+  font-family: $font-stack;
+  background-color: $color-black;
+  color: $color-white;
+  border: 1px solid $color-black;
+  transition: background-color 0.2s;
 
-  &.btn-secondary {
-    background-color: #e0e0e0;
-    color: #333;
-    border: 1px solid #ccc;
-
-    &:hover {
-      background-color: #d0d0d0;
-    }
+  &:hover {
+    background-color: #333333;
+    border-color: #333333;
   }
 
   &:disabled {
-    background-color: #f0f0f0;
-    color: #aaa;
-    border-color: #e0e0e0;
+    background-color: #ccc;
+    border-color: #ccc;
     cursor: not-allowed;
   }
 }
 
-.forgot-password-link {
-  display: block;
+.form-footer {
+  margin-top: 25px;
   text-align: center;
-  margin-top: 20px;
+  color: $color-dark-gray;
   font-size: 14px;
-  color: #333;
-  text-decoration: none;
-  font-family: $font-serif;
 
-  &:hover {
-    text-decoration: underline;
+  .create-account-text {
+    margin-bottom: 15px;
+    margin-top: 0;
+
+    a {
+      color: $color-link-blue;
+      text-decoration: none;
+      font-weight: 600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .forgot-password-link {
+    color: $color-link-blue;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }

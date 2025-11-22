@@ -1,9 +1,12 @@
 package com.recorever.recorever_backend.controller;
 
+import com.recorever.recorever_backend.dto.ClaimCreationDTO;
+import com.recorever.recorever_backend.dto.ClaimResponseDTO;
 import com.recorever.recorever_backend.model.Claim;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.service.ClaimService;
 import com.recorever.recorever_backend.service.ReportService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -24,25 +28,14 @@ public class ClaimController {
 
     @PostMapping("/claim")
     public ResponseEntity<?> submitClaim(Authentication authentication, 
-                                          @RequestBody Map<String, String> body) {
+                                          @Valid @RequestBody ClaimCreationDTO claimCreationDTO) {
         
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();
         
-        String reportIdStr = body.get("report_id");
-        String proofDescription = body.get("proof_description");
+        int reportId = claimCreationDTO.getReport_id().intValue();
+        String proofDescription = claimCreationDTO.getProof_description();
 
-        if (reportIdStr == null || proofDescription == null || proofDescription.isEmpty()) {
-            return ResponseEntity.badRequest().body("Missing report_id or proof_description.");
-        }
-        
-        int reportId;
-        try {
-            reportId = Integer.parseInt(reportIdStr);
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body("Invalid report ID format.");
-        }
-        
         if (reportService.getById(reportId) == null) {
             return ResponseEntity.status(404).body("Target report not found.");
         }
@@ -52,8 +45,12 @@ public class ClaimController {
     }
 
     @GetMapping("/claims")
-    public ResponseEntity<List<Claim>> getAllClaims() {
-        return ResponseEntity.ok(service.listAllClaims());
+    public ResponseEntity<List<ClaimResponseDTO>> getAllClaims() {
+        List<Claim> claims = service.listAllClaims();
+        List<ClaimResponseDTO> responseDTOs = claims.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(responseDTOs);
     }
     
     @GetMapping("/claim/{id}")
@@ -62,6 +59,20 @@ public class ClaimController {
         if (claim == null) {
             return ResponseEntity.status(404).body("Claim not found.");
         }
-        return ResponseEntity.ok(claim);
+        return ResponseEntity.ok(convertToDto(claim));
+    }
+    
+    /**
+     * Helper method to map Claim model to ClaimResponseDTO.
+     */
+    private ClaimResponseDTO convertToDto(Claim claim) {
+        ClaimResponseDTO dto = new ClaimResponseDTO();
+        dto.setClaim_id(claim.getClaim_id());
+        dto.setReport_id(claim.getReport_id());
+        dto.setProof_description(claim.getProof_description());
+        dto.setItem_name(claim.getItem_name());
+        dto.setStatus(claim.getStatus());
+        dto.setCreated_at(claim.getCreated_at());
+        return dto;
     }
 }

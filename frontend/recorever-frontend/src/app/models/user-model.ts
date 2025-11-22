@@ -5,6 +5,7 @@ export type User = {
   phone_number: string;
   profile_picture: string;
   role: 'user' | 'admin';
+  reports?: Report[];
 };
 
 export type NavItem = {

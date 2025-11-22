@@ -3,12 +3,12 @@
     <div class="graphic-placeholder"></div>
   </section>
 
-  <section class="login-page-form" [class.loading]="isLoading">
-    <app-login-form (loginSubmit)="onLogin($event)" />
-    @if (hasLoginError) {
-      <div class="error-message-box">
-        Invalid email or password. Please try again.
-      </div>
-    }
+  <section class="login-page-form">
+    <app-login-form
+        [loginError]="hasLoginError"
+        [isSubmitting]="isLoading"
+        (loginSubmit)="onLogin($event)"
+        (clearError)="onClearError()">
+    </app-login-form>
   </section>
 </main>

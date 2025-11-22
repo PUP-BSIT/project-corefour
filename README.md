@@ -28,16 +28,31 @@ organized.
 
 ---
 
-
-### :link: Web Host URL  
+## :link: Web Host URL  
 **[Recorever Web Host](https://recorever.site/)**
+
+---
+
+## 🔑 Sample User Accounts
+
+### Admin Account
+- **Email:** admin@example.com  
+- **Password:** Admin123  
+
+### Test User Account
+- **Email:** test@example.com  
+- **Password:** Password123  
+
 ---
 
 ## 👥 Project Team
 
-| Name      | Role(s)                 |
-|-----------|--------------------------|
-| Stephanie Durante  | Tester / Developer       |
-| Maydelyn Florido   | Project Manager / Developer |
-| Zyrrah Feil Riomalos  | Technical Lead / Developer    |
-| Jallaine Siervo    | UI/UX Designer / Developer |
+| Name                     | Role(s)                          |
+|--------------------------|----------------------------------|
+| Stephanie Durante        | Tester / Developer               |
+| Maydelyn Florido         | Project Manager / Developer      |
+| Zyrrah Feil Riomalos     | Technical Lead / Developer       |
+| Jallaine Siervo          | UI/UX Designer / Developer       |
+
+---
+

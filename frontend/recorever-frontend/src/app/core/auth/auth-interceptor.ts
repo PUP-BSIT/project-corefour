@@ -14,39 +14,35 @@ import { Observable,
         filter, 
         take 
 } from 'rxjs';
-import type { LoginResponse } from '../../models/auth-model';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const token = authService.getTokenFromStorage();
   const isApiRequest = req.url.startsWith(environment.apiUrl);
 
-  if (token && isApiRequest) {
-    req = addAuthToken(req, token);
+  if (isApiRequest) {
+    req = req.clone({
+      withCredentials: true
+    });
   }
 
   return next(req).pipe(
     catchError(error => {
-      if (
-        error instanceof HttpErrorResponse && 
-        error.status === 401 &&
-        !req.url.includes('/refresh-token')
-      ) {
-        return handle401Error(req, next, authService);
-      } else {
+      if (error instanceof HttpErrorResponse) {
+        
+        const isAuthError = (error.status === 401 || error.status === 403);
+        const isRefreshUrl = req.url.includes('/refresh-token');
+
+        if (isAuthError && !isRefreshUrl) {
+            return handle401Error(req, next, authService);
+
+        }
+
         return throwError(() => error);
       }
+      return throwError(() => error);
     })
   );
 };
-
-function addAuthToken(req: HttpRequest<any>, token: string): HttpRequest<any> {
-  return req.clone({
-    setHeaders: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-}
 
 function handle401Error(
   req: HttpRequest<any>,
@@ -56,16 +52,16 @@ function handle401Error(
 
   if (authService.isRefreshing) {
     return authService.refreshTokenSubject.pipe(
-      filter(token => token != null),
+      filter(val => val),
       take(1),
-      switchMap((newToken) => {
-        return next(addAuthToken(req, newToken as string));
+      switchMap(() => {
+        return next(req.clone()); 
       })
     );
   } else {
     return authService.refreshToken().pipe(
-      switchMap((response: LoginResponse) => {
-        return next(addAuthToken(req, response.access_token));
+      switchMap(() => {
+        return next(req.clone());
       }),
       catchError((err) => {
         authService.logout();

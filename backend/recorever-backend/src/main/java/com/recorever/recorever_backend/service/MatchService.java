@@ -1,5 +1,6 @@
 package com.recorever.recorever_backend.service;
 
+import com.recorever.recorever_backend.dto.MatchResponseDTO;
 import com.recorever.recorever_backend.model.Match;
 import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.repository.MatchRepository;
@@ -11,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class MatchService {
@@ -20,7 +22,7 @@ public class MatchService {
         "a", "an", "the", "in", "on", "at", "and", "or", "to", "for", "of",
         "with", "is", "was", "has", "i", "my", "me", "found", "lost"
     ));
-    
+
     @Autowired
     private MatchRepository matchRepo;
 
@@ -30,8 +32,19 @@ public class MatchService {
     @Autowired
     private NotificationService notificationService;
 
+    private MatchResponseDTO convertToDTO(Match match) {
+        if (match == null) return null;
+        MatchResponseDTO dto = new MatchResponseDTO();
+        dto.setMatch_id(match.getMatch_id());
+        dto.setLost_report_id(match.getLost_report_id());
+        dto.setFound_report_id(match.getFound_report_id());
+        dto.setStatus(match.getStatus());
+        dto.setCreated_at(match.getCreated_at());
+        return dto;
+    }
+
     public void findAndCreateMatch(Report newReport) {
-        List<Report> existingReports = reportRepo.getAllReports(); 
+        List<Report> existingReports = reportRepo.getAllReports();
 
         String newType = newReport.getType();
         String matchType = newType.equals("lost") ? "found" : "lost";
@@ -50,7 +63,7 @@ public class MatchService {
             if (isNameMatch) {
                 boolean isLocationMatch = checkLocationProximity(newReport, existingReport);
                 boolean isDescriptionMatch = checkDescriptionSimilarity(newReport, existingReport);
-                
+
                 String confidenceLevel;
                 String detailMessage;
 
@@ -64,31 +77,35 @@ public class MatchService {
                     confidenceLevel = "Low-Confidence Match (Location Conflict)";
                     detailMessage = "Name matched, but the reported location or item description is significantly different. Check carefully.";
                 }
-                
+
                 int lostId = newType.equals("lost") ? newReport.getReport_id() : existingReport.getReport_id();
                 int foundId = newType.equals("found") ? newReport.getReport_id() : existingReport.getReport_id();
-                
+
                 matchRepo.createMatch(lostId, foundId);
 
-                reportRepo.updateReport(lostId, "matched", null); 
+                reportRepo.updateReport(lostId, "matched", null);
                 reportRepo.updateReport(foundId, "matched", null);
 
                 String notificationMessage = String.format("%s found: Your %s has been linked to report #%d. Detail: %s", 
-                                                        confidenceLevel, newReport.getItem_name(), lostId, detailMessage);
+                                                      confidenceLevel,
+                                                      newReport.getItem_name(),
+                                                      lostId, detailMessage);
 
-                notificationService.create(newReport.getUser_id(), newReport.getReport_id(), notificationMessage);
-                notificationService.create(existingReport.getUser_id(), existingReport.getReport_id(), notificationMessage);
+                notificationService.create(newReport.getUser_id(),
+                        newReport.getReport_id(), notificationMessage);
+                notificationService.create(existingReport.getUser_id(),
+                        existingReport.getReport_id(), notificationMessage);
             }
         }
     }
-    
+
     // checks if one item name contains the other.
     private boolean checkNameSimilarity(Report report1, Report report2) {
         String name1 = report1.getItem_name().toLowerCase();
         String name2 = report2.getItem_name().toLowerCase();
         return name1.contains(name2) || name2.contains(name1);
     }
-    
+
     // checks if the location strings are exactly the same.
     private boolean checkLocationProximity(Report report1, Report report2) {
         String loc1 = report1.getLocation().trim().toLowerCase();
@@ -98,11 +115,13 @@ public class MatchService {
 
     // checks if the descriptions have significant keyword overlap.
     private boolean checkDescriptionSimilarity(Report report1, Report report2) {
-        String desc1 = report1.getDescription() != null ? report1.getDescription().toLowerCase() : "";
-        String desc2 = report2.getDescription() != null ? report2.getDescription().toLowerCase() : "";
-        
+        String desc1 = report1.getDescription() != null ?
+                report1.getDescription().toLowerCase() : "";
+        String desc2 = report2.getDescription() != null ?
+                report2.getDescription().toLowerCase() : "";
+
         if (desc1.isEmpty() || desc2.isEmpty()) return false;
-        
+
         Set<String> set1 = tokenize(desc1);
         Set<String> set2 = tokenize(desc2);
 
@@ -117,11 +136,11 @@ public class MatchService {
         double similarity = (double) intersection.size() / union.size();
         return similarity >= MIN_KEYWORD_OVERLAP;
     }
-    
+
     private Set<String> tokenize(String description) {
-        String cleaned = description.replaceAll("[^a-z0-9\\s]", " "); // Remove punctuation
-        String[] words = cleaned.split("\\s+"); // Split by whitespace
-        
+        String cleaned = description.replaceAll("[^a-z0-9\\s]", " ");
+        String[] words = cleaned.split("\\s+");
+
         Set<String> tokens = new HashSet<>();
         for (String word : words) {
             word = word.trim();
@@ -132,14 +151,17 @@ public class MatchService {
         return tokens;
     }
 
-    public List<Match> listAllMatches() {
-        return matchRepo.getAllMatches();
+    public List<MatchResponseDTO> listAllMatches() {
+        return matchRepo.getAllMatches().stream()
+               .map(this::convertToDTO)
+               .collect(Collectors.toList());
     }
-    
-    public Match getMatchById(int id) {
-        return matchRepo.getMatchById(id);
+
+    public MatchResponseDTO getMatchById(int id) {
+        Match match = matchRepo.getMatchById(id);
+        return convertToDTO(match);
     }
-    
+
     public boolean updateMatchStatus(int id, String status) {
         return matchRepo.updateMatchStatus(id, status);
     }

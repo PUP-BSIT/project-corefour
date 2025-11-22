@@ -12,10 +12,13 @@ import com.recorever.recorever_backend.dto.UserLoginDTO;
 import com.recorever.recorever_backend.dto.UserResponseDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletResponse; 
 import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
@@ -67,19 +70,48 @@ public class UserController {
     }
 
     @PostMapping("/login-user")
-    public ResponseEntity<?> loginUser(@Valid @RequestBody UserLoginDTO loginDto) {
+    public ResponseEntity<?> loginUser(
+        @Valid @RequestBody UserLoginDTO loginDto, 
+        HttpServletResponse response
+    ) {
         
         String email = loginDto.getEmail();
         String password = loginDto.getPassword();
 
-        Map<String, Object> result = service.login(email, password);
+        try {
+            Map<String, Object> result = service.login(email, password);
 
-        if (result.containsKey("error")) {
-            return ResponseEntity.status(401).body(result);
+            String accessToken = (String) result.get("accessToken");
+            String refreshToken = (String) result.get("refreshToken");
+            User user = (User) result.get("user");
+
+            // Create HTTP-ONLY Access Token Cookie
+            ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(3600) // 1 hour 
+                .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+
+            // Create HTTP-ONLY Refresh Token Cookie
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/refresh-token")
+                .maxAge(7 * 24 * 3600) // 7 days
+                .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+            UserResponseDTO userDto = mapToUserResponseDTO(user);
+
+            return ResponseEntity.ok(userDto); 
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
         }
-        return ResponseEntity.ok(result);
     }
-
+    
     @GetMapping("/get-user-data")
     public ResponseEntity<UserResponseDTO> getUser(Authentication authentication) {
         User authenticatedUser = (User) authentication.getPrincipal();
@@ -87,27 +119,40 @@ public class UserController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @GetMapping("/check-unique")
+    public ResponseEntity<Map<String, Boolean>> checkUnique(
+        Authentication authentication,
+        @RequestParam String field,
+        @RequestParam String value
+    ) {
+        User user = (User) authentication.getPrincipal();
+        int userId = user.getUser_id();
+        boolean isUnique = true;
+
+        if ("email".equals(field)) {
+            isUnique = !repo.isEmailTaken(value, userId);
+        } else if ("phone_number".equals(field)) {
+            isUnique = !repo.isPhoneNumberTaken(value, userId);
+        } else if ("name".equals(field)) {
+            isUnique = !repo.isNameTaken(value, userId);
+        }
+
+        return ResponseEntity.ok(Map.of("isUnique", isUnique));
+    }
+
     @PutMapping("/update-user-data")
     public ResponseEntity<?> updateUser(Authentication authentication,
                                         @RequestParam(required = false) String name,
                                         @RequestParam(required = false) String phone_number,
+                                        @RequestParam(required = false) String email, 
                                         @RequestParam(required = false) String profile_picture) {
         
         User user = (User) authentication.getPrincipal();
 
-        if (name != null && !name.isEmpty()) {
-            user.setName(name);
-        }
-        if (phone_number != null && !phone_number.isEmpty()) {
-            user.setPhone_number(phone_number);
-        }
-        if (profile_picture != null && !profile_picture.isEmpty()) {
-            user.setProfile_picture(profile_picture);
-        }
+        Map<String, Object> result = service.updateUserProfile(user, name, phone_number, email, profile_picture);
 
-        boolean updated = repo.updateUser(user.getUser_id(), user.getName(), user.getPhone_number(), user.getProfile_picture());
-        if (!updated) {
-            return ResponseEntity.badRequest().body("Failed to update user.");
+        if (result.containsKey("error")) {
+            return ResponseEntity.badRequest().body(result);
         }
 
         User updatedUser = repo.findById(user.getUser_id());
@@ -129,22 +174,63 @@ public class UserController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refresh(@RequestBody Map<String, String> body) {
-        String refreshToken = body.get("refreshToken");
-
-        User user = repo.findByRefreshToken(refreshToken);
-        if (user == null || user.getRefresh_token_expiry().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(401).body(Map.of("error_message", "Invalid or expired refresh token"));
+    public ResponseEntity<?> refresh(
+        @CookieValue(name = "refreshToken", required = false) String oldRefreshToken, 
+        HttpServletResponse response 
+    ) {
+        if (oldRefreshToken == null || oldRefreshToken.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("error_message", "Refresh token cookie is missing"));
         }
 
-        String accessToken = jwtUtil.generateToken(user.getUser_id(), user.getName());
+        User user = repo.findByRefreshToken(oldRefreshToken);
 
-        return ResponseEntity.ok(Map.of(
-            "access_token", accessToken,
-            "token_type", "Bearer",
-            "expires_in", 3600,
-            "user_id", user.getUser_id(),
-            "user_name", user.getName()
-        ));
+        if (user == null || user.getRefresh_token_expiry().isBefore(LocalDateTime.now())) {
+            clearCookie(response, "refreshToken");
+            return ResponseEntity.status(401).body(Map.of("error_message", "Invalid or expired refresh token"));
+        }
+        
+        // Call the service to get new tokens
+        Map<String, Object> newTokens = service.refreshTokens(user);
+        
+        String newAccessToken = (String) newTokens.get("accessToken");
+        String newRefreshToken = (String) newTokens.get("refreshToken");
+        
+        // Set new Access Token Cookie
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
+            .httpOnly(true)
+            .secure(true) 
+            .path("/")
+            .maxAge(3600) // 1 hour
+            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        
+        // Set new Refresh Token Cookie
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", newRefreshToken)
+            .httpOnly(true)
+            .secure(true) 
+            .path("/api/refresh-token") 
+            .maxAge(7 * 24 * 3600) // 7 days
+            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+        UserResponseDTO userDto = mapToUserResponseDTO(user);
+        return ResponseEntity.ok(userDto); 
+    }
+
+    private void clearCookie(HttpServletResponse response, String cookieName) {
+        ResponseCookie clearedCookie = ResponseCookie.from(cookieName, "")
+            .httpOnly(true)
+            .secure(true)
+            .path("/")
+            .maxAge(0)
+            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, clearedCookie.toString());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        clearCookie(response, "accessToken");
+        clearCookie(response, "refreshToken");
+        return ResponseEntity.ok(Map.of("success", true, "message", "Logged out successfully."));
     }
 }

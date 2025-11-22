@@ -1,1 +1,64 @@
-<p>item-report-form works!</p>
+<form [formGroup]="reportForm" (ngSubmit)="onSubmit()" class="item-report-form">
+
+  <div class="form-field">
+    <label for="itemName">Item Name:</label>
+    <input id="itemName" type="text" formControlName="item_name" />
+    @if (reportForm.controls.item_name.invalid && reportForm.controls.item_name.touched) {
+    <div class="error-message">Item name is required.</div>
+    }
+  </div>
+
+  <div class="form-field">
+    <label for="locationLost">{{ locationLabel }}</label>
+    <select id="locationLost" formControlName="location">
+      @for (location of locationOptions; track location) {
+      <option [value]="location">{{ location }}</option>
+      }
+    </select>
+    @if (reportForm.controls.location.invalid && reportForm.controls.location.touched) {
+    <div class="error-message">Location is required.</div>
+    }
+  </div>
+
+  <div class="form-field">
+    <label for="dateLost">{{ dateLabel }}</label>
+    <input id="dateLost" type="date" formControlName="date_reported" placeholder="mm/dd/yyyy" />
+    @if (reportForm.controls.date_reported.invalid && reportForm.controls.date_reported.touched) {
+    <div class="error-message">Date is required.</div>
+    }
+  </div>
+
+  <div class="form-field">
+    <label for="itemDescription">Item Description:</label>
+    <textarea id="itemDescription" formControlName="description"></textarea>
+    @if (reportForm.controls.description.invalid && reportForm.controls.description.touched) {
+    <div class="error-message">Description is required (min 100 characters).</div>
+    }
+  </div>
+
+  <div class="form-field photo-upload-field">
+    <label>Upload Photo: <small>(Upload if available)</small></label>
+    <div class="upload-area">
+      <span class="upload-icon">↑</span>
+    </div>
+
+    <div formArrayName="photoUrls" class="photo-thumbnails">
+      @for (photoControl of reportForm.controls.photoUrls.controls; track $index) {
+      <div class="photo-box">
+        <span class="remove-photo">x</span>
+      </div>
+      }
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-submit">Submit</button>
+    <button type="button" class="btn btn-reset" (click)="onCancel()">Reset</button>
+  </div>
+  </form>
+
+  @if (isCustomLocationModalOpen) {
+  <app-custom-location
+      (locationSelected)="handleCustomLocationSelected($event)"
+    (close)="handleCustomLocationClose()" />
+  }
