@@ -1,8 +1,7 @@
 <form
   [formGroup]="loginForm"
   (ngSubmit)="submitForm()"
-  class="login-form-card"
->
+  class="login-form-card">
   <h2>Login</h2>
 
   <div class="form-field">
@@ -11,8 +10,7 @@
       id="email"
       type="email"
       formControlName="email"
-      placeholder=""
-    />
+      placeholder=""/>
 
     @if (emailControl?.invalid && (emailControl?.touched ||
       emailControl?.dirty)) {
@@ -34,15 +32,13 @@
         id="password"
         [type]="isPasswordVisible ? 'text' : 'password'"
         formControlName="password"
-        class="password-input"
-      />
+        class="password-input"/>
       <img
         [src]="isPasswordVisible ? 'assets/eye-open.png' :
           'assets/eye-close.png'"
         alt="Toggle password visibility"
         class="password-eye-icon"
-        (click)="togglePasswordVisibility()"
-      />
+        (click)="togglePasswordVisibility()"/>
     </div>
 
     @if (passwordControl?.invalid && (passwordControl?.touched ||
