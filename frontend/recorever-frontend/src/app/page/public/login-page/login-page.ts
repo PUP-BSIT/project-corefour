@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core'; //
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { LoginForm } from './login-form/login-form';

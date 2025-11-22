@@ -1,16 +1,16 @@
 <form
   [formGroup]="loginForm"
-  (ngSubmit)="submitForm()"
-  class="login-form-card">
+    (ngSubmit)="submitForm()"
+    class="login-form-card">
   <h2>Login</h2>
 
   <div class="form-field">
     <label for="email">Email</label>
     <input
-      id="email"
-      type="email"
-      formControlName="email"
-      placeholder=""/>
+        id="email"
+        type="email"
+        formControlName="email"
+        placeholder=""/>
 
     @if (emailControl?.invalid && (emailControl?.touched ||
       emailControl?.dirty)) {
@@ -30,15 +30,15 @@
     <div class="password-wrapper">
       <input
         id="password"
-        [type]="isPasswordVisible ? 'text' : 'password'"
-        formControlName="password"
-        class="password-input"/>
+            [type]="isPasswordVisible ? 'text' : 'password'"
+            formControlName="password"
+            class="password-input"/>
       <img
         [src]="isPasswordVisible ? 'assets/eye-open.png' :
           'assets/eye-close.png'"
-        alt="Toggle password visibility"
-        class="password-eye-icon"
-        (click)="togglePasswordVisibility()"/>
+            alt="Toggle password visibility"
+            class="password-eye-icon"
+            (click)="togglePasswordVisibility()"/>
     </div>
 
     @if (passwordControl?.invalid && (passwordControl?.touched ||
@@ -58,10 +58,9 @@
   }
 
   <button
-    type="submit"
-    class="btn-sign-in"
-    [disabled]="loginForm.invalid || isSubmitting"
-  >
+        type="submit"
+        class="btn-sign-in"
+        [disabled]="loginForm.invalid || isSubmitting">
     @if (isSubmitting) {
       Signing in...
     } @else {
