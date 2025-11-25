@@ -11,7 +11,6 @@ export class ItemService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
-
   getReports(filters: ReportFilters): Observable<Report[]> {
     let params = new HttpParams();
 
@@ -28,5 +27,9 @@ export class ItemService {
     }
 
     return this.http.get<Report[]>(`${this.apiUrl}/reports`, { params });
+  }
+
+  deleteReport(reportId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/report/${reportId}`);
   }
 }

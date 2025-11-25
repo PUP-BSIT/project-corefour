@@ -1,58 +1,66 @@
 <div class="user-side-bar">
 
-  <div class="user-profile-header">
-    <div class="profile-click-area" (click)="toggleProfileDropdown()"
-      [class.dropdown-open]="isProfileDropdownOpen">
-      <img src="assets/profile-avatar.png" alt="Profile Avatar"
-        class="profile-avatar-img">
-      <div class="profile-info">
-        <span class="profile-name">Jane Dee</span>
-        <span class="profile-dropdown-arrow">▿</span>
+  @if (currentUser$ | async; as user) {
+    <div class="user-profile-header">
+      <div class="profile-click-area" (click)="toggleProfileDropdown()"
+        [class.dropdown-open]="isProfileDropdownOpen">
+        <img [src]="user.profile_picture || 'assets/profile-avatar.png'"
+             alt="Profile Avatar"
+             class="profile-avatar-img">
+             
+        <div class="profile-info">
+          <span class="profile-name">{{ user.name }}</span>
+          <span class="profile-dropdown-arrow">▿</span>
+        </div>
       </div>
-    </div>
-    <div class="notification-click-area">
-      <app-notification></app-notification>
-    </div>
-
-    @if (isProfileDropdownOpen) {
-    <div class="profile-dropdown-menu">
-      <div class="dropdown-user-info">
-        <img src="assets/profile-avatar.png" alt="Profile Avatar"
-            class="dropdown-avatar-img">
-        <div class="dropdown-name">Jane Dee</div>
-        <div class="dropdown-email">userjane.dee@gmail.com</div>
+      
+      <div class="notification-click-area">
+        <app-notification></app-notification>
       </div>
 
-      @for (item of profileDropdownItems; track item.label) {
-      @if (item.label === 'Add Account') {
-      <div class="dropdown-divider"></div>
-      }
+      @if (isProfileDropdownOpen) {
+      <div class="profile-dropdown-menu">
+        <div class="dropdown-user-info">
+          <img [src]="user.profile_picture || 'assets/profile-avatar.png'"
+               alt="Profile Avatar"
+               class="dropdown-avatar-img">
+          <div class="dropdown-name">{{ user.name }}</div>
+          <div class="dropdown-email">{{ user.email }}</div>
+        </div>
 
-      @if (item.action === 'navigate') {
-      <a [routerLink]="item.route" (click)="handleDropdownAction(item)"
-          class="dropdown-item">
-        <img [src]="item.iconPath" alt="{{ item.label }} Icon"
-            class="dropdown-item-icon">
-        {{ item.label }}
-      </a>
-      } @else {
-      <div (click)="handleDropdownAction(item)" class="dropdown-item">
-        <img [src]="item.iconPath" alt="{{ item.label }} Icon"
-            class="dropdown-item-icon">
-        {{ item.label }}
+        @for (item of profileDropdownItems; track item.label) {
+          @if (item.label === 'Add Account') {
+            <div class="dropdown-divider"></div>
+          }
+
+          @if (item.action === 'navigate') {
+            <a [routerLink]="item.route" (click)="handleDropdownAction(item)"
+                class="dropdown-item">
+              <img [src]="item.iconPath" alt="{{ item.label }} Icon"
+                  class="dropdown-item-icon">
+              {{ item.label }}
+            </a>
+          } @else {
+            <div (click)="handleDropdownAction(item)" class="dropdown-item">
+              <img [src]="item.iconPath" alt="{{ item.label }} Icon"
+                  class="dropdown-item-icon">
+              {{ item.label }}
+            </div>
+          }
+        }
       </div>
       }
-      }
     </div>
-    }
-  </div>
+  }
 
   <div class="nav-section main-nav">
     @for (item of mainNav; track item.label) {
-    <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
-      <img [src]="item.iconPath" alt="{{ item.label }} Icon" class="nav-icon">
-      <div class="nav-label">{{ item.label }}</div>
-    </a>
+      <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+        <img [src]="item.iconPath" 
+              alt="{{ item.label }} Icon" 
+              class="nav-icon">
+        <div class="nav-label">{{ item.label }}</div>
+      </a>
     }
   </div>
 
@@ -72,16 +80,16 @@
     </div>
 
     @if (isTrackingOpen) {
-    <div class="tracking-list-content">
-      @for (item of trackingNav; track item.label) {
-      <a [routerLink]="item.route" routerLinkActive="active"
-          class="nav-item tracking-item">
-        <img src="assets/tracking-item.png" alt="{{ item.label }} Icon"
-            class="nav-icon tracking-icon-sm">
-        <div class="nav-label">{{ item.label }}</div>
-      </a>
-      }
-    </div>
+      <div class="tracking-list-content">
+        @for (item of trackingNav; track item.label) {
+          <a [routerLink]="item.route" routerLinkActive="active"
+              class="nav-item tracking-item">
+            <img src="assets/tracking-item.png" alt="{{ item.label }} Icon"
+                class="nav-icon tracking-icon-sm">
+            <div class="nav-label">{{ item.label }}</div>
+          </a>
+        }
+      </div>
     }
   </div>
 

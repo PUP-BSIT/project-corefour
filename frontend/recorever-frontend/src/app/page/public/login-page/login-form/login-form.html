@@ -1,22 +1,25 @@
 <form
-  [formGroup]="loginForm"
-  (ngSubmit)="submitForm()"
-  class="login-form-card"
->
+    [formGroup]="loginForm"
+    (ngSubmit)="submitForm()"
+    class="login-form-card">
   <h2>Login</h2>
 
   <div class="form-field">
     <label for="email">Email</label>
-    <input id="email" type="email" formControlName="email" />
+    <input
+        id="email"
+        type="email"
+        formControlName="email"
+        placeholder=""/>
 
     @if (emailControl?.invalid && (emailControl?.touched ||
-                    emailControl?.dirty)) {
+      emailControl?.dirty)) {
       <div class="error-message">
         @if (emailControl?.hasError('required')) {
           <span>Email is required.</span>
         }
         @if (emailControl?.hasError('email')) {
-          <span>Please enter a valid email.</span>
+          <span>Please enter a valid email address.</span>
         }
       </div>
     }
@@ -27,21 +30,19 @@
     <div class="password-wrapper">
       <input
         id="password"
-        [type]="isPasswordVisible ? 'text' : 'password'"
-        formControlName="password"
-        class="password-input"
-      />
+            [type]="isPasswordVisible ? 'text' : 'password'"
+            formControlName="password"
+            class="password-input"/>
       <img
         [src]="isPasswordVisible ? 'assets/eye-open.png' :
-               'assets/eye-close.png'"
-        alt="Toggle password visibility"
-        class="password-eye-icon"
-        (click)="togglePasswordVisibility()"
-      />
+          'assets/eye-close.png'"
+            alt="Toggle password visibility"
+            class="password-eye-icon"
+            (click)="togglePasswordVisibility()"/>
     </div>
 
     @if (passwordControl?.invalid && (passwordControl?.touched ||
-                    passwordControl?.dirty)) {
+      passwordControl?.dirty)) {
       <div class="error-message">
         @if (passwordControl?.hasError('required')) {
           <span>Password is required.</span>
@@ -50,21 +51,29 @@
     }
   </div>
 
-  <div class="button-group">
+  @if (loginError) {
+    <div class="login-error-alert">
+      Invalid email or password. Please try again.
+    </div>
+  }
+
   <button
         type="submit"
-        class="btn btn-primary"
-        [disabled]="loginForm.invalid"
-    >
+        class="btn-sign-in"
+        [disabled]="loginForm.invalid || isSubmitting">
+    @if (isSubmitting) {
+      Signing in...
+    } @else {
       Sign In
-    </button>
+    }
+  </button>
 
-    <button type="button" class="btn btn-secondary" routerLink="/register">
-      Sign Up
-    </button>
+  <div class="form-footer">
+    <p class="create-account-text">
+      No account yet? <a routerLink="/register">Create one</a>
+    </p>
+    <a routerLink="/forgot-password" class="forgot-password-link">
+      forget Password ?
+    </a>
   </div>
-
-  <a routerLink="/forgot-password" class="forgot-password-link">
-    forget Password ?
-  </a>
 </form>

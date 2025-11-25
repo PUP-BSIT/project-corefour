@@ -5,6 +5,7 @@
   background-color: #f7f7f7;
   position: relative;
   overflow: hidden;
+  height: calc(100vh - 80px);
 }
 
 .page-logo {
@@ -12,6 +13,7 @@
   top: 40px;
   left: 40px;
   height: 20px;
+  z-index: 10;
 }
 
 .login-page-container {
@@ -21,10 +23,28 @@
   align-items: center;
   justify-content: center;
   gap: 80px;
+  padding: 20px;
+  box-sizing: border-box;
+
+  @media (max-width: 900px) {
+    gap: 40px;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+  }
 }
 
 .login-page-graphic {
   flex-basis: 500px;
+  flex-shrink: 1;
+  max-width: 100%;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 
   .graphic-placeholder {
     width: 100%;
@@ -50,6 +70,12 @@
 
 .login-page-form {
   flex-basis: 400px;
+  flex-shrink: 0;
   display: flex;
   justify-content: center;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    flex-basis: auto;
+  }
 }

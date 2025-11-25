@@ -6,12 +6,12 @@ import { BehaviorSubject,
         tap,
         of,
         catchError,
-        switchMap,
-        throwError
+        throwError,
+        filter,
+        take
 } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type { LoginRequest,
-              LoginResponse,
               RegisterRequest
 } from '../../models/auth-model';
 import type { User } from '../../models/user-model';
@@ -31,13 +31,14 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   private _isRefreshing = false;
-  private _refreshTokenSubject = new BehaviorSubject<string | null>(null);
+
+  private _refreshTokenSubject = new BehaviorSubject<boolean>(false);
 
   public get isRefreshing(): boolean {
     return this._isRefreshing;
   }
 
-  public get refreshTokenSubject(): BehaviorSubject<string | null> {
+  public get refreshTokenSubject(): BehaviorSubject<boolean> { 
     return this._refreshTokenSubject;
   }
 
@@ -49,33 +50,30 @@ export class AuthService {
   }
 
   initAuth(): Observable<User | null> {
-    const token = this.getTokenFromStorage();
-    if (token) {
-      const userService = this.injector.get(UserService);
-      
-      return userService.getProfile().pipe(
-        catchError((err) => {
-          console.error('Session token is invalid, logging out.', err);
-          this.logout();
-          return of(null);
-        })
-      );
+    if (!this.getUserFromStorage()) {
+        return of(null);
     }
-    return of(null);
+    
+    const userService = this.injector.get(UserService);
+
+    return userService.getProfile().pipe(
+      tap((user) => {
+        this.updateCurrentUser(user);
+      }),
+      catchError((err) => {
+        console.error('Session token is invalid, logging out.', err);
+        this.logout();
+        return of(null);
+      })
+    );
   }
 
   login(credentials: LoginRequest): Observable<User> {
     return this.http
-      .post<LoginResponse>(`${this.API_BASE_URL}/login-user`, credentials)
+      .post<User>(`${this.API_BASE_URL}/login-user`, credentials, { withCredentials: true }) 
       .pipe(
-        tap((response: LoginResponse) => {
-          localStorage.setItem('authToken', response.access_token);
-
-          localStorage.setItem('refreshToken', response.refresh_token);
-        }),
-        switchMap(() => {
-          const userService = this.injector.get(UserService);
-          return userService.getProfile();
+        tap((user: User) => {
+          this.updateCurrentUser(user);
         }),
         catchError((err) => {
           throw err;
@@ -85,26 +83,22 @@ export class AuthService {
 
   refreshToken(): Observable<any> {
     if (this._isRefreshing) {
-      return this._refreshTokenSubject;
+      return this._refreshTokenSubject.pipe(filter(val => val), take(1));
     }
 
     this._isRefreshing = true;
-    const refreshToken = this.getRefreshTokenFromStorage();
-
-    if (!refreshToken) {
-      this.logout();
-      return throwError(() => new Error('No refresh token available'));
-    }
 
     return this.http
-      .post<LoginResponse>(
-        `${this.API_BASE_URL}/refresh-token`, { refreshToken }
+      .post<User>(
+        `${this.API_BASE_URL}/refresh-token`, 
+        {}, 
+        { withCredentials: true }
       )
       .pipe(
-        tap((response: LoginResponse) => {
+        tap((user: User) => {
           this._isRefreshing = false;
-          localStorage.setItem('authToken', response.access_token);
-          this._refreshTokenSubject.next(response.access_token);
+          this.updateCurrentUser(user);
+          this._refreshTokenSubject.next(true);
         }),
         catchError((err) => {
           this._isRefreshing = false;
@@ -128,9 +122,7 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
-    localStorage.removeItem('refreshToken');
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
@@ -141,20 +133,12 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getTokenFromStorage();
+    return !!this.getUserFromStorage(); 
   }
 
   isAdmin(): boolean {
     const user = this.getUserFromStorage();
     return !!user && user.role === 'admin';
-  }
-
-  getTokenFromStorage(): string | null {
-    return localStorage.getItem('authToken');
-  }
-
-  getRefreshTokenFromStorage(): string | null {
-    return localStorage.getItem('refreshToken');
   }
 
   private getUserFromStorage(): User | null {
@@ -164,7 +148,7 @@ export class AuthService {
     }
     
     try {
-      return JSON.parse(userJson) as User;
+      return JSON.parse(userJson) as User; 
     } catch (e) {
       console.error('Failed to parse user from localStorage', e);
       localStorage.removeItem('currentUser');

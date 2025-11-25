@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ProfileCard } from './profile-card';
+import { CustomLocation } from './custom-location';
 
-describe('ProfileCard', () => {
-  let component: ProfileCard;
-  let fixture: ComponentFixture<ProfileCard>;
+describe('CustomLocation', () => {
+  let component: CustomLocation;
+  let fixture: ComponentFixture<CustomLocation>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProfileCard]
+      imports: [CustomLocation]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ProfileCard);
+    fixture = TestBed.createComponent(CustomLocation);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
