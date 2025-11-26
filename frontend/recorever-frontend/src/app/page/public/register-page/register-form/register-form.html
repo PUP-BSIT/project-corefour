@@ -1,19 +1,17 @@
-<form
-  [formGroup]="registerForm"
-  (ngSubmit)="onSubmit()"
-  class="register-form"
->
+<form [formGroup]="registerForm"
+      (ngSubmit)="onSubmit()"
+      class="register-form">
+  
   <h2 class="form-title">Register</h2>
 
   <!-- Name Field -->
   <div class="form-field">
     <label for="name">Name</label>
-    <input
-      id="name"
-      type="text"
-      formControlName="name"
-      placeholder="Enter your full name"
-    />
+    <input id="name"
+           type="text"
+           formControlName="name"
+           placeholder="Enter your full name"/>
+
     @if (name?.invalid && (name?.dirty || name?.touched)) {
       <div class="error-message">
         @if (name?.errors?.['required']) {
@@ -26,13 +24,15 @@
   <!-- Phone Number Field -->
   <div class="form-field">
     <label for="phone_number">Phone Number</label>
-    <input
-      id="phone_number"
-      type="tel"
-      formControlName="phone_number"
-      placeholder="09xxxxxxxx"
-    />
-    @if (phone_number?.invalid && (phone_number?.dirty || phone_number?.touched)) {
+    <input id="phone_number"
+           type="tel"
+           formControlName="phone_number"
+           placeholder="09xxxxxxxx"/>
+
+    @if (
+      phone_number?.invalid &&
+      (phone_number?.dirty || phone_number?.touched)
+    ) {
       <div class="error-message">
         @if (phone_number?.errors?.['required']) {
           <span>Phone number is required.</span>
@@ -47,12 +47,11 @@
   <!-- Email Field -->
   <div class="form-field">
     <label for="email">Email</label>
-    <input
-      id="email"
-      type="email"
-      formControlName="email"
-      placeholder="example@mail.com"
-    />
+    <input id="email"
+           type="email"
+           formControlName="email"
+           placeholder="example@mail.com"/>
+
     @if (email?.invalid && (email?.dirty || email?.touched)) {
       <div class="error-message">
         @if (email?.errors?.['required']) {
@@ -69,29 +68,23 @@
   <div class="form-field">
     <label for="password">Password</label>
     <div class="password-wrapper">
-      <input
-        id="password"
-        [type]="passwordFieldType"
-        formControlName="password"
-        placeholder="••••••••••"
-      />
-      <button
-        type="button"
-        class="toggle-visibility"
-        (click)="togglePasswordVisibility()"
-      >
+      <input id="password"
+             [type]="passwordFieldType"
+             formControlName="password"
+             placeholder="••••••••••"/>
+
+      <button type="button"
+              class="toggle-visibility"
+              (click)="togglePasswordVisibility()">
+
         @if (passwordFieldType === 'password') {
-          <img
-            src="assets/eye-close.png"
-            alt="Show password"
-            class="eye-icon"
-          />
+          <img src="assets/eye-close.png"
+               alt="Show password"
+               class="eye-icon"/>
         } @else {
-          <img
-            src="assets/eye-open.png"
-            alt="Hide password"
-            class="eye-icon"
-          />
+          <img src="assets/eye-open.png"
+               alt="Hide password"
+               class="eye-icon"/>
         }
       </button>
     </div>
@@ -131,32 +124,26 @@
   <div class="form-field">
     <label for="confirmPassword">Confirm Password</label>
     <div class="password-wrapper">
-      <input
-        id="confirmPassword"
-        [type]="confirmPasswordFieldType"
-        formControlName="confirmPassword"
-        placeholder="••••••••••"
-      />
-      <button
-        type="button"
-        class="toggle-visibility"
-        (click)="toggleConfirmPasswordVisibility()"
-      >
+      <input id="confirmPassword"
+             [type]="confirmPasswordFieldType"
+             formControlName="confirmPassword"
+             placeholder="••••••••••"/>
+
+      <button type="button"
+              class="toggle-visibility"
+              (click)="toggleConfirmPasswordVisibility()">
         @if (confirmPasswordFieldType === 'password') {
-          <img
-            src="assets/eye-close.png"
-            alt="Show password"
-            class="eye-icon"
-          />
+          <img src="assets/eye-close.png"
+               alt="Show password"
+               class="eye-icon"/>
         } @else {
-          <img
-            src="assets/eye-open.png"
-            alt="Hide password"
-            class="eye-icon"
-          />
+          <img src="assets/eye-open.png"
+               alt="Hide password"
+               class="eye-icon"/>
         }
       </button>
     </div>
+
     @if (
       confirmPassword?.invalid &&
       (confirmPassword?.dirty || confirmPassword?.touched)
@@ -176,11 +163,9 @@
   </div>
 
   <!-- Submit Button -->
-  <button
-    type="submit"
-    class="submit-button"
-    [disabled]="registerForm.invalid || isLoading"
-  >
+  <button type="submit"
+          class="submit-button"
+          [disabled]="registerForm.invalid || isLoading">
     @if (isLoading) {
       Processing...
     } @else {
