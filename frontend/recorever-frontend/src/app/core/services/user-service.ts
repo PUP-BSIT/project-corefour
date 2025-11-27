@@ -41,7 +41,7 @@ export class UserService {
       )
       .pipe(
         map(response => response.isUnique),
-        catchError(() => of(false))
+        catchError(() => of(true))
       );
   }
 
