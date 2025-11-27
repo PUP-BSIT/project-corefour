@@ -119,37 +119,40 @@ public class UserController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @GetMapping("/user/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable int id) {
-        User user = repo.findById(id);
-        if (user == null) {
-            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+    @GetMapping("/check-unique")
+    public ResponseEntity<Map<String, Boolean>> checkUnique(
+        Authentication authentication,
+        @RequestParam String field,
+        @RequestParam String value
+    ) {
+        User user = (User) authentication.getPrincipal();
+        int userId = user.getUser_id();
+        boolean isUnique = true;
+
+        if ("email".equals(field)) {
+            isUnique = !repo.isEmailTaken(value, userId);
+        } else if ("phone_number".equals(field)) {
+            isUnique = !repo.isPhoneNumberTaken(value, userId);
+        } else if ("name".equals(field)) {
+            isUnique = !repo.isNameTaken(value, userId);
         }
-        UserResponseDTO responseDto = mapToUserResponseDTO(user);
-        return ResponseEntity.ok(responseDto);
+
+        return ResponseEntity.ok(Map.of("isUnique", isUnique));
     }
 
     @PutMapping("/update-user-data")
     public ResponseEntity<?> updateUser(Authentication authentication,
                                         @RequestParam(required = false) String name,
                                         @RequestParam(required = false) String phone_number,
+                                        @RequestParam(required = false) String email, 
                                         @RequestParam(required = false) String profile_picture) {
         
         User user = (User) authentication.getPrincipal();
 
-        if (name != null && !name.isEmpty()) {
-            user.setName(name);
-        }
-        if (phone_number != null && !phone_number.isEmpty()) {
-            user.setPhone_number(phone_number);
-        }
-        if (profile_picture != null && !profile_picture.isEmpty()) {
-            user.setProfile_picture(profile_picture);
-        }
+        Map<String, Object> result = service.updateUserProfile(user, name, phone_number, email, profile_picture);
 
-        boolean updated = repo.updateUser(user.getUser_id(), user.getName(), user.getPhone_number(), user.getProfile_picture());
-        if (!updated) {
-            return ResponseEntity.badRequest().body("Failed to update user.");
+        if (result.containsKey("error")) {
+            return ResponseEntity.badRequest().body(result);
         }
 
         User updatedUser = repo.findById(user.getUser_id());

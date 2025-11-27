@@ -1,1 +1,7 @@
-<p>report-found-page works!</p>
+<div class="report-page-container">
+  <h1 class="page-title">Report Found Item</h1>
+
+  <app-item-report-form [formType]="'found'"
+      (formSubmitted)="handleSubmission($event)"
+      (formCancelled)="handleCancel()" />
+</div>

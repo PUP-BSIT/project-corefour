@@ -1,4 +1,11 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  inject,
+} from '@angular/core';
 import {
   FormBuilder,
   ReactiveFormsModule,
@@ -17,10 +24,13 @@ import { LoginRequest } from '../../../../models/auth-model';
   templateUrl: './login-form.html',
   styleUrl: './login-form.scss',
 })
-export class LoginForm {
+export class LoginForm implements OnInit {
   private fb = inject(FormBuilder);
 
+  @Input() loginError = false;
+  @Input() isSubmitting = false;
   @Output() loginSubmit = new EventEmitter<LoginRequest>();
+  @Output() clearError = new EventEmitter<void>();
 
   isPasswordVisible = false;
 
@@ -35,12 +45,27 @@ export class LoginForm {
     }],
   });
 
-  get emailControl() { return this.loginForm.get('email'); }
-  get passwordControl() { return this.loginForm.get('password'); }
+  ngOnInit(): void {
+    this.loginForm.valueChanges.subscribe(() => {
+      if (this.loginError) {
+        this.clearError.emit();
+      }
+    });
+  }
+
+  get emailControl() {
+    return this.loginForm.get('email');
+  }
+
+  get passwordControl() {
+    return this.loginForm.get('password');
+  }
 
   submitForm(): void {
     if (this.loginForm.valid) {
-      this.loginSubmit.emit(this.loginForm.getRawValue() as LoginRequest);
+      this.loginSubmit.emit(
+        this.loginForm.getRawValue() as LoginRequest
+      );
     } else {
       this.loginForm.markAllAsTouched();
     }

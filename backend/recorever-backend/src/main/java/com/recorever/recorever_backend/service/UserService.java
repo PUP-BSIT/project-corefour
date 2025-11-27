@@ -60,4 +60,48 @@ public class UserService {
             "user", user
         );
     }
+
+    public Map<String, Object> updateUserProfile(User user, String name, String phoneNumber, String email, String profilePicture) {
+        
+        int userId = user.getUser_id();
+
+        if (name != null && !name.isEmpty() && !name.equals(user.getName())) {
+            if (repo.isNameTaken(name, userId)) {
+                return Map.of("error", "Username is already taken.");
+            }
+            user.setName(name);
+        }
+
+        if (phoneNumber != null && !phoneNumber.isEmpty() && !phoneNumber.equals(user.getPhone_number())) {
+            if (repo.isPhoneNumberTaken(phoneNumber, userId)) {
+                return Map.of("error", "Phone number is already in use by another account.");
+            }
+            user.setPhone_number(phoneNumber);
+        }
+
+        if (email != null && !email.isEmpty() && !email.equals(user.getEmail())) {
+            if (repo.isEmailTaken(email, userId)) {
+                return Map.of("error", "Email is already in use by another account.");
+            }
+            user.setEmail(email);
+        }
+
+        if (profilePicture != null && !profilePicture.isEmpty()) {
+            user.setProfile_picture(profilePicture);
+        }
+
+        boolean updated = repo.updateUser(
+            user.getUser_id(), 
+            user.getName(), 
+            user.getPhone_number(), 
+            user.getEmail(),
+            user.getProfile_picture()
+        );
+
+        if (!updated) {
+             return Map.of("error", "Failed to update user.");
+        }
+
+        return Map.of("success", true);
+    }
 }
