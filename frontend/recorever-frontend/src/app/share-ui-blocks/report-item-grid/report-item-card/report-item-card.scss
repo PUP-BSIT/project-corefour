@@ -5,22 +5,30 @@ $light-grey-bg: #f5f5f5;
 $border-color: #eee;
 $text-color: #333;
 $secondary-text: #666;
+$danger-color: #dc3545;
 
 .item-card {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  width: 300px;
-  margin: 20px;
+  overflow: visible;
+  width: 100%;
+  max-width: 300px;
   border: 1px solid $border-color;
+  position: relative;
 
   .card-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     padding: 10px 15px;
     background-color: $light-grey-bg;
     border-bottom: 1px solid $border-color;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
 
     .avatar {
       background-color: $primary-purple;
@@ -48,6 +56,67 @@ $secondary-text: #666;
         margin: 0;
         font-size: 12px;
         color: $secondary-text;
+      }
+    }
+
+    .action-menu-container {
+      position: relative;
+
+      .menu-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        
+        img {
+          width: 20px; 
+          height: auto;
+          opacity: 0.6;
+          
+          &:hover {
+            opacity: 1;
+          }
+        }
+      }
+
+      .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 50;
+        min-width: 120px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        
+        .dropdown-item {
+          padding: 10px 15px;
+          background: none;
+          border: none;
+          text-align: left;
+          font-size: 14px;
+          cursor: pointer;
+          color: $text-color;
+          
+          &:hover {
+            background-color: #f9f9f9;
+          }
+
+          &.delete {
+            color: $danger-color;
+            &:hover {
+              background-color: color.adjust(
+                $danger-color, $lightness: 45%
+              );
+            }
+          }
+        }
       }
     }
   }
@@ -121,6 +190,7 @@ $secondary-text: #666;
       color: $text-color;
       line-height: 1.4;
       margin-bottom: 20px;
+      min-height: 40px;
     }
 
     .card-footer-actions {
@@ -128,13 +198,6 @@ $secondary-text: #666;
       justify-content: space-between;
       align-items: center;
       margin-top: 10px;
-
-      .verified-label {
-        font-size: 14px;
-        color: #ccc;
-        font-weight: 500;
-        visibility: hidden;
-      }
     }
 
     .ticket-btn {

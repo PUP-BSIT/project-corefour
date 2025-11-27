@@ -1,17 +1,26 @@
+:host {
+  display: block; 
+  width: 100%;
+}
+
 .item-grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-  padding: 10px 0;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem 0;
+  width: 100%;
+}
 
-  app-report-item-card {
-    display: block;
-  }
+.empty-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+  padding: 2rem;
+}
 
-  .empty-message {
-    grid-column: 1 / -1;
-    padding: 40px;
-    color: #777;
-    font-style: italic;
+@media (max-width: 640px) {
+  .item-grid-container {
+    grid-template-columns: 1fr;
   }
 }
