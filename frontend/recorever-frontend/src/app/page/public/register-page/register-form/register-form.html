@@ -1,10 +1,10 @@
 <form [formGroup]="registerForm"
       (ngSubmit)="onSubmit()"
       class="register-form">
-  
+
   <h2 class="form-title">Register</h2>
 
-  <!-- Name Field -->
+  <!-- Username Field -->
   <div class="form-field">
     <label for="name">Username</label>
     <input id="name"
@@ -16,6 +16,10 @@
       <div class="error-message">
         @if (name?.errors?.['required']) {
           <span>Name is required.</span>
+        }
+
+        @if (name?.errors?.['notUnique']) {
+          <span>This username is already taken.</span>
         }
       </div>
     }
@@ -40,6 +44,9 @@
         @if (phone_number?.errors?.['pattern']) {
           <span>Please enter a valid PH phone number.</span>
         }
+        @if (phone_number?.errors?.['notUnique']) {
+          <span>This phone number is already registered.</span>
+        }
       </div>
     }
   </div>
@@ -59,6 +66,9 @@
         }
         @if (email?.errors?.['email']) {
           <span>Please enter a valid email address.</span>
+        }
+        @if (email?.errors?.['notUnique']) {
+          <span>This email is already in use.</span>
         }
       </div>
     }
@@ -162,14 +172,20 @@
     }
   </div>
 
+  @if (errorMessage) {
+    <div class="global-error-alert">
+      {{ errorMessage }}
+    </div>
+  }
+
   <!-- Submit Button -->
   <button type="submit"
           class="submit-button"
-          [disabled]="registerForm.invalid || isLoading">
-    @if (isLoading) {
+          [disabled]="registerForm.invalid || isLoading || registerForm.pending">
+    @if (isLoading || registerForm.pending) {
       Processing...
     } @else {
-        Register
+      Register
     }
   </button>
 
