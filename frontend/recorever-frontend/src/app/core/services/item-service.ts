@@ -2,7 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type { Report, ReportFilters } from '../../models/item-model';
+import type { Report, ReportFilters, FinalReportSubmission }
+    from '../../models/item-model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,6 +11,10 @@ import type { Report, ReportFilters } from '../../models/item-model';
 export class ItemService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
+
+  createReport(report: FinalReportSubmission): Observable<Report> {
+    return this.http.post<Report>(`${this.apiUrl}/report`, report);
+  }
 
   getReports(filters: ReportFilters): Observable<Report[]> {
     let params = new HttpParams();

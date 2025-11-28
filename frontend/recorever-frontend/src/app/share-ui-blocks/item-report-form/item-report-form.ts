@@ -12,6 +12,13 @@ import {
 import { CustomLocation }
 from '../../modal/custom-location/custom-location';
 
+type ApiReportPayload = {
+    type: 'lost' | 'found';
+    item_name: string;
+    location: string;
+    description: string;
+};
+
 
 @Component({
   selector: 'app-item-report-form',
@@ -61,7 +68,7 @@ export class ItemReportForm implements OnInit {
       ],
       description: [
         this.existingItemData?.description || '',
-        { validators: [Validators.required, Validators.minLength(100),
+        { validators: [Validators.required, Validators.minLength(10),
             Validators.maxLength(500)] }
       ],
       photoUrls: this.fb.array([])
@@ -96,23 +103,20 @@ export class ItemReportForm implements OnInit {
 
   onSubmit(): void {
     if (this.reportForm.valid) {
-      const formValue: FinalReportSubmission = {
+      const apiPayload: ApiReportPayload = {
           type: this.formType,
-          status: 'pending',
           item_name: this.reportForm.controls.item_name.value!,
           location: this.reportForm.controls.location.value!,
-          date_reported: this.reportForm.controls.date_reported.value!,
           description: this.reportForm.controls.description.value!,
-          photoUrls: [],
       };
 
-      this.formSubmitted.emit(formValue);
+      this.formSubmitted.emit(apiPayload as FinalReportSubmission);
     } else {
       this.reportForm.markAllAsTouched();
     }
   }
 
   onCancel(): void {
-    this.reportForm.reset();
+    this.formCancelled.emit();
   }
 }
