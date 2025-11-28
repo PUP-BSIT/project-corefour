@@ -1,16 +1,18 @@
 :host {
   display: block;
   height: 100vh;
+  overflow: hidden;
 }
 
 .layout-wrapper {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  height: 100%;
 }
 
 .page-content {
   flex-grow: 1;
+  overflow-y: auto;
 }
 
 app-header,
