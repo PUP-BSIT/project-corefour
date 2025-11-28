@@ -11,7 +11,7 @@ import {
     ReportSubmissionPayload
 } from '../../models/item-model';
 import { CustomLocation }
-from '../../modal/custom-location/custom-location';
+    from '../../modal/custom-location/custom-location';
 
 @Component({
   selector: 'app-item-report-form',
