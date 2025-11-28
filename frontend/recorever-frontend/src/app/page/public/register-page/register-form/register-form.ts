@@ -89,33 +89,35 @@ export class RegisterFormComponent implements OnChanges {
 
   registerForm = this.formBuilder.group(
     {
-      name: [
-        '',
-        [Validators.required],
-        [this.userService.uniqueValidator('name', '')],
-      ],
-      phone_number: [
-        '',
-        [
+      name: ['', {
+        validators: [Validators.required],
+        asyncValidators: [this.userService.uniqueValidator('name', '')]
+      }],
+
+      phone_number: ['', {
+        validators: [
           Validators.required,
           Validators.pattern(/^(\+63|0)9\d{9}$/),
         ],
-        [this.userService.uniqueValidator('phone_number', '')],
-      ],
-      email: [
-        '',
-        [Validators.required, Validators.email],
-        [this.userService.uniqueValidator('email', '')],
-      ],
-      password: [
-        '',
-        [
+        asyncValidators: [this.userService.uniqueValidator('phone_number', '')]
+      }],
+
+      email: ['', {
+        validators: [Validators.required, Validators.email],
+        asyncValidators: [this.userService.uniqueValidator('email', '')]
+      }],
+
+      password: ['', {
+        validators: [
           Validators.required,
           Validators.minLength(8),
           strongPasswordValidator(),
-        ],
-      ],
-      confirmPassword: ['', [Validators.required]],
+        ]
+      }],
+
+      confirmPassword: ['', {
+        validators: [Validators.required]
+      }],
     },
     {
       validators: [passwordMatchValidator('password', 'confirmPassword')],
@@ -123,7 +125,7 @@ export class RegisterFormComponent implements OnChanges {
   );
 
   @Output() formSubmit = new EventEmitter<RegisterRequest>();
-  @Input() isLoading: boolean = false;
+  @Input() isLoading = false;
   @Input() errorMessage: string | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -192,7 +194,7 @@ export class RegisterFormComponent implements OnChanges {
   }
 
 onSubmit(): void {
-    this.errorMessage = null;
+  this.errorMessage = null;
     if (this.registerForm.valid) {
       this.formSubmit.emit(this.registerForm.getRawValue() as RegisterRequest);
     } else {
