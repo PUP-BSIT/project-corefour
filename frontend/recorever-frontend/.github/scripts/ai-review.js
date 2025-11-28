@@ -11,6 +11,7 @@ const CONFIG = {
     copilotInstructions: "copilot-instructions.md",
   },
   diffLimit: 40000,
+  maxLineLength: 80, // Hard limit handled by JS
 };
 
 function initializeAI(apiKey) {
@@ -57,46 +58,41 @@ async function getPullRequestDiff(octokit, context) {
 }
 
 // Manually parse the diff to get accurate line numbers
-// This prevents the AI from "guessing" and getting it wrong
-function parseDiffAndAddLineNumbers(diff) {
+function parseDiff(diff) {
   const lines = diff.split('\n');
   let currentFile = '';
   let currentLine = 0;
-  let numberedContent = [];
+  let parsedLines = [];
 
   for (const line of lines) {
-    // Detect file header (e.g., "diff --git a/src/app.ts b/src/app.ts")
     if (line.startsWith('diff --git')) {
       const parts = line.split(' ');
       const bPath = parts.find(p => p.startsWith('b/'));
-      if (bPath) {
-        currentFile = bPath.substring(2);
-      }
+      if (bPath) currentFile = bPath.substring(2);
       continue;
     }
 
-    // Detect chunk header (e.g., "@@ -10,5 +20,5 @@")
     if (line.startsWith('@@')) {
       const match = line.match(/\+(\d+)/);
-      if (match) {
-        currentLine = parseInt(match[1], 10);
-      }
+      if (match) currentLine = parseInt(match[1], 10);
       continue;
     }
 
-    // Process Content Lines
     if (currentFile) {
       if (line.startsWith('+') && !line.startsWith('+++')) {
-        numberedContent.push(`${currentFile}:${currentLine}: ${line.substring(1)}`);
+        const content = line.substring(1);
+        parsedLines.push({
+          file: currentFile,
+          line: currentLine,
+          content: content
+        });
         currentLine++;
-      } else if (line.startsWith(' ')) {
-        numberedContent.push(`${currentFile}:${currentLine}: ${line.substring(1)}`);
+      } else if (line.startsWith(' ') && !line.startsWith('+++')) {
         currentLine++;
-      } else if (line.startsWith('-')) {
       }
     }
   }
-  return numberedContent.join('\n');
+  return parsedLines;
 }
 
 function loadCodingGuidelines() {
@@ -112,67 +108,66 @@ function loadCodingGuidelines() {
   return "";
 }
 
-function createPrompt(rules, numberedDiff) {
+function createPrompt(rules, numberedDiffString) {
   return `
     You are a strict Senior Angular Code Reviewer.
     
     ### CODING GUIDELINES:
     ${rules}
 
-    ### ACCURACY INSTRUCTIONS (CRITICAL):
-    The code below is pre-processed. Each line starts with \`filepath:lineNumber: code\`.
-    1. **Line Numbers:** You MUST use the exact line number provided in the prefix (e.g. for \`src/app.ts:42: code\`, the line is 42).
-    2. **Line Length:** When checking the 80-char limit, DO NOT count the prefix \`filepath:lineNumber: \`. Only count the code part.
-    3. **Hallucination Prevention:**
-       - **Nested Subscriptions:** Only flag \`.subscribe\` if it is *inside* the callback of another \`.subscribe\`. Flag the INNER one.
-       - **Types:** \`data: any\` is "Forbidden any". \`data\` (no type) is "Missing type".
-
-    ### ADDITIONAL CHECKS:
-    - **FORBIDDEN:** 'any', 'ngStyle', '*ngIf', '*ngFor'.
-    - **REQUIRED:** signals, @if, @for, typed interfaces.
-
-    ### CRITICAL:
-    - **NO TAGS:** Escape all Angular keywords (e.g. use \`@if\`, not @if) to prevent tagging users.
+    ### ACCURACY INSTRUCTIONS:
+    The code provided below is in the format: \`FILE:LINE:CONTENT\`.
+    1. **Line Numbers:** You MUST return the exact line number provided in the line prefix.
+    2. **Line Length:** IGNORE line length violations. The system checks this automatically.
+    
+    ### HALLUCINATION PREVENTION (CRITICAL):
+    - **Inferred Types:** Do NOT flag missing types for arrow function parameters in callbacks (e.g. \`.subscribe(data => ...)\` is OK).
+        Only flag missing types in explicit function declarations.
+    - **Nested Subscriptions:** Only flag \`.subscribe\` if you clearly see it *inside* another \`.subscribe\` block.
+    
+    ### OUTPUT RULES:
+    - **No Tags:** Escape all Angular keywords (use \`@if\`, not @if).
+    - **Snippet:** Copy the code content exactly into the snippet field.
 
     ### TASK:
-    Review the code below. Return a JSON object.
+    Review the code lines below. Return a JSON object.
     - If violations found -> "conclusion": "REQUEST_CHANGES".
     - If code is good -> "conclusion": "APPROVE".
 
     CODE TO REVIEW:
-    ${numberedDiff.slice(0, CONFIG.diffLimit)} 
+    ${numberedDiffString.slice(0, CONFIG.diffLimit)} 
   `;
 }
 
-async function postReview(octokit, context, reviewData) {
-  if (!reviewData.reviews || reviewData.reviews.length === 0) return;
+async function postReview(octokit, context, reviewData, automaticComments) {
+  let allComments = [...automaticComments];
 
-  const validComments = reviewData.reviews
-    .filter((r) => r.line > 0)
-    .map((r) => {
-      // Clean up comments to prevent tagging
-      let safeComment = r.comment.replace(/(@(if|for|switch|let|case|default|else|empty))/g, '`$1`');
-      
-      return {
-        path: r.path,
-        line: r.line,
-        body: `🤖 **AI Review:** ${safeComment}\n\n\`\`\`typescript\n${r.snippet}\n\`\`\``,
-      };
-    });
+  if (reviewData.reviews && reviewData.reviews.length > 0) {
+    const aiComments = reviewData.reviews
+      .filter((r) => r.line > 0)
+      .map((r) => {
+        let safeComment = r.comment.replace(/(@(if|for|switch|let|case|default|else|empty))/g, '`$1`');
+        return {
+          path: r.path,
+          line: r.line,
+          body: `🤖 **AI Review:** ${safeComment}\n\n\`\`\`typescript\n${r.snippet}\n\`\`\``,
+        };
+      });
+    allComments = allComments.concat(aiComments);
+  }
 
-  if (validComments.length > 0) {
+  if (allComments.length > 0) {
     await octokit.rest.pulls.createReview({
       owner: context.repo.owner,
       repo: context.repo.repo,
       pull_number: context.payload.pull_request.number,
-      event: reviewData.conclusion,
-      comments: validComments,
-      body:
-        reviewData.conclusion === "APPROVE"
-          ? "✅ Code looks good."
-          : "⚠️ **Violations found.** Please fix the issues below.",
+      event: "REQUEST_CHANGES",
+      comments: allComments,
+      body: "⚠️ **Violations found.** Please fix the issues below.",
     });
+    return "REQUEST_CHANGES";
   }
+  return "APPROVE";
 }
 
 async function run() {
@@ -195,12 +190,29 @@ async function run() {
       return;
     }
 
-    // Parse the diff to add explicit line numbers for the AI
-    const numberedDiff = parseDiffAndAddLineNumbers(prDiff);
-    const rules = loadCodingGuidelines();
-    const prompt = createPrompt(rules, numberedDiff);
+    const parsedLines = parseDiff(prDiff);
+    const automaticComments = [];
+    const numberedDiffLines = [];
 
-    console.log(`Sending diff to ${CONFIG.modelName}...`);
+    for (const lineObj of parsedLines) {
+      const isIgnorable = /^\s*(\/\/|\/\*|\*|import )/.test(lineObj.content);
+      
+      if (!isIgnorable && lineObj.content.length > CONFIG.maxLineLength) {
+        automaticComments.push({
+          path: lineObj.file,
+          line: lineObj.line,
+          body: `📏 **Style Violation:** Line exceeds ${CONFIG.maxLineLength} characters 
+                (Current: ${lineObj.content.length}). Please break this line.`
+        });
+      }
+      
+      numberedDiffLines.push(`${lineObj.file}:${lineObj.line}:${lineObj.content}`);
+    }
+
+    const rules = loadCodingGuidelines();
+    const prompt = createPrompt(rules, numberedDiffLines.join('\n'));
+
+    console.log(`Sending content to ${CONFIG.modelName}...`);
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
@@ -209,12 +221,12 @@ async function run() {
       reviewData = JSON.parse(responseText);
     } catch (e) {
       console.error("JSON Parse Error:", responseText);
-      return;
+      return; 
     }
 
-    await postReview(octokit, context, reviewData);
+    const finalStatus = await postReview(octokit, context, reviewData, automaticComments);
 
-    if (reviewData.conclusion === "REQUEST_CHANGES") {
+    if (finalStatus === "REQUEST_CHANGES") {
       core.setFailed(
         "❌ Blocking Merge: Violations of Coding Guidelines found. Please fix the issues commented by the AI."
       );
