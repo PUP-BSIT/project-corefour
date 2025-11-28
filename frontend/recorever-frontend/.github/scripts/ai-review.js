@@ -116,7 +116,7 @@ function createPrompt(rules, numberedDiff) {
   return `
     You are a strict Senior Angular Code Reviewer.
     
-    ### CODING GUIDELINES (SOURCE OF TRUTH):
+    ### CODING GUIDELINES:
     ${rules}
 
     ### ACCURACY INSTRUCTIONS (CRITICAL):
