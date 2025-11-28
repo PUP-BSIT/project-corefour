@@ -2,12 +2,14 @@
   display: block;
   height: 100vh;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .layout-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
+  box-sizing: border-box;
 }
 
 .page-content {

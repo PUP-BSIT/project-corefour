@@ -103,21 +103,31 @@
 }
 
 @media (max-width: 768px) {
+  .app-footer {
+    padding: 20px 15px;
+  }
+
   .footer-container {
     flex-wrap: wrap;
     justify-content: flex-start;
+    gap: 15px;
   }
 
   .footer-section {
     flex-basis: 45%;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     min-width: unset;
   }
 
   .logo-column {
     flex-basis: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     justify-content: center;
     align-items: center;
+  }
+
+  .footer-bottom {
+    margin-top: 20px;
+    padding-top: 15px;
   }
 }
