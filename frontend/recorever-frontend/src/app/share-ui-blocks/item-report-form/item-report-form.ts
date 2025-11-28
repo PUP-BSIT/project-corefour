@@ -7,18 +7,11 @@ import {
     Report,
     ItemReportForm as ItemFormType,
     StandardLocations,
-    FinalReportSubmission
+    FinalReportSubmission,
+    ReportSubmissionPayload
 } from '../../models/item-model';
 import { CustomLocation }
 from '../../modal/custom-location/custom-location';
-
-type ApiReportPayload = {
-    type: 'lost' | 'found';
-    item_name: string;
-    location: string;
-    description: string;
-};
-
 
 @Component({
   selector: 'app-item-report-form',
@@ -102,21 +95,21 @@ export class ItemReportForm implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.reportForm.valid) {
-      const apiPayload: ApiReportPayload = {
-          type: this.formType,
-          item_name: this.reportForm.controls.item_name.value!,
-          location: this.reportForm.controls.location.value!,
-          description: this.reportForm.controls.description.value!,
-      };
+      if (this.reportForm.valid) {
+        const apiPayload: ReportSubmissionPayload = {
+            type: this.formType,
+            item_name: this.reportForm.controls.item_name.value!,
+            location: this.reportForm.controls.location.value!,
+            description: this.reportForm.controls.description.value!,
+        };
 
-      this.formSubmitted.emit(apiPayload as FinalReportSubmission);
-    } else {
-      this.reportForm.markAllAsTouched();
+        this.formSubmitted.emit(apiPayload as FinalReportSubmission);
+      } else {
+        this.reportForm.markAllAsTouched();
+      }
+    }
+
+    onCancel(): void {
+      this.formCancelled.emit();
     }
   }
-
-  onCancel(): void {
-    this.formCancelled.emit();
-  }
-}
