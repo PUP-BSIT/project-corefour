@@ -1,14 +1,15 @@
 <main class="login-page-container">
   <section class="login-page-graphic">
-    <div class="graphic-placeholder"></div>
+    <div class="graphic-placeholder">
+      <img src="assets/log-in.jpg" alt="Login Page Graphic">
+    </div>
   </section>
 
   <section class="login-page-form">
-    <app-login-form
-        [loginError]="hasLoginError"
-        [isSubmitting]="isLoading"
-        (loginSubmit)="onLogin($event)"
-        (clearError)="onClearError()">
+    <app-login-form [loginError]="hasLoginError"
+     [isSubmitting]="isLoading"
+      (loginSubmit)="onLogin($event)"
+      (clearError)="onClearError()">
     </app-login-form>
   </section>
 </main>
