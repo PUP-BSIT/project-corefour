@@ -96,4 +96,15 @@
   <div class="help-link">
     <a [routerLink]="">Help & Support</a>
   </div>
+
+  @if (isLogoutModalOpen) {
+    <app-confirmation-modal
+      title="Log Out"
+      message="Are you sure you want to log out of your account?"
+      confirmLabel="Log Out"
+      variant="primary"
+      (confirm)="onLogoutConfirm()"
+      (cancel)="onLogoutCancel()">
+    </app-confirmation-modal>
+  }
 </div>

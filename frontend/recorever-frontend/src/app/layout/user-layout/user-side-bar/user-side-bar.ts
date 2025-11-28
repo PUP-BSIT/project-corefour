@@ -1,12 +1,13 @@
-import { Component, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { RouterModule, Router } from '@angular/router';
+import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
 import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
 import { AppRoutePaths } from '../../../app.routes';
 import { Notification } from '../../../share-ui-blocks/notification/notification';
 import { AuthService } from '../../../core/auth/auth-service';
+import { ConfirmationModal } from '../../../modal/confirmation-modal/confirmation-modal';
+import { LogoutResponse } from '../../../models/auth-model';
 
 @Component({
   selector: 'app-user-side-bar',
@@ -15,20 +16,24 @@ import { AuthService } from '../../../core/auth/auth-service';
     CommonModule, 
     RouterModule, 
     Notification,
-    AsyncPipe
+    AsyncPipe,
+    ConfirmationModal
   ], 
   templateUrl: './user-side-bar.html',
   styleUrl: './user-side-bar.scss',
 })
-export class UserSideBar {
+export class UserSideBar implements OnDestroy{
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   @Output() openSettingsModal = new EventEmitter<void>();
-  @Output() openLogoutModal = new EventEmitter<void>();
 
   public currentUser$: Observable<User | null> = this.authService.currentUser$;
-
+  protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
+
+  private logoutTrigger$ = new Subject<void>();
+  private destroy$ = new Subject<void>();
 
   protected profileDropdownItems: ProfileNavItem[] = [
     { label: 'Profile', iconPath: 'assets/profile-avatar.png',
@@ -62,7 +67,21 @@ export class UserSideBar {
           iconPath: 'assets/tracking-item.png' },
   ];
 
-  constructor(private router: Router) {}
+  constructor() {
+    this.logoutTrigger$
+      .pipe(
+        switchMap(() => this.authService.logout()),
+        takeUntil(this.destroy$) 
+      )
+      .subscribe({
+        next: (_response: LogoutResponse) => {
+          this.isLogoutModalOpen = false;
+        },
+        error: (_err) => {
+          this.isLogoutModalOpen = false;
+        }
+      });
+  }
 
   public toggleTracking(): void {
     this.isTrackingOpen = !this.isTrackingOpen;
@@ -88,8 +107,21 @@ export class UserSideBar {
         this.router.navigate(['/login']);
         break;
       case 'logout':
-        this.openLogoutModal.emit();
+        this.isLogoutModalOpen = true;
         break;
     }
+  }
+
+  protected onLogoutConfirm(): void {
+    this.logoutTrigger$.next();
+  }
+
+  protected onLogoutCancel(): void {
+    this.isLogoutModalOpen = false;
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
