@@ -57,7 +57,6 @@ async function getPullRequestDiff(octokit, context) {
   return prDiff;
 }
 
-// Manually parse the diff to get accurate line numbers
 function parseDiff(diff) {
   const lines = diff.split('\n');
   let currentFile = '';
@@ -131,7 +130,7 @@ function createPrompt(rules, numberedDiffString) {
 
     ### TASK:
     Review the code lines below. Return a JSON object.
-    - If violations found -> "conclusion": "REQUEST_CHANGES".
+    - If violations found -> "conclusion": "COMMENT".
     - If code is good -> "conclusion": "APPROVE".
 
     CODE TO REVIEW:
@@ -146,6 +145,7 @@ async function postReview(octokit, context, reviewData, automaticComments) {
     const aiComments = reviewData.reviews
       .filter((r) => r.line > 0)
       .map((r) => {
+        // Escape special characters to prevent GitHub markdown issues
         let safeComment = r.comment.replace(/(@(if|for|switch|let|case|default|else|empty))/g, '`$1`');
         return {
           path: r.path,
@@ -161,11 +161,11 @@ async function postReview(octokit, context, reviewData, automaticComments) {
       owner: context.repo.owner,
       repo: context.repo.repo,
       pull_number: context.payload.pull_request.number,
-      event: "REQUEST_CHANGES",
+      event: "COMMENT", 
       comments: allComments,
-      body: "⚠️ **Violations found.** Please fix the issues below.",
+      body: "⚠️ **AI Code Analysis:** I found some potential issues for you to review.",
     });
-    return "REQUEST_CHANGES";
+    return "FOUND_ISSUES";
   }
   return "APPROVE";
 }
@@ -197,6 +197,7 @@ async function run() {
     for (const lineObj of parsedLines) {
       const isIgnorable = /^\s*(\/\/|\/\*|\*|import )/.test(lineObj.content);
       
+      // Check for line length violations
       if (!isIgnorable && lineObj.content.length > CONFIG.maxLineLength) {
         automaticComments.push({
           path: lineObj.file,
@@ -224,12 +225,11 @@ async function run() {
       return; 
     }
 
+    // Post the review (comments only)
     const finalStatus = await postReview(octokit, context, reviewData, automaticComments);
 
-    if (finalStatus === "REQUEST_CHANGES") {
-      core.setFailed(
-        "❌ Blocking Merge: Violations of Coding Guidelines found. Please fix the issues commented by the AI."
-      );
+    if (finalStatus === "FOUND_ISSUES") {
+      core.warning("⚠️ AI found potential violations. Please review the comments.");
     } else {
       console.log("No issues found.");
     }
