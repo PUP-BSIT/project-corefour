@@ -3,6 +3,7 @@ package com.recorever.recorever_backend.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -29,9 +30,17 @@ public class SecurityConfig {
                     "/api/login-user",
                     "/api/register-user",
                     "/api/refresh-token",
+                    "/api/image/download/**",
                     "/error"
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN") 
+
+                // Require authentication for uploading and managing images
+                .requestMatchers(HttpMethod.POST, 
+                    "/api/report/*/upload-image", 
+                    "/api/claim/*/upload-image").authenticated()
+                .requestMatchers("/api/image/**").authenticated() 
+                .requestMatchers("/api/images").authenticated()
                 .anyRequest().authenticated()
             )
             .httpBasic(httpBasic -> httpBasic.disable())

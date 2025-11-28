@@ -33,7 +33,7 @@ public class ReportRepository {
             r.setStatus(rs.getString("status"));
             r.setSurrender_code(rs.getString("surrender_code"));
             r.setClaim_code(rs.getString("claim_code"));
-            r.setIs_deleted(rs.getBoolean("is_deleted"));
+            r.set_deleted(rs.getBoolean("is_deleted"));
             return r;
         }
     };
