@@ -36,6 +36,13 @@ export type ItemReportForm = FormGroup<{
   photoUrls: FormArray<FormControl<string | null>>;
 }>;
 
+export type ReportSubmissionPayload = {
+    type: 'lost' | 'found';
+    item_name: string;
+    location: string;
+    description: string;
+};
+
 export type FinalReportSubmission = {
     type: 'lost' | 'found';
     status: 'pending';
