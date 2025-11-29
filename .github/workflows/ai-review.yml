@@ -23,11 +23,10 @@ jobs:
           node-version: '20'
 
       - name: Install Dependencies
-        # Installs the Google AI SDK and GitHub Actions Core
         run: npm install @google/generative-ai @actions/core @actions/github
 
       - name: Run Gemini 2.5 Flash Review
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: node .github/scripts/review.js
+        run: node .github/scripts/ai-review.js
