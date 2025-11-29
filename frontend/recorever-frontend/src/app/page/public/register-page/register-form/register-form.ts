@@ -1,9 +1,18 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import {
   AbstractControl,
   FormBuilder,
-  FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
@@ -11,6 +20,7 @@ import {
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { RegisterRequest } from '../../../../models/auth-model';
+import { UserService } from '../../../../core/services/user-service';
 
 type PasswordFieldType = 'password' | 'text';
 type PasswordStrength = 'none' | 'weak' | 'medium' | 'strong';
@@ -72,51 +82,64 @@ export function strongPasswordValidator(): ValidatorFn {
   styleUrl: './register-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RegisterFormComponent implements OnInit {
+export class RegisterFormComponent implements OnChanges {
   private formBuilder = inject(FormBuilder);
+  private userService = inject(UserService);
+  private cdr = inject(ChangeDetectorRef);
 
-  registerForm!: FormGroup;
+  registerForm = this.formBuilder.group(
+    {
+      name: ['', {
+        validators: [Validators.required],
+        asyncValidators: [this.userService.uniqueValidator('name', '')]
+      }],
 
-  @Output() formSubmit = new EventEmitter<RegisterRequest>();
-  @Input() isLoading: boolean = false;
-  @Input() errorMessage: string | null = null;
+      phone_number: ['', {
+        validators: [
+          Validators.required,
+          Validators.pattern(/^(\+63|0)9\d{9}$/),
+        ],
+        asyncValidators: [this.userService.uniqueValidator('phone_number', '')]
+      }],
+
+      email: ['', {
+        validators: [Validators.required, Validators.email],
+        asyncValidators: [this.userService.uniqueValidator('email', '')]
+      }],
+
+      password: ['', {
+        validators: [
+          Validators.required,
+          Validators.minLength(8),
+          strongPasswordValidator(),
+        ]
+      }],
+
+      confirmPassword: ['', {
+        validators: [Validators.required]
+      }],
+    },
+    {
+      validators: [passwordMatchValidator('password', 'confirmPassword')],
+    }
+  );
+
+  @Output() formSubmit = new EventEmitter<RegisterRequest>();
+  @Input() isLoading = false;
+  @Input() errorMessage: string | null = null;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isLoading'] || changes['errorMessage']) {
+      this.cdr.detectChanges();
+    }
+  }
 
   passwordFieldType: PasswordFieldType = 'password';
   confirmPasswordFieldType: PasswordFieldType = 'password';
   passwordStrength: PasswordStrength = 'none';
 
-  ngOnInit(): void {
-    this.registerForm = this.formBuilder.group(
-      {
-        name: ['', { validators: [Validators.required] }],
-        phone_number: [
-          '',
-          {
-            validators: [
-              Validators.required,
-              Validators.pattern(/^(\+63|0)9\d{9}$/),
-            ],
-          },
-        ],
-        email: ['', { validators: [Validators.required, Validators.email] }],
-        password: [
-          '',
-          {
-            validators: [
-              Validators.required,
-              Validators.minLength(8),
-              strongPasswordValidator(),
-            ],
-          },
-        ],
-        confirmPassword: ['', { validators: [Validators.required] }],
-      },
-      {
-        validators: [passwordMatchValidator('password', 'confirmPassword')],
-      }
-    );
-
-    this.password?.valueChanges.subscribe((value: string | null) => {
+  constructor() {
+    this.registerForm.get('password')?.valueChanges.subscribe((value) => {
       this.updatePasswordStrength(value || '');
     });
   }
@@ -171,7 +194,7 @@ export class RegisterFormComponent implements OnInit {
   }
 
 onSubmit(): void {
-    this.errorMessage = null;
+  this.errorMessage = null;
     if (this.registerForm.valid) {
       this.formSubmit.emit(this.registerForm.getRawValue() as RegisterRequest);
     } else {
