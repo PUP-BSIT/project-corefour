@@ -14,7 +14,7 @@ Use type keyword to structure an object instead of interface.
 
 Naming Conventions:
 
-Enums: PascalCase for the enum name, UPPER_SNAKE_CASE for elements (e.g., Status.ACTIVE_USER).
+Enums: PascalCase for the enum name, UPPER_SNAKE_CASE for elements (e.g., Status.ACTIVE_USER).git 
 
 Classes/Types/Decorators: Always use PascalCase.
 
