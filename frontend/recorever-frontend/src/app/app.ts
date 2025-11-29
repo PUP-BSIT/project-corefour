@@ -1,9 +1,7 @@
-import { Component, signal, OnInit, AfterViewInit, Renderer2, Inject, ApplicationRef }
-    from '@angular/core';
+import { Component, signal, OnInit, ApplicationRef } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AuthService } from './core/auth/auth-service';
-import { DOCUMENT } from '@angular/common';
-import { filter, first } from 'rxjs/operators';
+import { filter, first, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -11,41 +9,31 @@ import { filter, first } from 'rxjs/operators';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-
-export class App implements OnInit, AfterViewInit {
+export class App implements OnInit {
   protected readonly title = signal('recorever-frontend');
+  protected readonly isLoading = signal(true);
 
   constructor(
     private auth: AuthService,
-    private renderer: Renderer2,
-    private appRef: ApplicationRef,
-    @Inject(DOCUMENT) private document: Document
+    private appRef: ApplicationRef
   ) {}
 
-  ngOnInit() {
-    this.auth.initAuth().subscribe();
-  }
-
-  ngAfterViewInit(): void {
-    this.appRef.isStable
+  ngOnInit(): void {
+    this.auth.initAuth()
       .pipe(
-        filter(stable => stable),
+        switchMap(() => this.appRef.isStable),
+        filter((stable: boolean) => stable),
         first()
       )
-      .subscribe(() => {
-        this.hideLoadingScreen();
+      .subscribe({
+        next: () => {
+          setTimeout(() => {
+            this.isLoading.set(false);
+          }, 500);
+        },
+        error: () => {
+          this.isLoading.set(false);
+        }
       });
-  }
-
-  private hideLoadingScreen(): void {
-    const loadingScreen = this.document.getElementById('app-loading-screen');
-
-    if (loadingScreen) {
-      this.renderer.addClass(loadingScreen, 'fade-out');
-
-      setTimeout(() => {
-        this.renderer.removeChild(this.document.body, loadingScreen);
-      }, 1000);
-    }
   }
 }
