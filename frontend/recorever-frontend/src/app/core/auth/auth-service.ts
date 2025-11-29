@@ -16,6 +16,7 @@ import type { LoginRequest,
 } from '../../models/auth-model';
 import type { User } from '../../models/user-model';
 import { UserService } from '../services/user-service';
+import { LogoutResponse } from '../../models/auth-model';
 
 @Injectable({
   providedIn: 'root',
@@ -121,7 +122,24 @@ export class AuthService {
       );
   }
 
-  logout(): void {
+  logout(): Observable<LogoutResponse> {
+    return this.http.post<LogoutResponse>(
+      `${this.API_BASE_URL}/logout`, 
+      {}, 
+      { withCredentials: true }
+    ).pipe(
+      tap((_response) => {
+        this.handleClientLogout();
+      }),
+      catchError((err) => {
+        console.error('Server logout failed', err);
+        this.handleClientLogout();
+        return of({ success: false, message: 'Local logout forced' } as LogoutResponse);
+      })
+    );
+  }
+
+  private handleClientLogout(): void {
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
