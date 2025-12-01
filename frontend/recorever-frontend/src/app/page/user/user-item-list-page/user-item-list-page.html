@@ -4,8 +4,22 @@
     <div class="item-list-page__search-wrapper">
       <app-search-bar (search)="onSearchSubmit($event)"></app-search-bar>
     </div>
-    <div class="item-list-page__report-wrapper">
-      <app-report-button [theme]="reportButtonTheme()"></app-report-button>
+
+    <div class="item-list-page__toggle-wrapper">
+      <button
+        type="button"
+        class="toggle-button"
+        [class.toggle-button--active]="!showResolved()"
+        (click)="toggleStatus(false)">
+        {{ itemType() === 'found' ? 'Unclaimed Items' : 'Unresolved Items' }}
+      </button>
+      <button
+        type="button"
+        class="toggle-button"
+        [class.toggle-button--active]="showResolved()"
+        (click)="toggleStatus(true)">
+        {{ itemType() === 'found' ? 'Claimed Items' : 'Resolved Items' }}
+      </button>
     </div>
   </header>
 
@@ -14,115 +28,93 @@
       type="button"
       class="filters__button"
       [class.filters__button--active]="activeFilter() === 'all'"
-      (click)="activeFilter.set('all'); activeDropdown.set(null)"
-    >
+      (click)="activeFilter.set('all'); activeDropdown.set(null)">
       All
     </button>
     <button
       type="button"
       class="filters__button"
       [class.filters__button--active]="activeFilter() === 'az'"
-      (click)="activeFilter.set('az'); activeDropdown.set(null)"
-    >
+      (click)="activeFilter.set('az'); activeDropdown.set(null)">
       A-Z ↑
     </button>
 
-    @if (itemType() === 'found') {
     <div class="filters__dropdown-container">
       <button
         type="button"
         class="filters__button filters__button--dropdown-label"
         [class.filters__button--active]="activeDropdown() === 'date'"
-        (click)="toggleDropdown('date')"
-      >
-        <span>Date Found</span>
+        (click)="toggleDropdown('date')">
+        <span>Date {{ itemType() === 'lost' ? 'Lost' : 'Found' }}</span>
         <span class="filters__dropdown-arrow">↓</span>
       </button>
 
       @if (activeDropdown() === 'date') {
       <div class="dropdown-panel dropdown-panel--date">
-        @for (filter of dateFilters; track filter) {
-        <button class="dropdown-panel__item" (click)="selectDateFilter(filter)">
+        @for (filter of dateFilters(); track filter) {
+        <button
+          class="dropdown-panel__item"
+          (click)="selectDateFilter(filter)">
           {{ filter }}
-          @if (filter === 'Any time') {
+          @if (selectedDateFilter() === filter) {
           <span class="dropdown-panel__checkmark">✓</span>
           }
         </button>
         }
         <button
           class="dropdown-panel__item"
-          (click)="selectDateFilter('Custom range...')"
-        >
+          (click)="selectDateFilter('Custom range...')">
           Custom range...
         </button>
       </div>
       }
     </div>
-
     <div class="filters__dropdown-container">
       <button
         type="button"
         class="filters__button filters__button--dropdown-label"
         [class.filters__button--active]="activeDropdown() === 'location'"
-        (click)="toggleDropdown('location')"
-      >
-        <span>Location Found</span>
+        (click)="toggleDropdown('location')">
+        <span>Location {{ itemType() === 'lost' ? 'Lost' : 'Found' }}</span>
         <span class="filters__dropdown-arrow">↓</span>
       </button>
 
       @if (activeDropdown() === 'location') {
       <div class="dropdown-panel dropdown-panel--location">
-        <input
-          type="text"
-          class="dropdown-panel__input"
-          placeholder="Type campus location..."
-        />
+        @for (location of locationFilters; track location) {
+        <button
+          class="dropdown-panel__item"
+          (click)="selectLocationFilter(location)">
+          {{ location }}
+          @if (selectedLocationFilter() === location) {
+          <span class="dropdown-panel__checkmark">✓</span>
+          }
+        </button>
+        }
       </div>
       }
     </div>
-    }
   </nav>
 
   <div class="item-list-page__content">
     @if (isLoading()) {
-      <div class="content-message">Loading items...</div>
+    <div class="content-message">Loading items...</div>
     } @else if (error()) {
-      <div class="content-message content-message--error">{{ error() }}</div>
+    <div class="content-message content-message--error">{{ error() }}</div>
     } @else if (!allReports().length) {
-      <div class="content-message">No items match your criteria.</div>
+    <div class="content-message">
+      No {{ itemType() === 'found' ? (showResolved() ? 'claimed' : 'unclaimed')
+        : (showResolved() ? 'resolved' :
+        'unresolved') }} items found.
+    </div>
     } @else {
-      <app-report-item-grid
-        [items]="unresolvedReports()"
-        [currentUserId]="currentUserId()"
-        (cardTicketClicked)="onTicketClick($event)"
-        (cardEditClicked)="onEditClick($event)"
-        (cardDeleteClicked)="onDeleteClick($event)">
-      </app-report-item-grid>
-
-      @if (itemType() === 'lost' && resolvedReports().length > 0) {
-        <div class="resolved-toggle-bar">
-          <button
-            class="resolved-toggle-btn"
-            (click)="showResolved.set(!showResolved())"
-          >
-            <span>View Resolved Items</span>
-            <span class="resolved-toggle-btn__arrow" [class.show]="showResolved()">
-              ^
-            </span>
-          </button>
-        </div>
-      }
-
-      @if (showResolved()) {
-        <app-report-item-grid
-          class="report-grid--resolved"
-          [items]="resolvedReports()"
-          [currentUserId]="currentUserId()"
-          (cardTicketClicked)="onTicketClick($event)"
-          (cardEditClicked)="onEditClick($event)"
-          (cardDeleteClicked)="onDeleteClick($event)">
-        </app-report-item-grid>
-      }
+    <app-report-item-grid
+      [items]="allReports()"
+      [currentUserId]="currentUserId()"
+      (cardTicketClicked)="onTicketClick($event)"
+      (cardEditClicked)="onEditClick($event)"
+      (cardDeleteClicked)="onDeleteClick($event)">
+    </app-report-item-grid>
     }
   </div>
 </div>
@@ -130,7 +122,9 @@
 @if (showCustomDateModal()) {
 <div class="modal-overlay" (click)="showCustomDateModal.set(false)">
   <div class="modal-content" (click)="$event.stopPropagation()">
-    <button class="modal-content__close" (click)="showCustomDateModal.set(false)">
+    <button
+      class="modal-content__close"
+      (click)="showCustomDateModal.set(false)">
       ×
     </button>
     <h3 class="modal-content__title">Custom date range</h3>
@@ -147,11 +141,16 @@
       <button class="date-range__go-btn">Go</button>
     </div>
 
-    <!-- TODO(Durante): Implement calendar logic -->
     <div class="calendar-placeholder">
       <p>November 2025</p>
       <p>(Calendar UI)</p>
     </div>
   </div>
 </div>
+}
+
+@if (showCustomLocationModal()) {
+<app-custom-location
+  (close)="showCustomLocationModal.set(false)"
+  (locationSelected)="fetchReports($event)" />
 }
