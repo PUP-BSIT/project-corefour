@@ -151,6 +151,6 @@
 
 @if (showCustomLocationModal()) {
 <app-custom-location
-  (close)="showCustomLocationModal.set(false)"
-  (locationSelected)="fetchReports($event)" />
+    (close)="showCustomLocationModal.set(false)"
+    (locationSelected)="fetchReports($event)" />
 }

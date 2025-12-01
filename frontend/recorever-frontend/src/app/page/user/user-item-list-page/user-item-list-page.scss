@@ -19,7 +19,8 @@
   --active-filter-color: #4caf50;
 
   ::ng-deep app-report-button button {
-    background: linear-gradient(135deg, #90ee90 0%, #38b000 100%) !important;
+    background: linear-gradient(135deg, #90ee90 0%, #38b000 100%)
+        !important;
   }
 }
 
@@ -76,12 +77,12 @@
 
     &:first-child:not(.toggle-button--active) {
       border-right: 1px solid color-mix(in srgb,
-      var(--active-filter-color) 30%, white);
+          var(--active-filter-color) 30%, white);
     }
 
     &:hover:not(.toggle-button--active) {
       background-color: color-mix(in srgb,
-      var(--active-filter-color) 15%, white);
+          var(--active-filter-color) 15%, white);
     }
   }
 

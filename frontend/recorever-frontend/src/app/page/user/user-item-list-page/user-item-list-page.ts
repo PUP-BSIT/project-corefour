@@ -79,7 +79,7 @@ export class UserItemListPage {
   isLoading = signal(true);
   error = signal<string | null>(null);
   filters = signal<ReportFilters>({ type: 'found',
-    location: undefined, status: 'approved' });
+      location: undefined, status: 'approved' });
 
   private getCutoffTime(filter: string): number {
     const now = new Date().getTime();
@@ -131,8 +131,7 @@ export class UserItemListPage {
         this.itemType.set(type);
         this.filters.set({
           type: type,
-          status: 'approved',
-          location: undefined,
+          status: 'approved', location: undefined,
         });
         this.selectedDateFilter.set('Any time');
         this.selectedLocationFilter.set('Any Location');
@@ -155,8 +154,7 @@ export class UserItemListPage {
     }
 
     this.filters.update(currentFilters => ({
-        ...currentFilters,
-        status: statusFilter
+        ...currentFilters, status: statusFilter
     }));
 
     this.fetchReports();
@@ -216,8 +214,7 @@ export class UserItemListPage {
         filter === 'Any Location' ? undefined : filter;
 
     this.filters.update((currentFilters: ReportFilters) => ({
-        ...currentFilters,
-        location: locationValue
+        ...currentFilters, location: locationValue
     }));
 
     this.fetchReports();
