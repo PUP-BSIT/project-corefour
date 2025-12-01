@@ -75,11 +75,13 @@
     line-height: 40px;
 
     &:first-child:not(.toggle-button--active) {
-      border-right: 1px solid color-mix(in srgb, var(--active-filter-color) 30%, white);
+      border-right: 1px solid color-mix(in srgb,
+      var(--active-filter-color) 30%, white);
     }
 
     &:hover:not(.toggle-button--active) {
-      background-color: color-mix(in srgb, var(--active-filter-color) 15%, white);
+      background-color: color-mix(in srgb,
+      var(--active-filter-color) 15%, white);
     }
   }
 
