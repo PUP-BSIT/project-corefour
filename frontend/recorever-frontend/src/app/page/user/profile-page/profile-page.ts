@@ -4,22 +4,16 @@ import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { map, switchMap, catchError, shareReplay, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import {
-  ReportItemGrid
-} from '../../../share-ui-blocks/report-item-grid/report-item-grid';
-import {
-  EditProfileModal
-} from '../../../modal/edit-profile-modal/edit-profile-modal';
-import {
-  DeleteReportModal
-} from '../../../modal/delete-report-modal/delete-report-modal';
+import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
+import { EditProfileModal } from '../../../modal/edit-profile-modal/edit-profile-modal';
+import { DeleteReportModal } from '../../../modal/delete-report-modal/delete-report-modal';
 
 import { ItemService } from '../../../core/services/item-service';
 import { UserService } from '../../../core/services/user-service';
 import { Report } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
 
-type TabType = 'all' | 'found' | 'lost';
+type TabType = 'all' | 'found' | 'lost' | 'claim';
 
 @Component({
   selector: 'app-profile-page',
@@ -38,19 +32,17 @@ export class ProfilePage implements OnInit {
   private userService = inject(UserService);
 
   activeTab$ = new BehaviorSubject<TabType>('all');
-
-  showEditModal = false;
-  showDeleteModal = false;
-
-  updateError: string | null = null;
-  itemToDelete: Report | null = null;
-
+  activeStatus$ = new BehaviorSubject<string>(''); 
+  private refreshUser$ = new BehaviorSubject<void>(undefined);
   currentUser$: Observable<User | null>;
-  
+
   displayedItems = signal<Report[]>([]);
   isItemsLoading = signal(false);
 
-  private refreshUser$ = new BehaviorSubject<void>(undefined);
+  showEditModal = false;
+  showDeleteModal = false;
+  updateError: string | null = null;
+  itemToDelete: Report | null = null;
 
   constructor() {
     this.currentUser$ = this.refreshUser$.pipe(
@@ -63,44 +55,82 @@ export class ProfilePage implements OnInit {
   ngOnInit(): void {
     combineLatest([
       this.currentUser$,
-      this.activeTab$
+      this.activeTab$,
+      this.activeStatus$
     ]).pipe(
       tap(() => this.isItemsLoading.set(true)),
-      switchMap(([user, tab]) => {
+      switchMap(([user, tab, status]) => {
         if (!user) return of([]);
-        return this.fetchReportsByTab(tab).pipe(
-          map(reports => 
-            reports.filter(r => r.user_id === user.user_id)
-          )
+
+        return this.fetchReportsByTab(tab, user.user_id).pipe(
+          map((items: Report[]) => {
+            if (!status || status === 'all') {
+              return items;
+            }
+            return items.filter((item: Report) =>
+              item.status.toLowerCase() === status.toLowerCase()
+            );
+          })
         );
       })
     ).subscribe({
-      next: (items) => {
+      next: (items: Report[]) => {
         this.displayedItems.set(items);
         this.isItemsLoading.set(false);
       },
-      error: (err) => {
+      error: (err: unknown) => {
         console.error('Error loading items', err);
         this.isItemsLoading.set(false);
       }
     });
   }
 
-  private fetchReportsByTab(tab: TabType): Observable<Report[]> {
+  private fetchReportsByTab(
+    tab: TabType,
+    userId: number
+  ): Observable<Report[]> {
+    let source$: Observable<Report[]>;
+
+    if (tab === 'claim') {
+      return this.itemService.getClaimedReports(userId);
+    }
+
     if (tab === 'all') {
-      return combineLatest([
+      source$ = combineLatest([
         this.itemService.getReports({ type: 'lost' }),
         this.itemService.getReports({ type: 'found' })
       ]).pipe(
-        map(([lost, found]) => [...lost, ...found])
+        map(([lost, found]) => {
+          const combined = [...lost, ...found];
+          const uniqueItems = new Map(
+            combined.map((item: Report) => [item.report_id, item])
+          );
+          return Array.from(uniqueItems.values());
+        })
       );
     } else {
-      return this.itemService.getReports({ type: tab });
+      source$ = this.itemService.getReports({ type: tab }).pipe(
+        map((items: Report[]) => items.filter((item: Report) => 
+                item.type === tab))
+      );
     }
+
+    return source$.pipe(
+      map((reports: Report[]) => reports.filter((r: Report) => 
+          r.user_id === userId))
+    );
   }
 
   setActiveTab(tab: TabType): void {
     this.activeTab$.next(tab);
+  }
+
+  setActiveStatus(status: string): void {
+    this.activeStatus$.next(status);
+  }
+
+  clearStatusFilter(): void {
+    this.activeStatus$.next('');
   }
 
   handleSaveProfile(event: { user: User, file: File | null }): void {
@@ -137,8 +167,8 @@ export class ProfilePage implements OnInit {
       next: () => {
         console.log('Item deleted successfully');
 
-        this.displayedItems.update(items => 
-          items.filter(item => item.report_id !== idToDelete)
+        this.displayedItems.update((items: Report[]) =>
+          items.filter((item: Report) => item.report_id !== idToDelete)
         );
 
         this.showDeleteModal = false;

@@ -52,6 +52,15 @@ public class ClaimController {
             .collect(Collectors.toList());
         return ResponseEntity.ok(responseDTOs);
     }
+
+    @GetMapping("/claims/user/{userId}")
+    public ResponseEntity<List<ClaimResponseDTO>> getClaimsByUser(@PathVariable int userId) {
+        List<Claim> claims = service.listClaimsByUserId(userId);
+        List<ClaimResponseDTO> responseDTOs = claims.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(responseDTOs);
+    }
     
     @GetMapping("/claim/{id}")
     public ResponseEntity<?> getSingleClaim(@PathVariable int id) {
