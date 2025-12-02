@@ -1,1 +1,12 @@
-<p>admin-layout works!</p>
+<div class="main-viewport-container">
+  <app-header />
+  <div class="admin-layout-container" >
+    <aside class="sidebar-area" aria-label="Primary navigation">
+      <app-admin-side-bar />
+    </aside>
+
+    <main class="content-area">
+      <router-outlet />
+    </main>
+  </div>
+</div>
