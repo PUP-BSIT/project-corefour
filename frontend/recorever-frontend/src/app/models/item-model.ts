@@ -28,6 +28,14 @@ export enum StandardLocations {
     OTHERS = 'Others...',
 }
 
+export const StandardRelativeDateFilters: string[] = [
+    'Past hour',
+    'Past 24 hours',
+    'Past week',
+    'Past month',
+    'Past year',
+];
+
 export type ItemReportForm = FormGroup<{
   item_name: FormControl<string | null>;
   location: FormControl<string | null>;
