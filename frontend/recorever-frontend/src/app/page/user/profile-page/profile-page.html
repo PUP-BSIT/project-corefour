@@ -42,27 +42,31 @@
     <div class="profile-page__tabs">
       <button type="button"
           class="profile-page__tab-btn"
-          [class.profile-page__tab-btn--active]="(activeTab$ | async) === 'all'"
-          (click)="setActiveTab('all')">
+          [class.profile-page__tab-btn--active]=
+              "(activeTab$ | async) === 'all'"
+                  (click)="setActiveTab('all')">
         All
       </button>
       <button type="button"
           class="profile-page__tab-btn"
-          [class.profile-page__tab-btn--active]="(activeTab$ | async) === 'found'"
-          (click)="setActiveTab('found')">
+          [class.profile-page__tab-btn--active]=
+              "(activeTab$ | async) === 'found'"
+                  (click)="setActiveTab('found')">
         Found
       </button>
       <button type="button"
           class="profile-page__tab-btn"
-          [class.profile-page__tab-btn--active]="(activeTab$ | async) === 'lost'"
-          (click)="setActiveTab('lost')">
+          [class.profile-page__tab-btn--active]=
+              "((activeTab$ | async) === 'lost')"
+                  (click)="setActiveTab('lost')">
         Lost
       </button>
       <button type="button"
           class="profile-page__tab-btn"
-          [class.profile-page__tab-btn--active]="(activeTab$ | async) === 'claimed'"
-          (click)="setActiveTab('claimed')">
-        Claimed
+          [class.profile-page__tab-btn--active]=
+            "(activeTab$ | async) === 'claim'"
+                (click)="setActiveTab('claim')">
+        Claim Items
       </button>
     </div>
 
@@ -83,7 +87,7 @@
           <option value="" disabled selected hidden>Status</option>
           <option value="pending">Pending</option>
           <option value="approved">Verified</option>
-          <option value="claimed">Claimed</option>
+          <option value="claim">Claimed</option>
         </select>
         <img src="assets/arrow-right.png" class="dropdown-arrow" alt="arrow">
       </div>

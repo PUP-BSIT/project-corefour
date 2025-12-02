@@ -13,7 +13,7 @@ import { UserService } from '../../../core/services/user-service';
 import { Report } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
 
-type TabType = 'all' | 'found' | 'lost' | 'claimed';
+type TabType = 'all' | 'found' | 'lost' | 'claim';
 
 @Component({
   selector: 'app-profile-page',
@@ -91,7 +91,7 @@ export class ProfilePage implements OnInit {
   ): Observable<Report[]> {
     let source$: Observable<Report[]>;
 
-    if (tab === 'claimed') {
+    if (tab === 'claim') {
       return this.itemService.getClaimedReports(userId);
     }
 
@@ -110,12 +110,14 @@ export class ProfilePage implements OnInit {
       );
     } else {
       source$ = this.itemService.getReports({ type: tab }).pipe(
-        map((items: Report[]) => items.filter((item: Report) => item.type === tab))
+        map((items: Report[]) => items.filter((item: Report) => 
+                item.type === tab))
       );
     }
 
     return source$.pipe(
-      map((reports: Report[]) => reports.filter((r: Report) => r.user_id === userId))
+      map((reports: Report[]) => reports.filter((r: Report) => 
+          r.user_id === userId))
     );
   }
 
