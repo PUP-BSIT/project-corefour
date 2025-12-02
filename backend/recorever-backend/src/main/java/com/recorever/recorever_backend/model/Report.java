@@ -6,28 +6,28 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.util.List;
 
-@Entity 
-@Table(name = "report") 
+@Entity
+@Table(name = "report")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Report {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int report_id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private int report_id;
 
-    private int user_id;
-    private String type; 
-    private String item_name;
-    private String location;
-    private String date_reported;
-    private String date_resolved;
-    private String description;
-    private String status; 
-    private String surrender_code;
-    private String claim_code;
-    private boolean is_deleted; 
+  private int user_id;
+  private String type;
+  private String item_name;
+  private String location;
+  private String date_reported;
+  private String date_resolved;
+  private String description;
+  private String status;
+  private String surrender_code;
+  private String claim_code;
+  private boolean is_deleted;
 
-    @OneToMany(mappedBy = "reportId", fetch = FetchType.LAZY)
-    private List<Image> images;
+  @OneToMany(mappedBy = "reportId", fetch = FetchType.LAZY)
+  private List<Image> images;
 }
