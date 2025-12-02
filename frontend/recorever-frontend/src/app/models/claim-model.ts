@@ -2,7 +2,7 @@ export enum ClaimStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  CLAIMED = 'claimed'
+  CLAIMED = 'claim'
 }
 
 export type Claim = {
