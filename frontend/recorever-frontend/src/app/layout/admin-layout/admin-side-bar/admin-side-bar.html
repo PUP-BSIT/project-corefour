@@ -1,1 +1,107 @@
-<p>admin-side-bar works!</p>
+<div class="admin-side-bar">
+
+  @if (currentUser$ | async; as user) {
+    <div class="user-profile-header">
+      <div class="profile-click-area" (click)="toggleProfileDropdown()"
+        [class.dropdown-open]="isProfileDropdownOpen">
+        <img [src]="user.profile_picture || 'assets/profile-avatar.png'"
+             alt="Profile Avatar"
+             class="profile-avatar-img">
+             
+        <div class="profile-info">
+          <span class="profile-name">{{ user.name }}</span>
+          <span class="profile-dropdown-arrow">▿</span>
+        </div>
+      </div>
+      
+      <div class="notification-click-area">
+        <app-notification></app-notification>
+      </div>
+
+      @if (isProfileDropdownOpen) {
+      <div class="profile-dropdown-menu">
+        <div class="dropdown-user-info">
+          <img [src]="user.profile_picture || 'assets/profile-avatar.png'"
+               alt="Profile Avatar"
+               class="dropdown-avatar-img">
+          <div class="dropdown-name">{{ user.name }}</div>
+          <div class="dropdown-email">{{ user.email }}</div>
+        </div>
+
+        @for (item of profileDropdownItems; track item.label) {
+          <ng-container>
+            @if (item.action === 'navigate') {
+              <a [routerLink]="item.route" class="dropdown-item"
+                    (click)="isProfileDropdownOpen = false">
+                <img [src]="item.iconPath" alt="{{ item.label }} Icon"
+                    class="dropdown-item-icon" />
+                {{ item.label }}
+              </a>
+            } @else {
+              <button type="button" class="dropdown-item"
+                    (click)="handleDropdownAction(item)">
+                <img [src]="item.iconPath" alt="{{ item.label }} Icon"
+                      class="dropdown-item-icon" />
+                {{ item.label }}
+              </button>
+            }
+          </ng-container>
+        }
+      </div>
+      }
+    </div>
+  }
+
+  <div class="nav-section main-nav">
+    @for (item of mainNav; track item.label) {
+      <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+        <img [src]="item.iconPath" 
+              alt="{{ item.label }} Icon" 
+              class="nav-icon">
+        <div class="nav-label">{{ item.label }}</div>
+      </a>
+    }
+  </div>
+
+  <div class="nav-divider-mock"></div> 
+
+  <div class="nav-section archive-nav">
+
+    <div class="section-header nav-item" (click)="toggleArchive()"
+        [attr.aria-expanded]="isArchiveOpen">
+
+        <span class="section-title-link">
+          <img [src]="archiveSection.iconPath" 
+                alt="{{ archiveSection.label }} Icon" 
+                class="nav-icon">
+          {{ archiveSection.label }}
+        </span>
+
+        <div class="toggle-icon">▼</div>
+    </div>
+
+    @if (isArchiveOpen) {
+      <div class="archive-list-content">
+        @for (item of archiveNav; track item.label) {
+          <a [routerLink]="item.route" routerLinkActive="active"
+              class="nav-item archive-item">
+            <img [src]="item.iconPath" alt="{{ item.label }} Icon"
+                class="nav-icon tracking-icon-sm">
+            <div class="nav-label">{{ item.label }}</div>
+          </a>
+        }
+      </div>
+    }
+  </div>
+
+  @if (isLogoutModalOpen) {
+    <app-confirmation-modal
+      title="Log Out"
+      message="Are you sure you want to log out of your account?"
+      confirmLabel="Log Out"
+      variant="primary"
+      (confirm)="onLogoutConfirm()"
+      (cancel)="onLogoutCancel()">
+    </app-confirmation-modal>
+  }
+</div>

@@ -1,11 +1,138 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
+import { CommonModule, AsyncPipe } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
+import { Notification } from '../../../share-ui-blocks/notification/notification';
+import { AuthService } from '../../../core/auth/auth-service';
+import { ConfirmationModal } from '../../../modal/confirmation-modal/confirmation-modal';
+import { LogoutResponse } from '../../../models/auth-model';
 
 @Component({
   selector: 'app-admin-side-bar',
-  imports: [],
+  standalone: true,
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    Notification,
+    AsyncPipe,
+    ConfirmationModal
+  ], 
   templateUrl: './admin-side-bar.html',
-  styleUrl: './admin-side-bar.scss',
+  styleUrls: ['./admin-side-bar.scss'],
 })
-export class AdminSideBar {
+export class AdminSideBar implements OnDestroy {
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
+  @Output() openSettingsModal = new EventEmitter<void>();
+
+  public currentUser$: Observable<User | null> = this.authService.currentUser$;
+  protected isLogoutModalOpen = false;
+  protected isProfileDropdownOpen = false;
+  protected isArchiveOpen = true;
+  
+  private logoutTrigger$ = new Subject<void>();
+  private destroy$ = new Subject<void>();
+
+  protected profileDropdownItems: ProfileNavItem[] = [
+    { label: 'Settings', iconPath: 'assets/setting.png',
+        action: 'emit' },
+    { label: 'Log out', iconPath: 'assets/log-out.png', action: 'logout' },
+  ];
+
+  protected adminSideBarLinks: NavItem[] = [
+    {
+      label: "Dashboard",
+      iconPath: "/assets/recents.png",
+      route: "/admin/dashboard",
+    },
+    {
+      label: "Report Status Management",
+      iconPath: "/assets/report-status.png",
+      route: "/admin/report-status",
+    },
+    {
+      label: "Claim Status Management",
+      iconPath: "/assets/claim-status.png",
+      route: "/admin/claim-status",
+    },
+  ];
+
+  protected archiveSection: NavItem = {
+      label: "Archive Items",
+      iconPath: "/assets/archive-folder.png",
+      route: "/admin/archive", 
+  }
+
+  protected archiveNav: NavItem[] = [
+    {
+      label: "Resolved Items",
+      iconPath: "/assets/resolved-item.png",
+      route: "/admin/archive/resolved",
+    },
+    {
+      label: "Claimed Items",
+      iconPath: "/assets/claimed-item.png",
+      route: "/admin/archive/claimed",
+    },
+  ];
+
+  protected mainNav = this.adminSideBarLinks;
+
+  constructor() {
+    this.logoutTrigger$
+      .pipe(
+        switchMap(() => this.authService.logout()),
+        takeUntil(this.destroy$) 
+      )
+      .subscribe({
+        next: (_response: LogoutResponse) => {
+          this.isLogoutModalOpen = false;
+          this.router.navigate(['/login']); 
+        },
+        error: (_err) => {
+          this.isLogoutModalOpen = false;
+        }
+      });
+  }
+
+  public toggleProfileDropdown(): void {
+    this.isProfileDropdownOpen = !this.isProfileDropdownOpen;
+  }
+
+  public toggleArchive(): void {
+    this.isArchiveOpen = !this.isArchiveOpen;
+  }
+
+  public handleDropdownAction(item: ProfileNavItem): void {
+    this.isProfileDropdownOpen = false;
+
+    switch (item.action) {
+      case 'navigate':
+        if (item.route) {
+          this.router.navigate([item.route]);
+        }
+        break;
+      case 'emit':
+        this.openSettingsModal.emit();
+        break;
+      case 'logout':
+        this.isLogoutModalOpen = true;
+        break;
+    }
+  }
+
+  protected onLogoutConfirm(): void {
+    this.logoutTrigger$.next();
+  }
+
+  protected onLogoutCancel(): void {
+    this.isLogoutModalOpen = false;
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 }
