@@ -48,23 +48,29 @@
 
   .graphic-placeholder {
     width: 100%;
-    height: 350px;
-    border: 2px solid #e0e0e0;
-    background: linear-gradient(
-        to bottom right,
+    max-width: 500px;
+    height: 500px;
+    box-shadow:
+      0 20px 40px rgba(0, 0, 0, 0.4),
+      0 10px 15px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(to bottom right,
         transparent 49.5%,
         #e0e0e0 49.5%,
         #e0e0e0 50.5%,
-        transparent 50.5%
-      ),
-      linear-gradient(
-        to top right,
+        transparent 50.5%),
+      linear-gradient(to top right,
         transparent 49.5%,
         #e0e0e0 49.5%,
         #e0e0e0 50.5%,
-        transparent 50.5%
-      );
+        transparent 50.5%);
     background-color: #f4f4f4;
+  }
+
+  .graphic-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
   }
 }
 

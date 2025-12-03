@@ -7,11 +7,11 @@ import {
     Report,
     ItemReportForm as ItemFormType,
     StandardLocations,
-    FinalReportSubmission
+    FinalReportSubmission,
+    ReportSubmissionPayload
 } from '../../models/item-model';
 import { CustomLocation }
-from '../../modal/custom-location/custom-location';
-
+    from '../../modal/custom-location/custom-location';
 
 @Component({
   selector: 'app-item-report-form',
@@ -61,7 +61,7 @@ export class ItemReportForm implements OnInit {
       ],
       description: [
         this.existingItemData?.description || '',
-        { validators: [Validators.required, Validators.minLength(100),
+        { validators: [Validators.required, Validators.minLength(10),
             Validators.maxLength(500)] }
       ],
       photoUrls: this.fb.array([])
@@ -95,24 +95,21 @@ export class ItemReportForm implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.reportForm.valid) {
-      const formValue: FinalReportSubmission = {
-          type: this.formType,
-          status: 'pending',
-          item_name: this.reportForm.controls.item_name.value!,
-          location: this.reportForm.controls.location.value!,
-          date_reported: this.reportForm.controls.date_reported.value!,
-          description: this.reportForm.controls.description.value!,
-          photoUrls: [],
-      };
+      if (this.reportForm.valid) {
+        const apiPayload: ReportSubmissionPayload = {
+            type: this.formType,
+            item_name: this.reportForm.controls.item_name.value!,
+            location: this.reportForm.controls.location.value!,
+            description: this.reportForm.controls.description.value!,
+        };
 
-      this.formSubmitted.emit(formValue);
-    } else {
-      this.reportForm.markAllAsTouched();
+        this.formSubmitted.emit(apiPayload as FinalReportSubmission);
+      } else {
+        this.reportForm.markAllAsTouched();
+      }
+    }
+
+    onCancel(): void {
+      this.formCancelled.emit();
     }
   }
-
-  onCancel(): void {
-    this.reportForm.reset();
-  }
-}

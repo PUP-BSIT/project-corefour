@@ -1,18 +1,19 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
-import { map, switchMap, catchError, shareReplay } from 'rxjs/operators';
+import { map, switchMap, catchError, shareReplay, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import { EditProfileModal } from '../../../modal/edit-profile-modal/edit-profile-modal';
+import { DeleteReportModal } from '../../../modal/delete-report-modal/delete-report-modal';
 
 import { ItemService } from '../../../core/services/item-service';
 import { UserService } from '../../../core/services/user-service';
 import { Report } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
 
-type TabType = 'all' | 'found' | 'lost';
+type TabType = 'all' | 'found' | 'lost' | 'claim';
 
 @Component({
   selector: 'app-profile-page',
@@ -20,7 +21,8 @@ type TabType = 'all' | 'found' | 'lost';
   imports: [
     CommonModule,
     ReportItemGrid,
-    EditProfileModal
+    EditProfileModal,
+    DeleteReportModal
   ],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss'
@@ -30,14 +32,17 @@ export class ProfilePage implements OnInit {
   private userService = inject(UserService);
 
   activeTab$ = new BehaviorSubject<TabType>('all');
+  activeStatus$ = new BehaviorSubject<string>(''); 
+  private refreshUser$ = new BehaviorSubject<void>(undefined);
+  currentUser$: Observable<User | null>;
+
+  displayedItems = signal<Report[]>([]);
+  isItemsLoading = signal(false);
 
   showEditModal = false;
+  showDeleteModal = false;
   updateError: string | null = null;
-
-  currentUser$: Observable<User | null>;
-  displayedItems$: Observable<Report[]> = of([]);
-
-  private refreshUser$ = new BehaviorSubject<void>(undefined);
+  itemToDelete: Report | null = null;
 
   constructor() {
     this.currentUser$ = this.refreshUser$.pipe(
@@ -48,40 +53,84 @@ export class ProfilePage implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadItems();
-  }
-
-  loadItems(): void {
-    this.displayedItems$ = combineLatest([
+    combineLatest([
       this.currentUser$,
-      this.activeTab$
+      this.activeTab$,
+      this.activeStatus$
     ]).pipe(
-      switchMap(([user, tab]) => {
+      tap(() => this.isItemsLoading.set(true)),
+      switchMap(([user, tab, status]) => {
         if (!user) return of([]);
 
-        if (tab === 'all') {
-          return combineLatest([
-            this.itemService.getReports({ type: 'lost' }),
-            this.itemService.getReports({ type: 'found' })
-          ]).pipe(
-            map(([lost, found]) => [...lost, ...found])
-          );
-        } else {
-          return this.itemService.getReports({ type: tab });
-        }
-      }),
-      switchMap(reports =>
-        combineLatest([of(reports), this.currentUser$])
-      ),
-      map(([reports, user]) => {
-        if (!user) return [];
-        return reports.filter(r => r.user_id === user.user_id);
+        return this.fetchReportsByTab(tab, user.user_id).pipe(
+          map((items: Report[]) => {
+            if (!status || status === 'all') {
+              return items;
+            }
+            return items.filter((item: Report) =>
+              item.status.toLowerCase() === status.toLowerCase()
+            );
+          })
+        );
       })
+    ).subscribe({
+      next: (items: Report[]) => {
+        this.displayedItems.set(items);
+        this.isItemsLoading.set(false);
+      },
+      error: (err: unknown) => {
+        console.error('Error loading items', err);
+        this.isItemsLoading.set(false);
+      }
+    });
+  }
+
+  private fetchReportsByTab(
+    tab: TabType,
+    userId: number
+  ): Observable<Report[]> {
+    let source$: Observable<Report[]>;
+
+    if (tab === 'claim') {
+      return this.itemService.getClaimedReports(userId);
+    }
+
+    if (tab === 'all') {
+      source$ = combineLatest([
+        this.itemService.getReports({ type: 'lost' }),
+        this.itemService.getReports({ type: 'found' })
+      ]).pipe(
+        map(([lost, found]) => {
+          const combined = [...lost, ...found];
+          const uniqueItems = new Map(
+            combined.map((item: Report) => [item.report_id, item])
+          );
+          return Array.from(uniqueItems.values());
+        })
+      );
+    } else {
+      source$ = this.itemService.getReports({ type: tab }).pipe(
+        map((items: Report[]) => items.filter((item: Report) => 
+                item.type === tab))
+      );
+    }
+
+    return source$.pipe(
+      map((reports: Report[]) => reports.filter((r: Report) => 
+          r.user_id === userId))
     );
   }
 
   setActiveTab(tab: TabType): void {
     this.activeTab$.next(tab);
+  }
+
+  setActiveStatus(status: string): void {
+    this.activeStatus$.next(status);
+  }
+
+  clearStatusFilter(): void {
+    this.activeStatus$.next('');
   }
 
   handleSaveProfile(event: { user: User, file: File | null }): void {
@@ -97,8 +146,6 @@ export class ProfilePage implements OnInit {
         console.error('Update failed', err);
         if (err.error && err.error.error) {
           this.updateError = err.error.error;
-        } else if (typeof err.error === 'string') {
-          this.updateError = err.error;
         } else {
           this.updateError = 'Failed to update. Please try again.';
         }
@@ -107,11 +154,39 @@ export class ProfilePage implements OnInit {
   }
 
   onDeleteItem(item: Report): void {
-    // TODO: Implement delete Modal
+    this.itemToDelete = item;
+    this.showDeleteModal = true;
+  }
+
+  confirmDelete(): void {
+    if (!this.itemToDelete) return;
+
+    const idToDelete = this.itemToDelete.report_id;
+
+    this.itemService.deleteReport(idToDelete).subscribe({
+      next: () => {
+        console.log('Item deleted successfully');
+
+        this.displayedItems.update((items: Report[]) =>
+          items.filter((item: Report) => item.report_id !== idToDelete)
+        );
+
+        this.showDeleteModal = false;
+        this.itemToDelete = null;
+      },
+      error: (err: unknown) => {
+        console.error('Failed to delete', err);
+        this.showDeleteModal = false;
+      }
+    });
+  }
+
+  cancelDelete(): void {
+    this.showDeleteModal = false;
+    this.itemToDelete = null;
   }
 
   onEditItem(item: Report): void {
     console.log('Edit item requested:', item);
-    // TODO: Implement Edit Modal
   }
 }

@@ -1,9 +1,11 @@
 <div class="item-grid-container">
-
-  @for (item of items; track item.report_id) {
-  <app-report-item-card [report]="item"
-      (ticketClicked)="handleTicketClick(item)" />
-  } @empty {
-  <p class="empty-message">No items found matching the current filter.</p>
+  @for (item of items(); track item.report_id) {
+    <app-report-item-card
+      [report]="item"
+      [currentUserId]="currentUserId()"
+      (ticketClicked)="handleTicketClick(item)"
+      (editClicked)="handleEditClick(item)"
+      (deleteClicked)="handleDeleteClick(item)">
+    </app-report-item-card>
   }
 </div>

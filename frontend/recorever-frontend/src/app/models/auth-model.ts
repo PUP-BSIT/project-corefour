@@ -18,3 +18,8 @@ export type LoginResponse = {
   user_id: number;
   user_name: string;
 };
+
+export type LogoutResponse = {
+  success: boolean;
+  message: string;
+}

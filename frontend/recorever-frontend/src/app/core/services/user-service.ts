@@ -1,9 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap, timer, map, catchError, switchMap, of } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, tap, timer, map, catchError, switchMap, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../auth/auth-service';
 import type { User } from '../../models/user-model';
+import { AbstractControl,
+        AsyncValidatorFn,
+        ValidationErrors
+} from '@angular/forms';
 import { AbstractControl,
         AsyncValidatorFn,
         ValidationErrors
@@ -21,10 +27,16 @@ export class UserService {
   getProfile(): Observable<User> {
     return this.http.get<User>(`${this.API_BASE_URL}/get-user-data`)
     .pipe(
+    return this.http.get<User>(`${this.API_BASE_URL}/get-user-data`)
+    .pipe(
       tap(user => {
         this.authService.updateCurrentUser(user);
       })
     );
+  }
+
+  getUserById(userId: number): Observable<User> {
+    return this.http.get<User>(`${this.API_BASE_URL}/user/${userId}`);
   }
 
   checkUniqueness(
@@ -41,7 +53,7 @@ export class UserService {
       )
       .pipe(
         map(response => response.isUnique),
-        catchError(() => of(false))
+        catchError(() => of(true))
       );
   }
 

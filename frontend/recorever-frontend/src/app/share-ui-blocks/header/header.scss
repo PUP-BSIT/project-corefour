@@ -6,6 +6,8 @@
   background-color: #fff;
   border-bottom: 1px solid #ccc;
   height: 40px;
+  box-sizing: content-box;
+  flex-shrink: 0;
 
   .logo-container {
     display: flex;
@@ -51,6 +53,7 @@
       transition: background-color 0.3s ease;
       text-decoration: none;
       display: inline-block;
+      white-space: nowrap;
     }
 
     .login-btn {
@@ -71,6 +74,40 @@
     .register-btn:hover {
       background-color: #f0f0f0;
       border-color: #716f6f;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .app-header {
+    padding: 8px 15px;
+    height: auto;
+    min-height: 40px;
+  }
+
+  .logo-container {
+
+    .app-logo {
+      height: 30px;
+      margin-right: 8px;
+    }
+
+    .app-name {
+      font-size: 16px;
+    }
+
+    .tagline {
+      font-size: 8px;
+    }
+  }
+
+  .auth-buttons {
+    gap: 5px;
+
+    .btn {
+      padding: 5px 15px;
+      font-size: 12px;
+      min-width: unset;
     }
   }
 }

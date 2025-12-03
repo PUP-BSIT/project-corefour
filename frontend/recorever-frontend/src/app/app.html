@@ -1,1 +1,7 @@
-<router-outlet />
+@if (isLoading()) {
+<div class="app-loading-screen">
+  <img src="assets/temp_logo.png" alt="Recorever Logo" class="loading-logo">
+</div>
+}
+
+<router-outlet></router-outlet>

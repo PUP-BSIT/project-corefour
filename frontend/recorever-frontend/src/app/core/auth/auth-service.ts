@@ -9,6 +9,9 @@ import { BehaviorSubject,
         throwError,
         filter,
         take
+        throwError,
+        filter,
+        take
 } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type { LoginRequest,
@@ -16,6 +19,7 @@ import type { LoginRequest,
 } from '../../models/auth-model';
 import type { User } from '../../models/user-model';
 import { UserService } from '../services/user-service';
+import { LogoutResponse } from '../../models/auth-model';
 
 @Injectable({
   providedIn: 'root',
@@ -34,10 +38,13 @@ export class AuthService {
 
   private _refreshTokenSubject = new BehaviorSubject<boolean>(false);
 
+  private _refreshTokenSubject = new BehaviorSubject<boolean>(false);
+
   public get isRefreshing(): boolean {
     return this._isRefreshing;
   }
 
+  public get refreshTokenSubject(): BehaviorSubject<boolean> { 
   public get refreshTokenSubject(): BehaviorSubject<boolean> { 
     return this._refreshTokenSubject;
   }
@@ -66,12 +73,31 @@ export class AuthService {
         return of(null);
       })
     );
+    if (!this.getUserFromStorage()) {
+        return of(null);
+    }
+    
+    const userService = this.injector.get(UserService);
+
+    return userService.getProfile().pipe(
+      tap((user) => {
+        this.updateCurrentUser(user);
+      }),
+      catchError((err) => {
+        console.error('Session token is invalid, logging out.', err);
+        this.logout();
+        return of(null);
+      })
+    );
   }
 
   login(credentials: LoginRequest): Observable<User> {
     return this.http
       .post<User>(`${this.API_BASE_URL}/login-user`, credentials, { withCredentials: true }) 
+      .post<User>(`${this.API_BASE_URL}/login-user`, credentials, { withCredentials: true }) 
       .pipe(
+        tap((user: User) => {
+          this.updateCurrentUser(user);
         tap((user: User) => {
           this.updateCurrentUser(user);
         }),
@@ -84,6 +110,7 @@ export class AuthService {
   refreshToken(): Observable<any> {
     if (this._isRefreshing) {
       return this._refreshTokenSubject.pipe(filter(val => val), take(1));
+      return this._refreshTokenSubject.pipe(filter(val => val), take(1));
     }
 
     this._isRefreshing = true;
@@ -93,10 +120,17 @@ export class AuthService {
         `${this.API_BASE_URL}/refresh-token`, 
         {}, 
         { withCredentials: true }
+      .post<User>(
+        `${this.API_BASE_URL}/refresh-token`, 
+        {}, 
+        { withCredentials: true }
       )
       .pipe(
         tap((user: User) => {
+        tap((user: User) => {
           this._isRefreshing = false;
+          this.updateCurrentUser(user);
+          this._refreshTokenSubject.next(true);
           this.updateCurrentUser(user);
           this._refreshTokenSubject.next(true);
         }),
@@ -121,7 +155,24 @@ export class AuthService {
       );
   }
 
-  logout(): void {
+  logout(): Observable<LogoutResponse> {
+    return this.http.post<LogoutResponse>(
+      `${this.API_BASE_URL}/logout`, 
+      {}, 
+      { withCredentials: true }
+    ).pipe(
+      tap((_response) => {
+        this.handleClientLogout();
+      }),
+      catchError((err) => {
+        console.error('Server logout failed', err);
+        this.handleClientLogout();
+        return of({ success: false, message: 'Local logout forced' } as LogoutResponse);
+      })
+    );
+  }
+
+  private handleClientLogout(): void {
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
@@ -133,6 +184,7 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
+    return !!this.getUserFromStorage(); 
     return !!this.getUserFromStorage(); 
   }
 
@@ -148,6 +200,7 @@ export class AuthService {
     }
     
     try {
+      return JSON.parse(userJson) as User; 
       return JSON.parse(userJson) as User; 
     } catch (e) {
       console.error('Failed to parse user from localStorage', e);
