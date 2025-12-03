@@ -11,10 +11,7 @@ import { ItemService } from '../../../core/services/item-service';
   selector: 'app-report-found-page',
   standalone: true,
   imports: [CommonModule, RouterModule, ItemReportForm],
-  standalone: true,
-  imports: [CommonModule, RouterModule, ItemReportForm],
   templateUrl: './report-found-page.html',
-  styleUrls: ['./report-found-page.scss']
   styleUrls: ['./report-found-page.scss']
 })
 export class ReportFoundPage {
