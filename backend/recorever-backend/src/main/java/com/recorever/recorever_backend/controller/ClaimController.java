@@ -28,7 +28,8 @@ public class ClaimController {
 
     @PostMapping("/claim")
     public ResponseEntity<?> submitClaim(Authentication authentication, 
-                                          @Valid @RequestBody ClaimCreationDTO claimCreationDTO) {
+                                          @Valid @RequestBody
+                                          ClaimCreationDTO claimCreationDTO) { 
 
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();

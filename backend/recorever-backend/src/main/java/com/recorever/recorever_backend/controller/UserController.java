@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletResponse; 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
@@ -116,6 +116,7 @@ public class UserController {
         }
     }
     
+    
     @GetMapping("/get-user-data")
     public ResponseEntity<UserResponseDTO> getUser(Authentication authentication) {
         User authenticatedUser = (User) authentication.getPrincipal();
@@ -158,11 +159,10 @@ public class UserController {
     public ResponseEntity<?> updateUser(Authentication authentication,
                                         @RequestParam(required = false) String name,
                                         @RequestParam(required = false) String phone_number,
-                                        @RequestParam(required = false) String email, 
+                                        @RequestParam(required = false) String email,
                                         @RequestParam(required = false) String profile_picture) {
         
         User user = (User) authentication.getPrincipal();
-
         Map<String, Object> result = service.updateUserProfile(user, name, phone_number, email, profile_picture);
 
         if (result.containsKey("error")) {
@@ -251,6 +251,6 @@ public class UserController {
         clearCookie(response, "accessToken");
         clearCookie(response, "refreshToken");
         return ResponseEntity.ok(Map.of("success", true, "message",
-                                                "Logged out successfully."));
+                                        "Logged out successfully."));
     }
 }
