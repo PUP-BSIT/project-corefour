@@ -11,7 +11,10 @@ import { ItemService } from '../../../core/services/item-service';
   selector: 'app-report-lost-page',
   standalone: true,
   imports: [CommonModule, RouterModule, ItemReportForm],
+  standalone: true,
+  imports: [CommonModule, RouterModule, ItemReportForm],
   templateUrl: './report-lost-page.html',
+  styleUrls: ['./report-lost-page.scss']
   styleUrls: ['./report-lost-page.scss']
 })
 export class ReportLostPage {

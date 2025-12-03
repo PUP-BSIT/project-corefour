@@ -2,10 +2,13 @@ package com.recorever.recorever_backend.controller;
 
 import com.recorever.recorever_backend.dto.ClaimCreationDTO;
 import com.recorever.recorever_backend.dto.ClaimResponseDTO;
+import com.recorever.recorever_backend.dto.ClaimCreationDTO;
+import com.recorever.recorever_backend.dto.ClaimResponseDTO;
 import com.recorever.recorever_backend.model.Claim;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.service.ClaimService;
 import com.recorever.recorever_backend.service.ReportService;
+import jakarta.validation.Valid;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,10 +33,14 @@ public class ClaimController {
     @PostMapping("/claim")
     public ResponseEntity<?> submitClaim(Authentication authentication, 
                                           @Valid @RequestBody ClaimCreationDTO claimCreationDTO) {
+                                          @Valid @RequestBody ClaimCreationDTO claimCreationDTO) {
         
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();
         
+        int reportId = claimCreationDTO.getReport_id().intValue();
+        String proofDescription = claimCreationDTO.getProof_description();
+
         int reportId = claimCreationDTO.getReport_id().intValue();
         String proofDescription = claimCreationDTO.getProof_description();
 
@@ -68,6 +76,21 @@ public class ClaimController {
         if (claim == null) {
             return ResponseEntity.status(404).body("Claim not found.");
         }
+        return ResponseEntity.ok(convertToDto(claim));
+    }
+    
+    /**
+     * Helper method to map Claim model to ClaimResponseDTO.
+     */
+    private ClaimResponseDTO convertToDto(Claim claim) {
+        ClaimResponseDTO dto = new ClaimResponseDTO();
+        dto.setClaim_id(claim.getClaim_id());
+        dto.setReport_id(claim.getReport_id());
+        dto.setProof_description(claim.getProof_description());
+        dto.setItem_name(claim.getItem_name());
+        dto.setStatus(claim.getStatus());
+        dto.setCreated_at(claim.getCreated_at());
+        return dto;
         return ResponseEntity.ok(convertToDto(claim));
     }
     
