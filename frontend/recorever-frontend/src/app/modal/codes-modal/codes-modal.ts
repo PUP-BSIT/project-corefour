@@ -1,12 +1,11 @@
 import {
   Component,
   EventEmitter,
-  Input,
   Output,
   ChangeDetectorRef,
   inject,
   Renderer2,
-  Inject
+  input
 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 
@@ -22,8 +21,8 @@ export class CodesModal {
   private renderer = inject(Renderer2);
   private document = inject(DOCUMENT);
 
-  @Input({ required: true }) title!: string;
-  @Input({ required: true }) code!: string | number;
+  title = input.required<string>();
+  code = input.required<string | number>();
 
   copyLabel = 'Copy';
   isCopied = false;
@@ -40,7 +39,7 @@ export class CodesModal {
       event.preventDefault();
     }
 
-    const textToCopy = this.code.toString();
+    const textToCopy = this.code().toString();
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(textToCopy)
