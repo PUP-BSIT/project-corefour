@@ -55,12 +55,22 @@ public class ReportRepository {
     }
 
     public List<Report> getReportsByType(String type) {
-        String sql = "SELECT * FROM reports WHERE type = ? AND is_deleted = 0 ORDER BY date_reported DESC";
+        String sql = """
+            SELECT *
+            FROM reports
+            WHERE type = ? AND is_deleted = 0
+            ORDER BY date_reported DESC
+        """;
         return jdbcTemplate.query(sql, reportMapper, type);
     }
 
     public List<Report> getReportsByTypeAndStatus(String type, String status) {
-        String sql = "SELECT * FROM reports WHERE type = ? AND status = ? AND is_deleted = 0 ORDER BY date_reported DESC";
+        String sql = """
+            SELECT *
+            FROM reports
+            WHERE type = ? AND status = ? AND is_deleted = 0
+            ORDER BY date_reported DESC
+        """;
         return jdbcTemplate.query(sql, reportMapper, type, status);
     }
 
