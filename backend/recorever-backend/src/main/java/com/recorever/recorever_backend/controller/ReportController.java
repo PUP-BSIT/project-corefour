@@ -69,6 +69,18 @@ public class ReportController {
         return ResponseEntity.ok(responseList);
     }
 
+    @GetMapping("reports/type/{type}")
+    public List<Report> getReportsByType(
+            @PathVariable String type, 
+            @RequestParam(required = false) String status) {
+        
+        if (status != null && !status.isEmpty()) {
+            return service.getReportsByTypeAndStatus(type, status);
+        } else {
+            return service.getReportsByType(type);
+        }
+    }
+
     @GetMapping("/report/{id}")
     public ResponseEntity<?> getReport(@PathVariable int id) {
         Report report = service.getById(id);
