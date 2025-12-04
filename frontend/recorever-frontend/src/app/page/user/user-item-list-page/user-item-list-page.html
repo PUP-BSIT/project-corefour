@@ -113,7 +113,8 @@
       [currentUserId]="currentUserId()"
       (cardTicketClicked)="onTicketClick($event)"
       (cardEditClicked)="onEditClick($event)"
-      (cardDeleteClicked)="onDeleteClick($event)">
+      (cardDeleteClicked)="onDeleteClick($event)"
+      (cardViewCodeClicked)="onViewCodeClick($event)">
     </app-report-item-grid>
     }
   </div>
@@ -153,4 +154,12 @@
 <app-custom-location
     (close)="showCustomLocationModal.set(false)"
     (locationSelected)="fetchReports($event)" />
+}
+
+@if (viewCodeItem()) {
+  <app-codes-modal
+    [title]="codeModalTitle()"
+    [code]="codeModalValue()"
+    (close)="viewCodeItem.set(null)">
+  </app-codes-modal>
 }

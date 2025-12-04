@@ -23,6 +23,7 @@ import type { Report, ReportFilters } from '../../../models/item-model';
 import { StandardLocations, StandardRelativeDateFilters }
     from '../../../models/item-model';
 import { CustomLocation } from '../../../modal/custom-location/custom-location';
+import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 type FilterType = 'all' | 'az' | 'date' | 'location';
 type ActiveDropdown = 'date' | 'location' | null;
@@ -36,6 +37,7 @@ type ItemType = 'lost' | 'found';
     SearchBarComponent,
     ReportItemGrid,
     CustomLocation,
+    CodesModal,
   ],
   templateUrl: './user-item-list-page.html',
   styleUrl: './user-item-list-page.scss',
@@ -66,6 +68,34 @@ export class UserItemListPage {
   showCustomDateModal = signal(false);
   showCustomLocationModal = signal(false);
   showResolved = signal(false);
+
+  viewCodeItem = signal<Report | null>(null);
+
+  codeModalTitle = computed(() => {
+    const item = this.viewCodeItem();
+    if (!item) return '';
+
+    if (item.type === 'lost' || item.claim_code) {
+        return 'Ticket ID';
+    }
+
+    return 'Reference Code';
+  });
+
+  codeModalValue = computed(() => {
+    const item = this.viewCodeItem();
+    if (!item) return '';
+
+    if (item.claim_code) {
+      return item.claim_code;
+    }
+
+    if (item.type === 'lost') {
+      return item.report_id ? `Report #${item.report_id}` : 'Pending';
+    }
+
+    return item.surrender_code || 'N/A';
+  });
 
   selectedDateFilter = signal<string>('Any time');
   selectedLocationFilter = signal<string>('Any Location');
@@ -234,5 +264,9 @@ export class UserItemListPage {
 
   onDeleteClick(item: Report): void {
     console.log('Delete clicked for', item.report_id);
+  }
+
+  onViewCodeClick(item: Report): void {
+    this.viewCodeItem.set(item);
   }
 }
