@@ -12,4 +12,5 @@ export type Claim = {
   item_name: string;
   status: ClaimStatus;
   created_at: string;
+  claim_code?: string;
 };
