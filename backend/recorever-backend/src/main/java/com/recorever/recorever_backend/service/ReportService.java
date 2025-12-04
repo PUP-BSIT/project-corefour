@@ -65,6 +65,14 @@ public class ReportService {
     public List<Report> listByStatus(String status) {
         return repo.getReportsByStatus(status); }
 
+    public List<Report> getReportsByType(String type) {
+        return repo.getReportsByType(type);
+    }
+
+    public List<Report> getReportsByTypeAndStatus(String type, String status) {
+        return repo.getReportsByTypeAndStatus(type, status);
+    }
+
     public Report getById(int id) {
         return repo.getReportById(id); }
     
