@@ -32,7 +32,6 @@ public class ReportRepository {
             r.setDescription(rs.getString("description"));
             r.setStatus(rs.getString("status"));
             r.setSurrender_code(rs.getString("surrender_code"));
-            r.setClaim_code(rs.getString("claim_code"));
             r.set_deleted(rs.getBoolean("is_deleted"));
             return r;
         }
@@ -53,6 +52,16 @@ public class ReportRepository {
     public List<Report> getReportsByStatus(String status) {
         String sql = "SELECT * FROM reports WHERE status = ? AND is_deleted = 0 ORDER BY date_reported DESC";
         return jdbcTemplate.query(sql, reportMapper, status);
+    }
+
+    public List<Report> getReportsByType(String type) {
+        String sql = "SELECT * FROM reports WHERE type = ? AND is_deleted = 0 ORDER BY date_reported DESC";
+        return jdbcTemplate.query(sql, reportMapper, type);
+    }
+
+    public List<Report> getReportsByTypeAndStatus(String type, String status) {
+        String sql = "SELECT * FROM reports WHERE type = ? AND status = ? AND is_deleted = 0 ORDER BY date_reported DESC";
+        return jdbcTemplate.query(sql, reportMapper, type, status);
     }
 
     public Report getReportById(int id) {
