@@ -6,11 +6,13 @@ import {
   computed,
   signal,
   inject,
-  effect,
+  ElementRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { switchMap, map, distinctUntilChanged, catchError, of } from 'rxjs';
 import type { Report } from '../../../models/item-model';
-import type { User } from '../../../models/user-model';
 import { ItemStatus } from '../../status-badge/status-badge';
 import { UserService } from '../../../core/services/user-service';
 
@@ -19,10 +21,11 @@ import { UserService } from '../../../core/services/user-service';
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './report-item-card.html',
-  styleUrl: './report-item-card.scss',
+  styleUrls: ['./report-item-card.scss'],
 })
 export class ReportItemCard {
   private userService = inject(UserService);
+  private elementRef = inject(ElementRef);
 
   report = input.required<Report>();
   currentUserId = input<number | null>(null);
@@ -30,17 +33,31 @@ export class ReportItemCard {
   @Output() ticketClicked = new EventEmitter<void>();
   @Output() editClicked = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
+  @Output() viewCodeClicked = new EventEmitter<void>();
 
   isMenuOpen = signal(false);
-  userName = signal<string>('Loading...');
 
-  constructor() {
-    effect(() => {
-      const userId = this.report().user_id;
-      if (userId) {
-        this.fetchUserName(userId);
-      }
-    });
+  private report$ = toObservable(this.report);
+  
+  private userName$ = this.report$.pipe(
+    map(r => r.user_id),
+    distinctUntilChanged(),
+    switchMap(id => {
+        if (!id) return of('Unknown User');
+        return this.userService.getUserById(id).pipe(
+            map(u => u.name || `User ${id}`),
+            catchError(() => of(`User ${id}`))
+        );
+    })
+  );
+
+  userName = toSignal(this.userName$, { initialValue: 'Loading...' });
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.isMenuOpen() && !this.elementRef.nativeElement
+        .contains(event.target)) { this.isMenuOpen.set(false);
+    }
   }
 
   isOwner = computed(() => {
@@ -61,19 +78,15 @@ export class ReportItemCard {
     }
   });
 
-  private fetchUserName(userId: number): void {
-    this.userService.getUserById(userId).subscribe({
-      next: (user: User) => {
-        this.userName.set(user.name || `User ${userId}`);
-      },
-      error: () => {
-        this.userName.set(`User ${userId}`);
-      },
-    });
+  getCodeButtonLabel(): string {
+    const item = this.report();
+    if (item.type === 'lost' || item.claim_code) {
+        return 'View Ticket ID';
+    }
+    return 'View Reference Code';
   }
 
   onTicketClick(): void {
-    // TODO: Implement ticket/claim logic
     this.ticketClicked.emit();
   }
 
@@ -94,7 +107,9 @@ export class ReportItemCard {
     this.deleteClicked.emit();
   }
 
-  onBackdropClick(): void {
+  onViewCode(event: Event): void {
+    event.stopPropagation();
     this.isMenuOpen.set(false);
+    this.viewCodeClicked.emit();
   }
 }
