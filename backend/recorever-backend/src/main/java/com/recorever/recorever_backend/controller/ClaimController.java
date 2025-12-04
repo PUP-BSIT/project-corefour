@@ -82,6 +82,7 @@ public class ClaimController {
         dto.setItem_name(claim.getItem_name());
         dto.setStatus(claim.getStatus());
         dto.setCreated_at(claim.getCreated_at());
+        dto.setClaim_code(claim.getClaim_code());
         return dto;
     }
 }
