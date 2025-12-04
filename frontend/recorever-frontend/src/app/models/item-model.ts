@@ -11,7 +11,7 @@ export type Report = {
   description: string;
   status: 'pending' | 'approved' | 'matched' | 'claimed' | 'rejected';
   surrender_code: string | null;
-  is_deleted?: boolean;
+  reporter_name?: string;
 };
 
 export type ReportFilters = {
