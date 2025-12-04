@@ -33,6 +33,12 @@ public class ReportRepository {
             r.setStatus(rs.getString("status"));
             r.setSurrender_code(rs.getString("surrender_code"));
             r.set_deleted(rs.getBoolean("is_deleted"));
+
+            try {
+                r.setReporter_name(rs.getString("reporter_name"));
+            } catch (SQLException e) {
+                r.setReporter_name(null);
+            }
             return r;
         }
     };
@@ -45,38 +51,57 @@ public class ReportRepository {
     }
 
     public List<Report> getAllReports() {
-        String sql = "SELECT * FROM reports WHERE is_deleted = 0 ORDER BY date_reported DESC";
+        String sql = """
+            SELECT r.*, u.name AS reporter_name 
+            FROM reports r 
+            LEFT JOIN users u ON r.user_id = u.user_id 
+            WHERE r.is_deleted = 0 
+            ORDER BY r.date_reported DESC
+            """;
         return jdbcTemplate.query(sql, reportMapper);
     }
 
     public List<Report> getReportsByStatus(String status) {
-        String sql = "SELECT * FROM reports WHERE status = ? AND is_deleted = 0 ORDER BY date_reported DESC";
+        String sql = """
+            SELECT r.*, u.name AS reporter_name 
+            FROM reports r 
+            LEFT JOIN users u ON r.user_id = u.user_id 
+            WHERE r.status = ? AND r.is_deleted = 0 
+            ORDER BY r.date_reported DESC
+            """;
         return jdbcTemplate.query(sql, reportMapper, status);
     }
 
     public List<Report> getReportsByType(String type) {
         String sql = """
-            SELECT *
-            FROM reports
-            WHERE type = ? AND is_deleted = 0
-            ORDER BY date_reported DESC
-        """;
+            SELECT r.*, u.name AS reporter_name
+            FROM reports r
+            LEFT JOIN users u ON r.user_id = u.user_id
+            WHERE r.type = ? AND r.is_deleted = 0
+            ORDER BY r.date_reported DESC
+            """;
         return jdbcTemplate.query(sql, reportMapper, type);
     }
 
     public List<Report> getReportsByTypeAndStatus(String type, String status) {
         String sql = """
-            SELECT *
-            FROM reports
-            WHERE type = ? AND status = ? AND is_deleted = 0
-            ORDER BY date_reported DESC
-        """;
+            SELECT r.*, u.name AS reporter_name
+            FROM reports r
+            LEFT JOIN users u ON r.user_id = u.user_id
+            WHERE r.type = ? AND r.status = ? AND r.is_deleted = 0
+            ORDER BY r.date_reported DESC
+            """;
         return jdbcTemplate.query(sql, reportMapper, type, status);
     }
 
     public Report getReportById(int id) {
         try {
-            String sql = "SELECT * FROM reports WHERE report_id = ? AND is_deleted = 0";
+            String sql = """
+                SELECT r.*, u.name AS reporter_name 
+                FROM reports r 
+                LEFT JOIN users u ON r.user_id = u.user_id 
+                WHERE r.report_id = ? AND r.is_deleted = 0
+                """;
             return jdbcTemplate.queryForObject(sql, reportMapper, id);
         } catch (EmptyResultDataAccessException e) {
             return null;
