@@ -141,13 +141,13 @@ export class ProfilePage implements OnInit {
     } else {
       source$ = this.itemService.getReports({ type: tab }).pipe(
         map((items: Report[]) => items.filter((item: Report) =>
-          item.type === tab))
+            item.type === tab))
       );
     }
 
     return source$.pipe(
       map((reports: Report[]) => reports.filter((r: Report) =>
-        r.user_id === userId))
+            r.user_id === userId))
     );
   }
 

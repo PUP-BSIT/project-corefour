@@ -125,9 +125,9 @@
 
   @if (viewCodeItem()) {
     <app-codes-modal
-      [title]="codeModalTitle()"
-      [code]="codeModalValue()"
-      (close)="viewCodeItem.set(null)">
+        [title]="codeModalTitle()"
+        [code]="codeModalValue()"
+        (close)="viewCodeItem.set(null)">
     </app-codes-modal>
   }
 </div>

@@ -14,11 +14,11 @@
         {{ itemType() === 'found' ? 'Unclaimed Items' : 'Unresolved Items' }}
       </button>
       <button
-        type="button"
-        class="toggle-button"
-        [class.toggle-button--active]="showResolved()"
-        (click)="toggleStatus(true)">
-        {{ itemType() === 'found' ? 'Claimed Items' : 'Resolved Items' }}
+          type="button"
+          class="toggle-button"
+          [class.toggle-button--active]="showResolved()"
+          (click)="toggleStatus(true)">
+          {{ itemType() === 'found' ? 'Claimed Items' : 'Resolved Items' }}
       </button>
     </div>
   </header>
@@ -158,8 +158,8 @@
 
 @if (viewCodeItem()) {
   <app-codes-modal
-    [title]="codeModalTitle()"
-    [code]="codeModalValue()"
-    (close)="viewCodeItem.set(null)">
+      [title]="codeModalTitle()"
+      [code]="codeModalValue()"
+      (close)="viewCodeItem.set(null)">
   </app-codes-modal>
 }
