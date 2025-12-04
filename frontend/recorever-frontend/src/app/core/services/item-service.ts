@@ -56,7 +56,6 @@ export class ItemService {
         description: claim.proof_description,
         status: claim.status,
         surrender_code: null,
-        is_deleted: false
       } as Report)))
     );
   }
