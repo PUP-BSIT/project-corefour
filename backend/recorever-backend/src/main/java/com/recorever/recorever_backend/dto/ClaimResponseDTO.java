@@ -13,4 +13,5 @@ public class ClaimResponseDTO {
     private String item_name;
     private String status; // 'pending', 'approved', 'rejected'
     private String created_at;
+    private String claim_code; // Added field
 }
