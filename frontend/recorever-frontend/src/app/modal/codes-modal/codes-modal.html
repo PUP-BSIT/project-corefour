@@ -1,1 +1,20 @@
-<p>codes-modal works!</p>
+<div class="modal-overlay" (click)="onDone()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <h2 class="modal-title">{{ title }}</h2>
+
+    <div class="input-group">
+      <div class="code-display" title="Click to select">
+        {{ code }}
+      </div>
+      <button class="copy-btn"
+              [class.copied]="isCopied"
+              (click)="copyToClipboard($event)">
+        {{ copyLabel }}
+      </button>
+    </div>
+
+    <button class="done-btn" (click)="onDone()">Done</button>
+
+  </div>
+</div>
