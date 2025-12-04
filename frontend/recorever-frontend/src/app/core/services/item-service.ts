@@ -52,7 +52,7 @@ export class ItemService {
         description: claim.proof_description,
         status: claim.status,
         surrender_code: null,
-        claim_code: null
+        claim_code: claim.claim_code || null
       } as Report)))
     );
   }
