@@ -37,7 +37,7 @@ public class ReportController {
         dto.setDescription(report.getDescription());
         dto.setStatus(report.getStatus());
         dto.setSurrender_code(report.getSurrender_code());
-        dto.setClaim_code(report.getClaim_code());
+        dto.setReporter_name(report.getReporter_name());
         return dto;
     }
 
@@ -70,15 +70,23 @@ public class ReportController {
     }
 
     @GetMapping("reports/type/{type}")
-    public List<Report> getReportsByType(
+    public ResponseEntity<List<ReportResponseDTO>> getReportsByType(
             @PathVariable String type, 
             @RequestParam(required = false) String status) {
         
+        List<Report> reports;
+        
         if (status != null && !status.isEmpty()) {
-            return service.getReportsByTypeAndStatus(type, status);
+            reports = service.getReportsByTypeAndStatus(type, status);
         } else {
-            return service.getReportsByType(type);
+            reports = service.getReportsByType(type);
         }
+
+        List<ReportResponseDTO> responseList = reports.stream()
+                .map(this::mapToReportResponseDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responseList);
     }
 
     @GetMapping("/report/{id}")
