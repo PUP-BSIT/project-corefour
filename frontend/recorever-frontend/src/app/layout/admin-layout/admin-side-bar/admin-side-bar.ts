@@ -7,6 +7,7 @@ import { Notification } from '../../../share-ui-blocks/notification/notification
 import { AuthService } from '../../../core/auth/auth-service';
 import { ConfirmationModal } from '../../../modal/confirmation-modal/confirmation-modal';
 import { LogoutResponse } from '../../../models/auth-model';
+import { AppRoutePaths } from '../../../app.routes';
 
 @Component({
   selector: 'app-admin-side-bar',
@@ -50,7 +51,7 @@ export class AdminSideBar implements OnDestroy {
     {
       label: "Report Status Management",
       iconPath: "/assets/report-status.png",
-      route: "/admin/report-status",
+      route: AppRoutePaths.REPORT_STATUS_MANAGEMENT,
     },
     {
       label: "Claim Status Management",
