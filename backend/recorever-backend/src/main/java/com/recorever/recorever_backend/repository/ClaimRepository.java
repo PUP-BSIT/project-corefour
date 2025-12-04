@@ -24,6 +24,13 @@ public class ClaimRepository {
         c.setItem_name(rs.getString("item_name"));
         c.setStatus(rs.getString("status"));
         c.setCreated_at(rs.getString("created_at"));
+        
+        try {
+            c.setClaim_code(rs.getString("claim_code"));
+        } catch (Exception e) {
+            c.setClaim_code(null);
+        }
+        
         return c;
     };
 
@@ -35,18 +42,24 @@ public class ClaimRepository {
     }
 
     public List<Claim> getAllClaims() {
-        String sql = "SELECT * FROM claims ORDER BY created_at DESC";
+        String sql = "SELECT c.*, r.claim_code FROM claims c " +
+                     "LEFT JOIN reports r ON c.report_id = r.report_id " +
+                     "ORDER BY c.created_at DESC";
         return jdbcTemplate.query(sql, claimMapper);
     }
 
     public List<Claim> getClaimsByUserId(int userId) {
-        String sql = "SELECT * FROM claims WHERE user_id = ? ORDER BY created_at DESC";
+        String sql = "SELECT c.*, r.claim_code FROM claims c " +
+                     "LEFT JOIN reports r ON c.report_id = r.report_id " +
+                     "WHERE c.user_id = ? ORDER BY c.created_at DESC";
         return jdbcTemplate.query(sql, claimMapper, userId);
     }
 
     public Claim getClaimById(int claimId) {
         try {
-            String sql = "SELECT * FROM claims WHERE claim_id = ?";
+            String sql = "SELECT c.*, r.claim_code FROM claims c " +
+                         "LEFT JOIN reports r ON c.report_id = r.report_id " +
+                         "WHERE c.claim_id = ?";
             return jdbcTemplate.queryForObject(sql, claimMapper, claimId);
         } catch (EmptyResultDataAccessException e) {
             return null;
