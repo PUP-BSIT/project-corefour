@@ -23,7 +23,9 @@ public class Claim {
     private String status; 
     private String created_at;
 
+    @Transient
+    private String claim_code;
+
     @OneToMany(mappedBy = "claimId", fetch = FetchType.LAZY) 
     private List<Image> proofImages;
-
 }
