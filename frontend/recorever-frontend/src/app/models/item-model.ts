@@ -11,12 +11,12 @@ export type Report = {
   description: string;
   status: 'pending' | 'approved' | 'matched' | 'claimed' | 'rejected';
   surrender_code: string | null;
-  claim_code: string | null;
+  is_deleted?: boolean;
 };
 
 export type ReportFilters = {
   type: 'lost' | 'found';
-  status?: 'pending' | 'approved' | 'matched' | 'claimed' | 'rejected';
+  status?: 'pending' | 'approved' | 'matched' | 'claimed' | 'closed';
   location?: string;
   item_name?: string;
 };
