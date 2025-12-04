@@ -25,8 +25,10 @@ public class Report {
   private String description;
   private String status;
   private String surrender_code;
-  private String claim_code;
   private boolean is_deleted;
+
+  @Transient
+  private String reporter_name;
 
   @OneToMany(mappedBy = "reportId", fetch = FetchType.LAZY)
   private List<Image> images;
