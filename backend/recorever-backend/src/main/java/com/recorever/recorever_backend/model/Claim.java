@@ -1,31 +1,18 @@
 package com.recorever.recorever_backend.model;
 
-import jakarta.persistence.*; 
 import lombok.Data;
-import lombok.NoArgsConstructor; 
-import lombok.AllArgsConstructor; 
-import java.util.List; 
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
-@Entity 
-@Table(name = "claim") 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor 
+@AllArgsConstructor
 public class Claim {
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int claim_id;
-
     private int report_id;
     private int user_id;
-    private String proof_description;
-    private String item_name;
-    private String status; 
-    private String created_at;
-
-    @Transient
     private String claim_code;
-
-    @OneToMany(mappedBy = "claimId", fetch = FetchType.LAZY) 
-    private List<Image> proofImages;
+    private String status;
+    private String admin_remarks;
+    private String created_at;
 }
