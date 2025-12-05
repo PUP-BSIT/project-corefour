@@ -24,7 +24,8 @@ export type Report = {
 
 export type ReportFilters = {
   type: 'lost' | 'found';
-  status?: 'pending' | 'approved' | 'matched' | 'claimed' | 'closed';
+  status?: 'pending' | 'approved' | 'matched' | 'claimed'
+      | 'rejected' | 'closed';
   location?: string;
   item_name?: string;
 };
