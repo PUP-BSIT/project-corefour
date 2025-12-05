@@ -12,8 +12,6 @@ import { CommonModule } from '@angular/common';
   selector: 'app-codes-modal',
   standalone: true,
   imports: [CommonModule],
-  standalone: true,
-  imports: [CommonModule],
   templateUrl: './codes-modal.html',
   styleUrl: './codes-modal.scss',
 })
