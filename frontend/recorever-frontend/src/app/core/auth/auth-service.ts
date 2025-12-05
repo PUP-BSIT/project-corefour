@@ -54,7 +54,6 @@ export class AuthService {
     if (!this.getUserFromStorage()) {
         return of(null);
     }
-    
     const userService = this.injector.get(UserService);
 
     return userService.getProfile().pipe(
@@ -71,7 +70,8 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<User> {
     return this.http
-      .post<User>(`${this.API_BASE_URL}/login-user`, credentials, { withCredentials: true }) 
+      .post<User>(`${this.API_BASE_URL}/login-user`,
+            credentials, { withCredentials: true }) 
       .pipe(
         tap((user: User) => {
           this.updateCurrentUser(user);
@@ -134,7 +134,8 @@ export class AuthService {
       catchError((err) => {
         console.error('Server logout failed', err);
         this.handleClientLogout();
-        return of({ success: false, message: 'Local logout forced' } as LogoutResponse);
+        return of({ success: false,
+                    message: 'Local logout forced' } as LogoutResponse);
       })
     );
   }
@@ -151,7 +152,7 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getUserFromStorage(); 
+    return !!this.getUserFromStorage();
   }
 
   isAdmin(): boolean {
@@ -164,9 +165,8 @@ export class AuthService {
     if (!userJson) {
       return null;
     }
-    
     try {
-      return JSON.parse(userJson) as User; 
+      return JSON.parse(userJson) as User;
     } catch (e) {
       console.error('Failed to parse user from localStorage', e);
       localStorage.removeItem('currentUser');

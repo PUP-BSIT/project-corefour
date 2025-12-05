@@ -7,7 +7,7 @@ import type { User } from '../../models/user-model';
 import { AbstractControl,
         AsyncValidatorFn,
         ValidationErrors
-} from '@angular/forms';
+    } from '@angular/forms';
 
 @Injectable({
   providedIn: 'root'
@@ -38,7 +38,6 @@ export class UserService {
     const params = new HttpParams()
       .set('field', field)
       .set('value', value);
-      
     return this.http
       .get<{ isUnique: boolean }>(
         `${this.API_BASE_URL}/check-unique`, { params }
@@ -69,7 +68,6 @@ export class UserService {
 
   updateProfile(user: User, file: File | null): Observable<User> {
     const formData = new FormData();
-    
     formData.append('name', user.name);
     formData.append('phone_number', user.phone_number);
     formData.append('email', user.email);

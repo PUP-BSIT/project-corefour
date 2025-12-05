@@ -22,17 +22,18 @@ public class ClaimController {
 
     @Autowired
     private ClaimService service;
-    
+
     @Autowired
     private ReportService reportService; 
 
     @PostMapping("/claim")
     public ResponseEntity<?> submitClaim(Authentication authentication, 
-                                          @Valid @RequestBody ClaimCreationDTO claimCreationDTO) {
-        
+                                          @Valid @RequestBody
+                                          ClaimCreationDTO claimCreationDTO) { 
+
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();
-        
+
         int reportId = claimCreationDTO.getReport_id().intValue();
         String proofDescription = claimCreationDTO.getProof_description();
 
@@ -61,7 +62,7 @@ public class ClaimController {
             .collect(Collectors.toList());
         return ResponseEntity.ok(responseDTOs);
     }
-    
+
     @GetMapping("/claim/{id}")
     public ResponseEntity<?> getSingleClaim(@PathVariable int id) {
         Claim claim = service.getById(id);
@@ -70,7 +71,7 @@ public class ClaimController {
         }
         return ResponseEntity.ok(convertToDto(claim));
     }
-    
+
     /**
      * Helper method to map Claim model to ClaimResponseDTO.
      */

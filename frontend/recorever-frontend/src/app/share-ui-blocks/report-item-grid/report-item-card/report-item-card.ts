@@ -14,7 +14,6 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { switchMap, map, distinctUntilChanged, catchError, of } from 'rxjs';
 import type { Report } from '../../../models/item-model';
 import { ItemStatus } from '../../status-badge/status-badge';
-import { UserService } from '../../../core/services/user-service';
 
 @Component({
   selector: 'app-report-item-card',
@@ -24,9 +23,7 @@ import { UserService } from '../../../core/services/user-service';
   styleUrls: ['./report-item-card.scss'],
 })
 export class ReportItemCard {
-  private userService = inject(UserService);
   private elementRef = inject(ElementRef);
-
   report = input.required<Report>();
   currentUserId = input<number | null>(null);
 
@@ -36,6 +33,10 @@ export class ReportItemCard {
   @Output() viewCodeClicked = new EventEmitter<void>();
 
   isMenuOpen = signal(false);
+
+  userName = computed(() => {
+    return this.report().reporter_name || `User ${this.report().user_id}`;
+  });
 
   private report$ = toObservable(this.report);
   

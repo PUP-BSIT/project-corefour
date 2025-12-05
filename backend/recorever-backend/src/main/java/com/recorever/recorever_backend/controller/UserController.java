@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletResponse; 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
@@ -51,7 +51,8 @@ public class UserController {
     }
 
     @PostMapping("/register-user")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationDTO registrationDto) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody
+                                        UserRegistrationDTO registrationDto) {
         int userId = service.register(
             registrationDto.getName(), 
             registrationDto.getPhone_number(),
@@ -60,7 +61,8 @@ public class UserController {
         );
         
         if (userId == -1) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Email already exists"));
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Email already exists"));
         }
 
         User newUser = repo.findById(userId);
@@ -86,7 +88,8 @@ public class UserController {
             User user = (User) result.get("user");
 
             // Create HTTP-ONLY Access Token Cookie
-            ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
+            ResponseCookie accessTokenCookie =
+                    ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
@@ -95,7 +98,8 @@ public class UserController {
             response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
 
             // Create HTTP-ONLY Refresh Token Cookie
-            ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+            ResponseCookie refreshTokenCookie =
+                    ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
                 .path("/api/refresh-token")
@@ -111,6 +115,7 @@ public class UserController {
             return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
         }
     }
+    
     
     @GetMapping("/get-user-data")
     public ResponseEntity<UserResponseDTO> getUser(Authentication authentication) {
@@ -154,11 +159,10 @@ public class UserController {
     public ResponseEntity<?> updateUser(Authentication authentication,
                                         @RequestParam(required = false) String name,
                                         @RequestParam(required = false) String phone_number,
-                                        @RequestParam(required = false) String email, 
+                                        @RequestParam(required = false) String email,
                                         @RequestParam(required = false) String profile_picture) {
         
         User user = (User) authentication.getPrincipal();
-
         Map<String, Object> result = service.updateUserProfile(user, name, phone_number, email, profile_picture);
 
         if (result.containsKey("error")) {
@@ -178,9 +182,11 @@ public class UserController {
 
         boolean deleted = repo.deleteUser(userId);
         if (!deleted)
-            return ResponseEntity.status(404).body("User not found or already deleted.");
+            return ResponseEntity.status(404)
+                .body("User not found or already deleted.");
         
-        return ResponseEntity.ok(Map.of("success", true, "message", "User account deactivated."));
+        return ResponseEntity.ok(Map.of("success", true, "message", 
+                                            "User account deactivated "));
     }
 
     @PostMapping("/refresh-token")
@@ -189,14 +195,17 @@ public class UserController {
         HttpServletResponse response 
     ) {
         if (oldRefreshToken == null || oldRefreshToken.isEmpty()) {
-            return ResponseEntity.status(401).body(Map.of("error_message", "Refresh token cookie is missing"));
+            return ResponseEntity.status(401).body(Map.of("error_message", 
+                                        "Refresh token cookie is missing"));
         }
 
         User user = repo.findByRefreshToken(oldRefreshToken);
 
-        if (user == null || user.getRefresh_token_expiry().isBefore(LocalDateTime.now())) {
+        if (user == null || user.getRefresh_token_expiry()
+                .isBefore(LocalDateTime.now())) {
             clearCookie(response, "refreshToken");
-            return ResponseEntity.status(401).body(Map.of("error_message", "Invalid or expired refresh token"));
+            return ResponseEntity.status(401).body(Map.of("error_message",
+                                        "Invalid or expired refresh token"));
         }
         
         // Call the service to get new tokens
@@ -241,6 +250,7 @@ public class UserController {
     public ResponseEntity<?> logout(HttpServletResponse response) {
         clearCookie(response, "accessToken");
         clearCookie(response, "refreshToken");
-        return ResponseEntity.ok(Map.of("success", true, "message", "Logged out successfully."));
+        return ResponseEntity.ok(Map.of("success", true, "message",
+                                        "Logged out successfully."));
     }
 }

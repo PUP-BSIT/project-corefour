@@ -109,7 +109,7 @@
     </div>
     } @else {
     <app-report-item-grid
-      [items]="allReports()"
+      [items]="visibleReports()"
       [currentUserId]="currentUserId()"
       (cardTicketClicked)="onTicketClick($event)"
       (cardEditClicked)="onEditClick($event)"
