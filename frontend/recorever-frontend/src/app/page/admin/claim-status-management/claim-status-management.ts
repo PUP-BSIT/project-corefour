@@ -13,13 +13,22 @@ import { Claim } from '../../../models/claim-model';
 import {
   SearchBarComponent
 } from '../../../share-ui-blocks/search-bar/search-bar';
+import { 
+  ClaimFormModal 
+} from '../../../modal/claim-form-modal/claim-form-modal';
 
 type SortOption = 'all' | 'az' | 'date';
 
 @Component({
   selector: 'app-claim-status-management',
   standalone: true,
-  imports: [CommonModule, RouterModule, SearchBarComponent, DatePipe],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    SearchBarComponent, 
+    DatePipe, 
+    ClaimFormModal
+  ],
   templateUrl: './claim-status-management.html',
   styleUrl: './claim-status-management.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -31,6 +40,8 @@ export class ClaimStatusManagement implements OnInit {
   protected searchQuery = signal<string>('');
   protected currentSort = signal<SortOption>('all');
   protected isLoading = signal<boolean>(true);
+  
+  protected selectedClaimId = signal<number | null>(null);
 
   protected filteredClaims = computed(() => {
     let data = this.claims();
@@ -45,12 +56,12 @@ export class ClaimStatusManagement implements OnInit {
       );
     }
 
-    return data.sort((a, b) => {
+    return [...data].sort((a, b) => {
       if (sortType === 'az') {
         return a.item_name.localeCompare(b.item_name);
       }
       if (sortType === 'date') {
-        return new Date(b.created_at).getTime() -
+        return new Date(b.created_at).getTime() - 
                new Date(a.created_at).getTime();
       }
       return 0;
@@ -61,7 +72,7 @@ export class ClaimStatusManagement implements OnInit {
     this.loadClaims();
   }
 
-  private loadClaims(): void {
+  protected loadClaims(): void {
     this.isLoading.set(true);
     this.claimService.getAllClaims().subscribe({
       next: (data) => {
@@ -84,6 +95,14 @@ export class ClaimStatusManagement implements OnInit {
   }
 
   protected onViewDetails(claimId: number): void {
-    console.log(`View details for claim ID: ${claimId}`);
+    this.selectedClaimId.set(claimId);
+  }
+
+  protected onCloseModal(): void {
+    this.selectedClaimId.set(null);
+  }
+
+  protected onStatusChanged(): void {
+    this.loadClaims();
   }
 }
