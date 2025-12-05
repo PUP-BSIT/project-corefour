@@ -53,7 +53,8 @@
               {{ claim.proof_description }}
             </p>
             <div class="meta-info">
-               Status: <span [class]="claim.status">{{ claim.status }}</span>
+               Status: <span [class]="claim.status.toLowerCase()">
+                    {{ claim.status }}</span>
                &bull; {{ claim.created_at | date:'mediumDate' }}
             </div>
           </div>
@@ -69,4 +70,12 @@
       }
     }
   </div>
+
+  @if (selectedClaimId()) {
+    <app-claim-form-modal 
+      [claimId]="selectedClaimId()!" 
+      (close)="onCloseModal()"
+      (statusChange)="onStatusChanged()">
+    </app-claim-form-modal>
+  }
 </div>
