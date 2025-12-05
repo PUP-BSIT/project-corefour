@@ -19,6 +19,8 @@ import {
 } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
+import { ClaimService } from '../../../core/services/claim-service';
+
 import type { Report, ReportFilters } from '../../../models/item-model';
 import { StandardLocations, StandardRelativeDateFilters }
     from '../../../models/item-model';
@@ -46,6 +48,7 @@ type ItemType = 'lost' | 'found';
 export class UserItemListPage {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
+  private claimService = inject(ClaimService);
   private route = inject(ActivatedRoute);
 
   currentUser = toSignal(this.authService.currentUser$);
@@ -107,7 +110,6 @@ export class UserItemListPage {
   ];
 
   allReports = signal<Report[]>([]);
-  
   isLoading = signal(true);
   error = signal<string | null>(null);
 
@@ -193,17 +195,15 @@ export class UserItemListPage {
 
   readonly dateFilters = this.availableDateFilters;
 
-
   toggleStatus(showResolved: boolean): void {
     this.showResolved.set(showResolved);
     const type = this.itemType();
-
     let statusFilter: ReportFilters['status'];
 
     if (type === 'found') {
       statusFilter = showResolved ? 'claimed' : 'approved';
     } else {
-      statusFilter = showResolved ? 'matched' : 'approved'; 
+      statusFilter = showResolved ? 'matched' : 'approved';
     }
 
     this.filters.update(currentFilters => ({
@@ -261,7 +261,6 @@ export class UserItemListPage {
     }
 
     this.selectedLocationFilter.set(filter);
-
     const locationValue: string | undefined =
         filter === 'Any Location' ? undefined : filter;
 
@@ -274,7 +273,24 @@ export class UserItemListPage {
   }
 
   onTicketClick(item: Report): void {
-    console.log('Ticket clicked for', item.report_id);
+    if (!this.currentUserId()) {
+        console.warn('User must be logged in to claim item');
+        return;
+    }
+
+    this.claimService.submitClaim(item.report_id).subscribe({
+        next: (response) => {
+            const itemWithCode = { 
+                ...item, 
+                claim_code: response.claim_code 
+            };
+
+            this.viewCodeItem.set(itemWithCode);
+        },
+        error: (err) => {
+            console.error('Failed to generate ticket', err);
+        }
+    });
   }
 
   onEditClick(item: Report): void {
