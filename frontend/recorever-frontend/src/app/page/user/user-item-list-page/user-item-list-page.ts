@@ -50,6 +50,7 @@ export class UserItemListPage {
   currentUserId = computed(() => this.currentUser()?.user_id ?? null);
 
   itemType = signal<ItemType>('lost');
+  
   pageTitle = computed(() =>
     this.itemType() === 'lost' ? 'Lost Items' : 'Found Items'
   );
@@ -76,10 +77,50 @@ export class UserItemListPage {
   ];
 
   allReports = signal<Report[]>([]);
+  
   isLoading = signal(true);
   error = signal<string | null>(null);
-  filters = signal<ReportFilters>({ type: 'found',
-      location: undefined, status: 'approved' });
+
+  filters = signal<ReportFilters>({ 
+      type: 'found',
+      location: undefined, 
+      status: 'approved',
+  });
+
+  constructor() {
+    this.route.data
+      .pipe(map((data) => data['itemType'] as ItemType))
+      .subscribe((type: ItemType) => {
+        this.itemType.set(type);
+
+        this.filters.set({
+          type: type,
+          status: 'approved',
+          location: undefined,
+        });
+        
+        this.selectedDateFilter.set('Any time');
+        this.selectedLocationFilter.set('Any Location');
+        this.showResolved.set(false);
+        
+        this.fetchReports();
+      });
+  }
+
+  visibleReports = computed(() => {
+    const reports = this.allReports();
+    const dateFilter = this.selectedDateFilter();
+
+    if (dateFilter === 'Any time') {
+        return reports;
+    }
+
+    const cutoffTime = this.getCutoffTime(dateFilter);
+    return reports.filter(report => {
+        const reportTime = new Date(report.date_reported).getTime();
+        return reportTime >= cutoffTime;
+    });
+  });
 
   private getCutoffTime(filter: string): number {
     const now = new Date().getTime();
@@ -108,49 +149,31 @@ export class UserItemListPage {
 
     for (const filter of StandardRelativeDateFilters) {
         const cutoffTime = this.getCutoffTime(filter);
-
-        const isAvailable = reports.some((report: Report) => {
+        const hasItems = reports.some((report: Report) => {
             const reportTime = new Date(report.date_reported).getTime();
             return reportTime >= cutoffTime;
         });
 
-        if (isAvailable) {
+        if (hasItems) {
             dynamicFilters.push(filter);
         }
     }
-
     return ['Any time', ...dynamicFilters];
   });
 
   readonly dateFilters = this.availableDateFilters;
 
-  constructor() {
-    this.route.data
-      .pipe(map((data) => data['itemType'] as ItemType))
-      .subscribe((type: ItemType) => {
-        this.itemType.set(type);
-        this.filters.set({
-          type: type,
-          status: 'approved', location: undefined,
-        });
-        this.selectedDateFilter.set('Any time');
-        this.selectedLocationFilter.set('Any Location');
-        this.showResolved.set(false);
-        this.fetchReports();
-      });
-  }
 
   toggleStatus(showResolved: boolean): void {
     this.showResolved.set(showResolved);
+    const type = this.itemType();
 
     let statusFilter: ReportFilters['status'];
-
-    const type = this.itemType();
 
     if (type === 'found') {
       statusFilter = showResolved ? 'claimed' : 'approved';
     } else {
-      statusFilter = showResolved ? 'rejected' : 'approved';
+      statusFilter = showResolved ? 'matched' : 'approved'; 
     }
 
     this.filters.update(currentFilters => ({
@@ -159,7 +182,6 @@ export class UserItemListPage {
 
     this.fetchReports();
   }
-
 
   fetchReports(query?: string): void {
     this.isLoading.set(true);
@@ -213,10 +235,7 @@ export class UserItemListPage {
     const locationValue: string | undefined =
         filter === 'Any Location' ? undefined : filter;
 
-    this.filters.update((currentFilters: ReportFilters) => ({
-        ...currentFilters, location: locationValue
-    }));
-
+    this.filters.update(current => ({ ...current, location: locationValue }));
     this.fetchReports();
   }
 
