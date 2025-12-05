@@ -19,5 +19,5 @@ public class ReportResponseDTO {
     private String status; 
     
     private String surrender_code;
-    private String claim_code;
+    private String reporter_name;
 }

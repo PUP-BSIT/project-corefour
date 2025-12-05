@@ -46,34 +46,33 @@ export class ItemReportForm implements OnInit {
 
   constructor() {
     this.reportForm = this.fb.group({
-      item_name: [
-        this.existingItemData?.item_name || '',
-        { validators: [Validators.required, Validators.maxLength(100)],
-            updateOn: 'blur' }
-      ],
+      item_name: ['', {
+          validators: [Validators.required, Validators.maxLength(100)],
+          updateOn: 'blur' }],
       location: [
-        this.existingItemData?.location || StandardLocations.ZONTA_PARK,
+        StandardLocations.ZONTA_PARK,
         { validators: [Validators.required] }
       ],
-      date_reported: [
-        this.existingItemData?.date_reported || '',
-        { validators: [Validators.required] }
-      ],
-      description: [
-        this.existingItemData?.description || '',
-        { validators: [Validators.required, Validators.minLength(10),
-            Validators.maxLength(500)] }
-      ],
-      photoUrls: this.fb.array([])
+      date_reported: ['', { validators: [Validators.required] }],
+      description:
+          ['', { validators: [Validators.required, Validators.minLength(10),
+          Validators.maxLength(500)] }],
+          photoUrls: this.fb.array([])
     }) as ItemFormType;
   }
 
   ngOnInit(): void {
     if (this.existingItemData) {
-      this.reportForm.patchValue(this.existingItemData);
+      this.reportForm.patchValue({
+        item_name: this.existingItemData.item_name,
+        location: this.existingItemData.location,
+        date_reported: this.existingItemData.date_reported,
+        description: this.existingItemData.description
+      });
     }
 
-    this.reportForm.controls.location.valueChanges.subscribe(value => {
+    this.reportForm.controls.location.valueChanges.subscribe
+        ((value: string | null) => {
       if (value === StandardLocations.OTHERS) {
         this.openCustomLocationModal();
       }
