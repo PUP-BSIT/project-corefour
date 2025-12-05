@@ -1,5 +1,6 @@
 <div class="modal-overlay" (click)="onClose()">
-  <div class="modal-container" (click)="$event.stopPropagation(); closeDropdowns()">
+  <div class="modal-container" (click)="$event.stopPropagation(); 
+      closeDropdowns()">
     
     @if (isLoading()) {
       <div class="loading-state">Loading details...</div>
