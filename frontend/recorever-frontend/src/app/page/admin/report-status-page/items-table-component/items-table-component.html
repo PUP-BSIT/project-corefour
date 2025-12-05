@@ -1,1 +1,52 @@
-<p>items-table-component works!</p>
+<div class="items-table-container">
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+        <th scope="col">Status</th>
+        <th scope="col">Item Name</th>
+        <th scope="col">Reference no.</th>
+        <th scope="col">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (state().loading) {
+        <tr>
+          <td colspan="5" class="loading-message"
+              aria-live="polite">Loading reports...</td>
+        </tr>
+      } @else if (state().error) {
+        <tr>
+          <td colspan="5" class="error-message" aria-live="polite">
+                Failed to load reports. Check backend and authentication.</td>
+        </tr>
+      } @else {
+        @for (report of state().reports; track report.report_id) {
+          <tr>
+            <td>{{ report.type | titlecase }}</td>
+           
+            <td>
+              <span class="status-badge" 
+                    [ngClass]="getDisplayStatusClass(report.status)"
+                    role="status"
+                    aria-label="{{ getDisplayStatus(report.status) }}">
+                {{ getDisplayStatus(report.status) }}
+              </span>
+            </td>
+           
+            <td>{{ report.item_name }}</td>
+            <td>{{ report.report_id }}</td>
+            <td>
+              <app-action-menu-component></app-action-menu-component>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="empty-message">No reports found.</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
