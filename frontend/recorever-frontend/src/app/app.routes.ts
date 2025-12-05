@@ -27,6 +27,7 @@ import { ProfilePage } from './page/user/profile-page/profile-page';
 import { AdminDashboardPage } from './page/admin/admin-dashboard-page/admin-dashboard-page';
 import { ManageItemsPage } from './page/admin/manage-items-page/manage-items-page';
 import { AdminItemListPage } from './page/admin/admin-item-list-page/admin-item-list-page';
+import { ReportStatusPage } from './page/admin/report-status-page/report-status-page';
 import { ClaimStatusManagement } from './page/admin/claim-status-management/claim-status-management';
 
 export const AppRoutePaths = {
@@ -36,6 +37,7 @@ export const AppRoutePaths = {
   FOUND_ITEMS: '/app/found-items',
   PROFILE: '/app/profile',
   ABOUT_US: '/app/about-us',
+  REPORT_STATUS_MANAGEMENT: '/admin/report-status',
 };
 
 export const routes: Routes = [
@@ -85,7 +87,9 @@ export const routes: Routes = [
       { path: 'manage-items', component: ManageItemsPage },
       { path: 'lost-items', component: AdminItemListPage, data: { itemType: 'lost' } },
       { path: 'found-items', component: AdminItemListPage, data: { itemType: 'found' } },
+      { path: 'report-status', component: ReportStatusPage },
       { path: 'claim-status', component: ClaimStatusManagement },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
 ];
