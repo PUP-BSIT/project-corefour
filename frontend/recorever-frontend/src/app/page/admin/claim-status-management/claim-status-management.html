@@ -1,0 +1,72 @@
+<div class="claim-management-container">
+  <header class="page-header">
+    <h1 class="page-title">Claim Status Management</h1>
+    
+    <div class="search-wrapper">
+      <app-search-bar (search)="onSearch($event)"></app-search-bar>
+    </div>
+  </header>
+
+  <div class="controls-bar">
+    <div class="sort-tabs">
+      <button 
+        class="tab-btn" 
+        [class.active]="currentSort() === 'all'"
+        (click)="setSort('all')">
+        All
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="currentSort() === 'az'"
+        (click)="setSort('az')">
+        A-Z ↑
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="currentSort() === 'date'"
+        (click)="setSort('date')">
+        Date ↑
+      </button>
+    </div>
+  </div>
+
+  <div class="claims-list">
+    @if (isLoading()) {
+      <div class="loading-state">
+        Loading claims...
+      </div>
+    } @else if (filteredClaims().length === 0) {
+      <div class="empty-state">
+        No claims found.
+      </div>
+    } @else {
+      @for (claim of filteredClaims(); track claim.claim_id) {
+        <div class="claim-card">
+          <div class="claim-info">
+            <div class="ticket-number">
+              Ticket no. {{ claim.claim_id }}
+            </div>
+            <h3 class="item-name">
+              {{ claim.item_name }}
+            </h3>
+            <p class="proof-preview">
+              {{ claim.proof_description }}
+            </p>
+            <div class="meta-info">
+               Status: <span [class]="claim.status">{{ claim.status }}</span>
+               &bull; {{ claim.created_at | date:'mediumDate' }}
+            </div>
+          </div>
+
+          <div class="claim-actions">
+            <button 
+              class="view-details-btn" 
+              (click)="onViewDetails(claim.claim_id)">
+              View Details
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
