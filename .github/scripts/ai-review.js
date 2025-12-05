@@ -7,7 +7,6 @@ const path = require("path");
 const CONFIG = {
   modelName: "gemini-2.5-flash",
   files: {
-    codingStandards: "Coding Guidelines/CODING_STANDARDS.md",
     copilotInstructions: "copilot-instructions.md",
   },
   diffLimit: 40000,
@@ -96,13 +95,10 @@ function parseDiff(diff) {
 
 function loadCodingGuidelines() {
   const workspace = process.env.GITHUB_WORKSPACE || ".";
-  const standardsPath = path.join(workspace, ".github", CONFIG.files.codingStandards);
-  const fallbackPath = path.join(workspace, ".github", CONFIG.files.copilotInstructions);
+  const instructionsPath = path.join(workspace, ".github", CONFIG.files.copilotInstructions);
 
-  if (fs.existsSync(standardsPath)) {
-    return fs.readFileSync(standardsPath, "utf8");
-  } else if (fs.existsSync(fallbackPath)) {
-    return fs.readFileSync(fallbackPath, "utf8");
+  if (fs.existsSync(instructionsPath)) {
+    return fs.readFileSync(instructionsPath, "utf8");
   }
   return "";
 }
