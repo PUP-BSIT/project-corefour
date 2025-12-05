@@ -11,29 +11,30 @@ export type Report = {
   description: string;
   status: 'pending' | 'approved' | 'matched' | 'claimed' | 'rejected';
   surrender_code: string | null;
-  reporter_name?: string;
+  claim_code: string | null;
+  remarks?: string;
 };
 
 export type ReportFilters = {
   type: 'lost' | 'found';
-  status?: 'pending' | 'approved' | 'matched' | 'claimed' | 'closed';
+  status?: 'pending' | 'approved' | 'matched' | 'claimed' | 'rejected';
   location?: string;
   item_name?: string;
 };
 
 export enum StandardLocations {
-    ZONTA_PARK = 'Zonta Park',
-    LOCATION_ONE = 'Location 1',
-    LOCATION_TWO = 'Location 2',
-    OTHERS = 'Others...',
+  ZONTA_PARK = 'Zonta Park',
+  LOCATION_ONE = 'Location 1',
+  LOCATION_TWO = 'Location 2',
+  OTHERS = 'Others...',
 }
 
 export const StandardRelativeDateFilters: string[] = [
-    'Past hour',
-    'Past 24 hours',
-    'Past week',
-    'Past month',
-    'Past year',
+  'Past hour',
+  'Past 24 hours',
+  'Past week',
+  'Past month',
+  'Past year',
 ];
 
 export type ItemReportForm = FormGroup<{
@@ -45,18 +46,18 @@ export type ItemReportForm = FormGroup<{
 }>;
 
 export type ReportSubmissionPayload = {
-    type: 'lost' | 'found';
-    item_name: string;
-    location: string;
-    description: string;
+  type: 'lost' | 'found';
+  item_name: string;
+  location: string;
+  description: string;
 };
 
 export type FinalReportSubmission = {
-    type: 'lost' | 'found';
-    status: 'pending';
-    item_name: string;
-    location: string;
-    date_reported: string;
-    description: string;
-    photoUrls: string[];
+  type: 'lost' | 'found';
+  status: 'pending';
+  item_name: string;
+  location: string;
+  date_reported: string;
+  description: string;
+  photoUrls: string[];
 };
