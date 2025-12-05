@@ -28,4 +28,18 @@ export class ClaimService {
       {}
     );
   }
+
+  restoreClaim(claimId: number): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiUrl}/admin/claim/${claimId}/pending`,
+      {}
+    );
+  }
+
+  markAsClaimed(claimId: number): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiUrl}/admin/claim/${claimId}/claim`,
+      {}
+    );
+  }
 }
