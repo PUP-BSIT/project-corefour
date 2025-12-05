@@ -1,1 +1,19 @@
-<p>admin-item-list-page works!</p>
+<div class="admin-item-list-page">
+  <h1 class="page-title">{{ pageTitle() }}</h1>
+
+  @if (isLoading()) {
+    <div class="loading-message">Loading reports...</div>
+  } @else if (error()) {
+    <div class="error-message">{{ error() }}</div>
+  } @else if (!reports().length) {
+    <div class="empty-message">No items found for this list.</div>
+  } @else {
+    <app-report-item-grid
+      [items]="reports()"
+      [currentUserId]="currentUserId()"
+      (cardTicketClicked)="onTicketClick($event)"
+      (cardEditClicked)="onEditClick($event)"
+      (cardDeleteClicked)="onDeleteClick($event)">
+    </app-report-item-grid>
+  }
+</div>
