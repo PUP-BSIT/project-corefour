@@ -1,1 +1,134 @@
-<p>claim-form-modal works!</p>
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation(); closeDropdowns()">
+    
+    @if (isLoading()) {
+      <div class="loading-state">Loading details...</div>
+    } @else {
+      <div class="left-panel">
+        <div class="header-mini">
+          <div class="avatar">
+            {{ reportOwnerName().charAt(0).toUpperCase() }}
+          </div>
+          <div class="meta">
+            <div class="item-name-label">Item Name</div>
+            <div class="item-date">
+              {{ report()?.date_reported | date:'mediumDate' }}
+            </div>
+          </div>
+        </div>
+
+        <div class="image-carousel">
+          <button class="nav-btn prev" (click)="prevImage()">
+             <img src="assets/Arrow-left.png" alt="Prev">
+          </button>
+          <div class="image-wrapper">
+             <img 
+               [src]="images()[activeImageIndex()]" 
+               alt="Item Image" 
+               class="main-image">
+          </div>
+          <button class="nav-btn next" (click)="nextImage()">
+            <img src="assets/arrow-right.png" alt="Next">
+          </button>
+        </div>
+
+        <div class="item-details">
+          <h2 class="title">{{ report()?.item_name }}</h2>
+          <div class="location">
+            <strong>Location:</strong> {{ report()?.location }}
+          </div>
+          <p class="description">
+            {{ report()?.description }}
+          </p>
+        </div>
+      </div>
+
+      <div class="right-panel" [formGroup]="claimForm">
+        
+        <div class="section claim-by-section">
+          <h3>Claim By:</h3>
+          <div class="table-container">
+            <table class="claims-table">
+              <thead>
+                <tr>
+                  <th class="th-name">Claimant Name</th>
+                  <th class="th-code">Code</th>
+                  <th class="th-date">Claim Date</th>
+                  <th class="th-status">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of relatedClaims(); track row.claim.claim_id) {
+                  <tr>
+                    <td class="name-col">{{ row.userName }}</td>
+                    <td class="code-col">{{ row.code }}</td>
+                    <td class="date-col">
+                      {{ row.claim.created_at | date:'M/d/yy' }}
+                    </td>
+                    <td class="status-col">
+                      <div class="status-dropdown-wrapper">
+                        <button 
+                          class="status-btn" 
+                          [ngClass]="row.claim.status.toLowerCase()"
+                          (click)="toggleDropdown($event, row.claim.claim_id)">
+                          {{ row.claim.status }}
+                          <span class="arrow">▼</span>
+                        </button>
+                        
+                        @if (openDropdownId() === row.claim.claim_id) {
+                          <div 
+                            class="dropdown-content" 
+                            (click)="$event.stopPropagation()">
+                             <div (click)="updateStatus(row.claim, 'pending')">
+                               Pending
+                             </div>
+                             <div (click)="updateStatus(row.claim, 'approved')">
+                               Verified
+                             </div>
+                             <div (click)="updateStatus(row.claim, 'claimed')">
+                               Claimed
+                             </div>
+                             <div (click)="updateStatus(row.claim, 'rejected')">
+                               Denied
+                             </div>
+                          </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="section claimed-by-section">
+          <h3>Claimed By:</h3>
+          <input 
+            type="text" 
+            class="input-field" 
+            formControlName="claimedBy"
+            placeholder="Enter name of person who claimed">
+        </div>
+
+        <div class="section remarks-section">
+          <h3>Remarks:</h3>
+          <textarea 
+            class="input-field textarea" 
+            formControlName="remarks"
+            placeholder="">
+          </textarea>
+        </div>
+
+        <div class="action-buttons">
+          <button 
+            class="save-btn" 
+            [disabled]="isSaving()" 
+            (click)="saveItemDetails()">
+            {{ isSaving() ? 'Saving...' : 'Submit' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,333 @@
+$panel-bg-left: #dadae0;
+$input-bg: #eaeaea;
+$text-color: #333;
+$verified-green: #2e7d32; 
+$denied-red: #ef4444;
+$pending-yellow: #fbbf24;
+$claimed-dark: #333333;
+
+:host {
+  display: block;
+  z-index: 2000;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-container {
+  background-color: white;
+  width: 1000px;
+  height: 650px;
+  max-width: 95vw;
+  max-height: 95vh;
+  border-radius: 12px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+
+  @media (max-width: 850px) {
+    flex-direction: column;
+    height: auto;
+    overflow-y: auto;
+  }
+}
+
+/* --- Left Panel --- */
+.left-panel {
+  flex: 0 0 45%;
+  background-color: $panel-bg-left;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+
+  .header-mini {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      background-color: #6b21a8;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .meta {
+      .item-name-label {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #1a1a1a;
+      }
+      .item-date {
+        font-size: 0.85rem;
+        color: #555;
+      }
+    }
+  }
+
+  .image-carousel {
+    position: relative;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+
+    .image-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        mix-blend-mode: multiply;
+      }
+    }
+
+    .nav-btn {
+      position: absolute;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      
+      img { width: 30px; height: auto; opacity: 0.6; }
+      &:hover img { opacity: 1; }
+
+      &.prev { left: -10px; }
+      &.next { right: -10px; }
+    }
+  }
+
+  .item-details {
+    .title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      color: #111;
+    }
+    .location {
+      font-size: 1.1rem;
+      color: #444;
+      margin-bottom: 1rem;
+    }
+    .description {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #444;
+    }
+  }
+}
+
+/* --- Right Panel --- */
+.right-panel {
+  flex: 1;
+  background-color: white;
+  padding: 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+
+  h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+    color: #000;
+  }
+
+  .section {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 1.5rem;
+
+    &:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+  }
+
+  // --- Table Alignment Fixes ---
+  .claims-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    font-size: 0.85rem;
+
+    th {
+      text-align: left;
+      font-weight: 700;
+      color: #111;
+      padding: 0 5px;
+      
+      &.th-name { width: 35%; }
+      &.th-code { width: 20%; }
+      &.th-date { width: 20%; }
+      &.th-status { 
+        width: 25%; 
+        text-align: center; 
+      }
+    }
+
+    td {
+      padding: 5px;
+      vertical-align: middle;
+      color: #000000;
+    }
+
+    .name-col { 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+    }
+    
+    .status-col { 
+      text-align: center; 
+      display: flex;
+      justify-content: center;
+    }
+
+    // Dropdown Styles
+    .status-dropdown-wrapper {
+      position: relative;
+      display: inline-block;
+
+      .status-btn {
+        width: 100px;
+        padding: 6px 0;
+        border-radius: 20px;
+        border: none;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        text-transform: capitalize;
+        color: white;
+
+        // Specific Colors
+        &.verified, &.approved { 
+          background-color: $verified-green; 
+          color: white; 
+        }
+        &.pending { 
+          background-color: $pending-yellow; 
+          color: black; 
+        }
+        &.claimed, &.claim { 
+          background-color: $claimed-dark; 
+          color: white; 
+        }
+        &.denied, &.rejected { 
+          background-color: $denied-red; 
+          color: white; 
+        }
+
+        .arrow { font-size: 0.6rem; }
+      }
+
+      .dropdown-content {
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: white;
+        min-width: 110px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        border-radius: 8px;
+        z-index: 100;
+        overflow: hidden;
+        border: 1px solid #eee;
+
+        div {
+          padding: 8px 12px;
+          cursor: pointer;
+          font-weight: 600;
+          color: #333;
+          font-size: 0.85rem;
+          text-align: center;
+          transition: background 0.1s;
+          
+          &:hover { background-color: #f0f0f0; }
+        }
+      }
+    }
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: $input-bg;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    color: #333;
+    box-sizing: border-box;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+
+    &.textarea {
+      border-radius: 15px;
+      min-height: 100px;
+      resize: none;
+      font-family: inherit;
+    }
+
+    &:focus {
+      outline: 1px solid #ccc;
+      background-color: white;
+    }
+  }
+
+  .action-buttons {
+    margin-top: auto;
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+
+    .save-btn {
+      background-color: #222;
+      color: white;
+      border: none;
+      padding: 12px 40px;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: #000;
+      }
+
+      &:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
