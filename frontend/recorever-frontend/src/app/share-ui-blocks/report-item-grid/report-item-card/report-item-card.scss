@@ -7,23 +7,35 @@ $text-color: #333;
 $secondary-text: #666;
 $danger-color: #dc3545;
 
+:host {
+  display: block;
+}
+
 .item-card {
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: visible;
   width: 100%;
   max-width: 300px;
   border: 1px solid $border-color;
   position: relative;
+  font-family: 'Arial', sans-serif;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
 
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px;
+    padding: 12px 15px;
     background-color: $light-grey-bg;
     border-bottom: 1px solid $border-color;
+    border-radius: 12px 12px 0 0;
 
     .header-left {
       display: flex;
@@ -31,29 +43,34 @@ $danger-color: #dc3545;
     }
 
     .avatar {
-      background-color: $primary-purple;
+      background-color: #6b5b95; 
       color: white;
       border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      margin-right: 10px;
+      width: 36px;
+      height: 36px;
+      margin-right: 12px;
       text-align: center;
-      line-height: 35px;
+      line-height: 36px;
       font-size: 14px;
-      font-weight: bold;
+      font-weight: 600;
       flex-shrink: 0;
+      user-select: none;
     }
 
     .info-text {
+      display: flex;
+      flex-direction: column;
+
       .item-name {
         margin: 0;
-        font-size: 16px;
-        font-weight: 500;
+        font-size: 14px;
+        font-weight: 700;
         color: $text-color;
+        line-height: 1.2;
       }
 
       .post-date {
-        margin: 0;
+        margin: 2px 0 0 0;
         font-size: 12px;
         color: $secondary-text;
       }
@@ -61,19 +78,29 @@ $danger-color: #dc3545;
 
     .action-menu-container {
       position: relative;
+      display: flex;
+      align-items: center;
 
       .menu-btn {
         background: none;
         border: none;
         cursor: pointer;
-        padding: 4px;
+        padding: 8px;
         display: flex;
         align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.2s;
         
+        &:hover {
+          background-color: rgba(0,0,0,0.05);
+        }
+
         img {
-          width: 20px; 
-          height: auto;
+          width: 20px;
+          height: 20px;
           opacity: 0.6;
+          object-fit: contain;
           
           &:hover {
             opacity: 1;
@@ -85,35 +112,38 @@ $danger-color: #dc3545;
         position: absolute;
         top: 100%;
         right: 0;
+        margin-top: 5px;
         background-color: #fff;
-        border: 1px solid #ddd;
-        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 50;
-        min-width: 120px;
+        z-index: 100;
+        min-width: 180px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        padding: 5px 0;
         
         .dropdown-item {
-          padding: 10px 15px;
+          padding: 10px 16px;
           background: none;
           border: none;
           text-align: left;
           font-size: 14px;
+          font-weight: 500;
           cursor: pointer;
           color: $text-color;
+          width: 100%;
+          transition: background-color 0.1s;
           
           &:hover {
-            background-color: #f9f9f9;
+            background-color: #f5f5f5;
           }
 
           &.delete {
             color: $danger-color;
             &:hover {
-              background-color: color.adjust(
-                $danger-color, $lightness: 45%
-              );
+              background-color: #fff0f0;
             }
           }
         }
@@ -123,8 +153,6 @@ $danger-color: #dc3545;
 
   .item-image-area {
     position: relative;
-    height: 180px;
-    background-color: $light-grey-bg;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -135,6 +163,7 @@ $danger-color: #dc3545;
       max-height: 100%;
       object-fit: contain;
       display: block;
+      mix-blend-mode: multiply;
     }
 
     .arrow {
@@ -144,75 +173,98 @@ $danger-color: #dc3545;
       cursor: pointer;
       padding: 5px;
       z-index: 10;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.9);
+        .arrow-icon {
+            opacity: 1;
+        }
+      }
 
       .arrow-icon {
         width: 24px;
         height: 24px;
-        opacity: 0.7;
+        opacity: 0.6;
         transition: opacity 0.2s ease;
         display: block;
       }
 
-      &:hover .arrow-icon {
-        opacity: 1;
-      }
-
       &.left-arrow {
-        left: 5px;
+        left: 8px;
       }
 
       &.right-arrow {
-        right: 5px;
+        right: 8px;
       }
     }
   }
 
   .card-body {
-    padding: 15px;
+    padding: 16px;
 
     .item-title {
       margin-top: 0;
-      margin-bottom: 5px;
-      font-size: 18px;
-      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 16px;
+      font-weight: 700;
       color: $text-color;
+      
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .item-location {
       margin-top: 0;
-      margin-bottom: 15px;
-      font-size: 14px;
+      margin-bottom: 12px;
+      font-size: 13px;
       color: $secondary-text;
+      display: flex;
+      align-items: center;
+      
     }
 
     .item-description {
-      font-size: 14px;
-      color: $text-color;
-      line-height: 1.4;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.5;
       margin-bottom: 20px;
       min-height: 40px;
+      
     }
 
     .card-footer-actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 10px;
+      margin-top: auto;
     }
 
     .ticket-btn {
       background-color: $primary-purple;
       color: white;
-      padding: 8px 18px;
+      padding: 8px 24px;
       border: none;
       border-radius: 20px;
       cursor: pointer;
-      font-weight: 500;
-      font-size: 14px;
+      font-weight: 600;
+      font-size: 13px;
       transition: background-color 0.15s ease;
+      box-shadow: 0 2px 4px rgba($primary-purple, 0.2);
 
       &:hover {
         background-color: color.adjust($primary-purple, $lightness: -5%);
+        box-shadow: 0 4px 8px rgba($primary-purple, 0.3);
+      }
+      
+      &:active {
+        transform: scale(0.98);
       }
     }
   }

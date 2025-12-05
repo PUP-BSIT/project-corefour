@@ -57,33 +57,44 @@ public class AdminController {
     }
 
     @PutMapping("/claim/{id}/approve")
-    public ResponseEntity<?> approveClaim(@PathVariable int id) {
-        boolean updated = claimService.updateStatus(id, "approved");
+    public ResponseEntity<?> approveClaim(@PathVariable int id, @RequestBody(required = false) Map<String, String> body) {
+        String remarks = (body != null && body.containsKey("admin_remarks")) 
+            ? body.get("admin_remarks") 
+            : "Approved by Admin";
+            
+        boolean updated = claimService.updateStatus(id, "approved", remarks);
         
         if (!updated) {
             return ResponseEntity.badRequest().body("Claim not found or approval failed.");
         }
-        return ResponseEntity.ok(Map.of("success", true, "message", "Claim approved. Claim code generated and user notified."));
+        return ResponseEntity.ok(Map.of("success", true, "message", "Claim approved."));
     }
 
     @PutMapping("/claim/{id}/finalize")
-    public ResponseEntity<?> finalizeClaim(@PathVariable int id) {
-        boolean updated = claimService.updateStatus(id, "claimed");
+    public ResponseEntity<?> finalizeClaim(@PathVariable int id, @RequestBody(required = false) Map<String, String> body) {
+        String remarks = (body != null && body.containsKey("admin_remarks")) 
+            ? body.get("admin_remarks") 
+            : "Item collected";
+
+        boolean updated = claimService.updateStatus(id, "claimed", remarks);
         
         if (!updated) {
             return ResponseEntity.badRequest().body("Claim not found or finalization failed.");
         }
-        return ResponseEntity.ok(Map.of("success", true, "message", "Item successfully collected. Claim and Report statuses updated to 'claimed'."));
+        return ResponseEntity.ok(Map.of("success", true, "message", "Item successfully collected."));
     }
 
     @PutMapping("/claim/{id}/reject")
-    public ResponseEntity<?> rejectClaim(@PathVariable int id) {
-        // Calls the business logic in ClaimService to update status and notify the user
-        boolean updated = claimService.updateStatus(id, "rejected");
+    public ResponseEntity<?> rejectClaim(@PathVariable int id, @RequestBody(required = false) Map<String, String> body) {
+        String remarks = (body != null && body.containsKey("admin_remarks")) 
+            ? body.get("admin_remarks") 
+            : "Rejected by Admin";
+
+        boolean updated = claimService.updateStatus(id, "rejected", remarks);
         
         if (!updated) {
             return ResponseEntity.badRequest().body("Claim not found or rejection failed.");
         }
-        return ResponseEntity.ok(Map.of("success", true, "message", "Claim rejected and user notified."));
+        return ResponseEntity.ok(Map.of("success", true, "message", "Claim rejected."));
     }
 }

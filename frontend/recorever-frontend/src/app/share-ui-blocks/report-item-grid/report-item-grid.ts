@@ -17,6 +17,7 @@ export class ReportItemGrid {
   @Output() cardTicketClicked = new EventEmitter<Report>();
   @Output() cardEditClicked = new EventEmitter<Report>();
   @Output() cardDeleteClicked = new EventEmitter<Report>();
+  @Output() cardViewCodeClicked = new EventEmitter<Report>();
 
   handleTicketClick(itemData: Report): void {
     this.cardTicketClicked.emit(itemData);
@@ -28,5 +29,9 @@ export class ReportItemGrid {
 
   handleDeleteClick(itemData: Report): void {
     this.cardDeleteClicked.emit(itemData);
+  }
+
+  handleViewCodeClick(itemData: Report): void {
+    this.cardViewCodeClicked.emit(itemData);
   }
 }

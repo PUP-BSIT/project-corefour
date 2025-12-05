@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { map, switchMap, catchError, shareReplay, tap } from 'rxjs/operators';
@@ -7,9 +7,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import { EditProfileModal } from '../../../modal/edit-profile-modal/edit-profile-modal';
 import { DeleteReportModal } from '../../../modal/delete-report-modal/delete-report-modal';
+import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 import { ItemService } from '../../../core/services/item-service';
 import { UserService } from '../../../core/services/user-service';
+import { ClaimService } from '../../../core/services/claim-service';
+
 import { Report } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
 
@@ -22,7 +25,8 @@ type TabType = 'all' | 'found' | 'lost' | 'claim';
     CommonModule,
     ReportItemGrid,
     EditProfileModal,
-    DeleteReportModal
+    DeleteReportModal,
+    CodesModal
   ],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss'
@@ -30,9 +34,10 @@ type TabType = 'all' | 'found' | 'lost' | 'claim';
 export class ProfilePage implements OnInit {
   private itemService = inject(ItemService);
   private userService = inject(UserService);
+  private claimService = inject(ClaimService);
 
   activeTab$ = new BehaviorSubject<TabType>('all');
-  activeStatus$ = new BehaviorSubject<string>(''); 
+  activeStatus$ = new BehaviorSubject<string>('');
   private refreshUser$ = new BehaviorSubject<void>(undefined);
   currentUser$: Observable<User | null>;
 
@@ -43,6 +48,33 @@ export class ProfilePage implements OnInit {
   showDeleteModal = false;
   updateError: string | null = null;
   itemToDelete: Report | null = null;
+
+  viewCodeItem = signal<Report | null>(null);
+
+  codeModalTitle = computed(() => {
+    const item = this.viewCodeItem();
+    if (!item) return '';
+
+    if (item.claim_code || item.type === 'lost') {
+      return 'Ticket ID';
+    }
+    return 'Reference Code';
+  });
+
+  codeModalValue = computed(() => {
+    const item = this.viewCodeItem();
+    if (!item) return '';
+
+    if (item.type === 'lost') {
+      return 'Pending';
+    }
+
+    if (item.claim_code) {
+      return item.claim_code || 'N/A';
+    }
+
+    return item.surrender_code || 'N/A';
+  });
 
   constructor() {
     this.currentUser$ = this.refreshUser$.pipe(
@@ -92,7 +124,7 @@ export class ProfilePage implements OnInit {
     let source$: Observable<Report[]>;
 
     if (tab === 'claim') {
-      return this.itemService.getClaimedReports(userId);
+      return this.claimService.getMyClaims(userId);
     }
 
     if (tab === 'all') {
@@ -110,14 +142,14 @@ export class ProfilePage implements OnInit {
       );
     } else {
       source$ = this.itemService.getReports({ type: tab }).pipe(
-        map((items: Report[]) => items.filter((item: Report) => 
-                item.type === tab))
+        map((items: Report[]) => items.filter((item: Report) =>
+            item.type === tab))
       );
     }
 
     return source$.pipe(
-      map((reports: Report[]) => reports.filter((r: Report) => 
-          r.user_id === userId))
+      map((reports: Report[]) => reports.filter((r: Report) =>
+            r.user_id === userId))
     );
   }
 
@@ -188,5 +220,9 @@ export class ProfilePage implements OnInit {
 
   onEditItem(item: Report): void {
     console.log('Edit item requested:', item);
+  }
+
+  onViewCode(item: Report): void {
+    this.viewCodeItem.set(item);
   }
 }
