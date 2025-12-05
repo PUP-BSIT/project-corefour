@@ -10,8 +10,6 @@ import {
   HostListener,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { switchMap, map, distinctUntilChanged, catchError, of } from 'rxjs';
 import type { Report } from '../../../models/item-model';
 import { ItemStatus } from '../../status-badge/status-badge';
 
@@ -33,31 +31,19 @@ export class ReportItemCard {
   @Output() viewCodeClicked = new EventEmitter<void>();
 
   isMenuOpen = signal(false);
-
-  userName = computed(() => {
-    return this.report().reporter_name || `User ${this.report().user_id}`;
-  });
-
-  private report$ = toObservable(this.report);
   
-  private userName$ = this.report$.pipe(
-    map(r => r.user_id),
-    distinctUntilChanged(),
-    switchMap(id => {
-        if (!id) return of('Unknown User');
-        return this.userService.getUserById(id).pipe(
-            map(u => u.name || `User ${id}`),
-            catchError(() => of(`User ${id}`))
-        );
-    })
-  );
-
-  userName = toSignal(this.userName$, { initialValue: 'Loading...' });
+  userName = computed(() => {
+    const r = this.report();
+    return r.reporter_name || `User ${r.user_id}`;
+  });
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (this.isMenuOpen() && !this.elementRef.nativeElement
-        .contains(event.target)) { this.isMenuOpen.set(false);
+    if (
+      this.isMenuOpen() &&
+      !this.elementRef.nativeElement.contains(event.target)
+    ) {
+      this.isMenuOpen.set(false);
     }
   }
 
@@ -81,9 +67,11 @@ export class ReportItemCard {
 
   getCodeButtonLabel(): string {
     const item = this.report();
+
     if (item.type === 'lost' || item.claim_code) {
         return 'View Ticket ID';
     }
+
     return 'View Reference Code';
   }
 
