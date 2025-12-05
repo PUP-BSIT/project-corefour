@@ -13,7 +13,28 @@
       </div>
     </div>
 
-    @if (isOwner()) {
+    @if (isOwner() && report().type === 'lost') {
+      <div class="action-menu-container">
+        <button type="button" 
+                class="menu-btn" 
+                (click)="toggleMenu($event)"
+                aria-label="Options menu">
+          <img src="assets/menu.png" alt="" aria-hidden="true"> 
+        </button>
+  
+        @if (isMenuOpen()) {
+          <div class="dropdown-menu">
+            <button class="dropdown-item" (click)="onEdit($event)">
+              Edit
+            </button>
+            
+            <button class="dropdown-item delete" (click)="onDelete($event)">
+              Delete
+            </button>
+          </div>
+        }
+      </div>
+    } @else if (isOwner()) {
       <div class="action-menu-container">
         <button type="button" 
                 class="menu-btn" 
@@ -34,6 +55,23 @@
             
             <button class="dropdown-item delete" (click)="onDelete($event)">
               Delete
+            </button>
+          </div>
+        }
+      </div>
+    } @else if (!isOwner() && report().claim_code) {
+      <div class="action-menu-container">
+        <button type="button" 
+                class="menu-btn" 
+                (click)="toggleMenu($event)"
+                aria-label="Options menu">
+          <img src="assets/menu.png" alt="" aria-hidden="true"> 
+        </button>
+  
+        @if (isMenuOpen()) {
+          <div class="dropdown-menu">
+            <button class="dropdown-item" (click)="onViewCode($event)">
+              {{ getCodeButtonLabel() }}
             </button>
           </div>
         }
