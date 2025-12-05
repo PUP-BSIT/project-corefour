@@ -53,12 +53,11 @@ export class ItemReportForm implements OnInit {
         StandardLocations.ZONTA_PARK,
         { validators: [Validators.required] }
       ],
-      date_reported: ['',
-        { validators: [Validators.required] }],
-      description: ['',
-        { validators: [Validators.required, Validators.minLength(10),
-            Validators.maxLength(500)] }],
-      photoUrls: this.fb.array([])
+      date_reported: ['', { validators: [Validators.required] }],
+      description:
+          ['', { validators: [Validators.required, Validators.minLength(10),
+          Validators.maxLength(500)] }],
+          photoUrls: this.fb.array([])
     }) as ItemFormType;
   }
 
