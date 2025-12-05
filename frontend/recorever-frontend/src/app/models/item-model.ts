@@ -12,6 +12,8 @@ export type Report = {
   status: 'pending' | 'approved' | 'matched' | 'claimed' | 'rejected';
   surrender_code: string | null;
   reporter_name?: string;
+  claim_id?: number | null;
+  claim_code?: string | null;
 };
 
 export type ReportFilters = {
