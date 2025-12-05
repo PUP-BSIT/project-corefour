@@ -11,6 +11,8 @@ import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 import { ItemService } from '../../../core/services/item-service';
 import { UserService } from '../../../core/services/user-service';
+import { ClaimService } from '../../../core/services/claim-service';
+
 import { Report } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
 
@@ -32,6 +34,7 @@ type TabType = 'all' | 'found' | 'lost' | 'claim';
 export class ProfilePage implements OnInit {
   private itemService = inject(ItemService);
   private userService = inject(UserService);
+  private claimService = inject(ClaimService);
 
   activeTab$ = new BehaviorSubject<TabType>('all');
   activeStatus$ = new BehaviorSubject<string>('');
@@ -55,7 +58,6 @@ export class ProfilePage implements OnInit {
     if (item.claim_code || item.type === 'lost') {
       return 'Ticket ID';
     }
-
     return 'Reference Code';
   });
 
@@ -63,12 +65,12 @@ export class ProfilePage implements OnInit {
     const item = this.viewCodeItem();
     if (!item) return '';
 
-    if (item.claim_code) {
-      return item.claim_code;
-    }
-
     if (item.type === 'lost') {
       return 'Pending';
+    }
+
+    if (item.claim_code) {
+      return item.claim_code || 'N/A';
     }
 
     return item.surrender_code || 'N/A';
@@ -122,7 +124,7 @@ export class ProfilePage implements OnInit {
     let source$: Observable<Report[]>;
 
     if (tab === 'claim') {
-      return this.itemService.getClaimedReports(userId);
+      return this.claimService.getMyClaims(userId);
     }
 
     if (tab === 'all') {
