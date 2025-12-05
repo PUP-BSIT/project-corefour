@@ -21,7 +21,8 @@ export class AdminItemListPage implements OnInit {
   private authService = inject(AuthService);
 
   currentUser = toSignal(this.authService.currentUser$);
-  currentUserId = computed<number | null>(() => this.currentUser()?.user_id ?? null);
+  currentUserId = computed<number | null>(() =>
+      this.currentUser()?.user_id ?? null);
 
   reports = signal<Report[]>([]);
   isLoading = signal<boolean>(true);
@@ -57,7 +58,7 @@ export class AdminItemListPage implements OnInit {
                 (type as string).slice(1)} Items`;
           }
 
-        } else if (data['itemType']) {          filters = {
+        } else if (data['itemType']) {filters = {
             type: data['itemType'] as 'lost' | 'found',
             status: 'approved'
           };

@@ -46,8 +46,8 @@ export class ItemReportForm implements OnInit {
 
   constructor() {
     this.reportForm = this.fb.group({
-      item_name: ['', { validators:
-          [Validators.required, Validators.maxLength(100)],
+      item_name: ['', {
+          validators: [Validators.required, Validators.maxLength(100)],
           updateOn: 'blur' }],
       location: [
         StandardLocations.ZONTA_PARK,
@@ -57,7 +57,7 @@ export class ItemReportForm implements OnInit {
         { validators: [Validators.required] }],
       description: ['',
         { validators: [Validators.required, Validators.minLength(10),
-          Validators.maxLength(500)] }],
+            Validators.maxLength(500)] }],
       photoUrls: this.fb.array([])
     }) as ItemFormType;
   }
