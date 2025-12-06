@@ -1,10 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import type { Report, ReportFilters, FinalReportSubmission } from '../../models/item-model';
-import type { Claim } from '../../models/claim-model';
 
 @Injectable({
   providedIn: 'root',
@@ -41,22 +39,5 @@ export class ItemService {
 
   deleteReport(reportId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/report/${reportId}`);
-  }
-
-  getClaimedReports(userId: number): Observable<Report[]> {
-    return this.http.get<Claim[]>(`${this.apiUrl}/claims/user/${userId}`).pipe(
-      map((claims: Claim[]) => claims.map((claim: Claim) => ({
-        report_id: claim.report_id,
-        user_id: userId,
-        type: 'found',
-        item_name: claim.item_name,
-        location: 'Claimed Item',
-        date_reported: claim.created_at,
-        date_resolved: null,
-        description: claim.proof_description,
-        status: claim.status,
-        surrender_code: null,
-      } as Report)))
-    );
   }
 }
