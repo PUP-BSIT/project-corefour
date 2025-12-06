@@ -5,6 +5,9 @@ import {
   EventEmitter,
   computed,
   signal,
+  inject,
+  ElementRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import type { Report } from '../../../models/item-model';
@@ -15,21 +18,34 @@ import { ItemStatus } from '../../status-badge/status-badge';
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './report-item-card.html',
-  styleUrl: './report-item-card.scss',
+  styleUrls: ['./report-item-card.scss'],
 })
 export class ReportItemCard {
+  private elementRef = inject(ElementRef);
   report = input.required<Report>();
   currentUserId = input<number | null>(null);
 
   @Output() ticketClicked = new EventEmitter<void>();
   @Output() editClicked = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
+  @Output() viewCodeClicked = new EventEmitter<void>();
 
   isMenuOpen = signal(false);
-
+  
   userName = computed(() => {
-    return this.report().reporter_name || `User ${this.report().user_id}`;
+    const r = this.report();
+    return r.reporter_name || `User ${r.user_id}`;
   });
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.isMenuOpen() &&
+      !this.elementRef.nativeElement.contains(event.target)
+    ) {
+      this.isMenuOpen.set(false);
+    }
+  }
 
   isOwner = computed(() => {
     return this.currentUserId() === this.report().user_id;
@@ -48,6 +64,16 @@ export class ReportItemCard {
         return 'Pending';
     }
   });
+
+  getCodeButtonLabel(): string {
+    const item = this.report();
+
+    if (item.type === 'lost' || item.claim_code) {
+        return 'View Ticket ID';
+    }
+
+    return 'View Reference Code';
+  }
 
   onTicketClick(): void {
     this.ticketClicked.emit();
@@ -70,7 +96,9 @@ export class ReportItemCard {
     this.deleteClicked.emit();
   }
 
-  onBackdropClick(): void {
+  onViewCode(event: Event): void {
+    event.stopPropagation();
     this.isMenuOpen.set(false);
+    this.viewCodeClicked.emit();
   }
 }

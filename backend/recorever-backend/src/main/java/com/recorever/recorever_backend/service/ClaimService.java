@@ -1,5 +1,6 @@
 package com.recorever.recorever_backend.service;
 
+import com.recorever.recorever_backend.dto.ClaimResponseDTO;
 import com.recorever.recorever_backend.model.Claim;
 import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.repository.ClaimRepository;
@@ -25,63 +26,76 @@ public class ClaimService {
 
     private static final int ADMIN_USER_ID = 1; // temporary admin user ID
 
-    public Map<String, Object> create(int reportId, int userId, String proofDescription) {
+    public Map<String, Object> create(int reportId, int userId) {
         Report targetReport = reportRepo.getReportById(reportId);
         
         if (targetReport == null) {
-            throw new RuntimeException("Target Report ID " + reportId + " not found or is invalid for claim creation.");
+            throw new RuntimeException("Target Report ID " + reportId + " not found.");
         }
-        
-        String itemName = targetReport.getItem_name();
-        
-        int id = repo.createClaim(reportId, userId, proofDescription, itemName);
 
+        String claimCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+
+        int id = repo.createClaim(reportId, userId, claimCode);
+
+        String itemName = targetReport.getItem_name();
         notificationService.create(ADMIN_USER_ID, reportId, 
-                String.format("New PENDING claim (Claim #%d) submitted for item name: %s.", id, itemName));
+                String.format("New Claim #%d submitted for item: %s. Code: %s", id, itemName, claimCode));
 
         return Map.of(
             "claim_id", id,
-            "report_id", reportId,
+            "claim_code", claimCode,
             "status", "pending",
-            "message", "Claim submitted for administrative review."
+            "message", "Claim ticket created successfully."
         );
     }
 
-    public List<Claim> listAllClaims() { return repo.getAllClaims(); }
-    
-    public List<Claim> listClaimsByUserId(int userId) { 
-        return repo.getClaimsByUserId(userId); }
+    public List<ClaimResponseDTO> getClaimsForReport(int reportId) {
+        return repo.getClaimsForReport(reportId);
+    }
 
-    public Claim getById(int claimId) { return repo.getClaimById(claimId); }
+    public String getClaimCode(int userId, int reportId) {
+        return repo.getClaimCode(userId, reportId);
+    }
 
-    public boolean updateStatus(int claimId, String status) {
+    public boolean updateStatus(int claimId, String status, String remarks) {
         Claim claim = repo.getClaimById(claimId);
         if (claim == null) return false;
 
-        boolean updated = repo.updateClaimStatus(claimId, status);
+        boolean updated = repo.updateClaimStatus(claimId, status, remarks);
         if (!updated) return false;
-        
-        if (status.equals("approved")) {
-            String claimCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            
-            reportRepo.setClaimCodes(claim.getReport_id(), null, claimCode); 
-            
-            String msg = String.format("Claim #%d approved! Your claim code is: **%s**. Please use this to claim your item.", 
-                                       claimId, claimCode);
-            notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
-        
-        } else if (status.equals("claimed")) {
+
+        if (status.equals("claimed")) {
             reportRepo.updateStatus(claim.getReport_id(), "claimed"); 
-            
-            String msg = String.format("Item collected! The item for Claim #%d has been successfully claimed.", claimId);
+
+            String msg = String.format("Success! You have successfully collected the item for Claim #%d.", claimId);
             notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
+
+            List<ClaimResponseDTO> allClaims = repo.getClaimsForReport(claim.getReport_id());
             
+            for (ClaimResponseDTO otherClaim : allClaims) {
+                if (otherClaim.getClaim_id() != claimId && !otherClaim.getStatus().equals("rejected")) {
+                    String autoRejectReason = "System Auto-Rejection: Item has been claimed by another user.";
+                    repo.updateClaimStatus(otherClaim.getClaim_id(), "rejected", autoRejectReason);
+
+                    String loserMsg = String.format("Update: Your claim for item '%s' was closed because the item was claimed by another user.", 
+                                                    otherClaim.getItem_name());
+                    notificationService.create(otherClaim.getUser_id(), otherClaim.getReport_id(), loserMsg);
+                }
+            }
         } else if (status.equals("rejected")) {
-            String msg = String.format("Claim #%d for %s has been rejected by the administrator.", 
-                                       claimId, claim.getItem_name());
+            String msg = String.format("Update: Your claim #%d was rejected. Admin Remarks: %s", 
+                                    claimId, remarks);
             notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
         }
         
         return updated;
     }
+
+    public List<ClaimResponseDTO> getClaimsByUserId(int userId) { 
+        return repo.getClaimsByUserIdDTO(userId); 
+    }
+    
+    public Claim getById(int claimId) { return repo.getClaimById(claimId); }
+    
+    public List<Claim> listAllClaims() { return repo.getAllClaims(); }
 }

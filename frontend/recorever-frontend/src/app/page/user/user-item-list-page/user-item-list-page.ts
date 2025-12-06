@@ -19,10 +19,13 @@ import {
 } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
+import { ClaimService } from '../../../core/services/claim-service';
+
 import type { Report, ReportFilters } from '../../../models/item-model';
 import { StandardLocations, StandardRelativeDateFilters }
     from '../../../models/item-model';
 import { CustomLocation } from '../../../modal/custom-location/custom-location';
+import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 type FilterType = 'all' | 'az' | 'date' | 'location';
 type ActiveDropdown = 'date' | 'location' | null;
@@ -36,6 +39,7 @@ type ItemType = 'lost' | 'found';
     SearchBarComponent,
     ReportItemGrid,
     CustomLocation,
+    CodesModal,
   ],
   templateUrl: './user-item-list-page.html',
   styleUrl: './user-item-list-page.scss',
@@ -44,6 +48,7 @@ type ItemType = 'lost' | 'found';
 export class UserItemListPage {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
+  private claimService = inject(ClaimService);
   private route = inject(ActivatedRoute);
 
   currentUser = toSignal(this.authService.currentUser$);
@@ -68,6 +73,34 @@ export class UserItemListPage {
   showCustomLocationModal = signal(false);
   showResolved = signal(false);
 
+  viewCodeItem = signal<Report | null>(null);
+
+  codeModalTitle = computed(() => {
+    const item = this.viewCodeItem();
+    if (!item) return '';
+
+    if (item.type === 'lost' || item.claim_code) {
+        return 'Ticket ID';
+    }
+
+    return 'Reference Code';
+  });
+
+  codeModalValue = computed(() => {
+    const item = this.viewCodeItem();
+    if (!item) return '';
+
+    if (item.claim_code) {
+      return item.claim_code;
+    }
+
+    if (item.type === 'lost') {
+      return item.report_id ? `Report #${item.report_id}` : 'Pending';
+    }
+
+    return item.surrender_code || 'N/A';
+  });
+
   selectedDateFilter = signal<string>('Any time');
   selectedLocationFilter = signal<string>('Any Location');
 
@@ -77,7 +110,6 @@ export class UserItemListPage {
   ];
 
   allReports = signal<Report[]>([]);
-  
   isLoading = signal(true);
   error = signal<string | null>(null);
 
@@ -163,17 +195,15 @@ export class UserItemListPage {
 
   readonly dateFilters = this.availableDateFilters;
 
-
   toggleStatus(showResolved: boolean): void {
     this.showResolved.set(showResolved);
     const type = this.itemType();
-
     let statusFilter: ReportFilters['status'];
 
     if (type === 'found') {
       statusFilter = showResolved ? 'claimed' : 'approved';
     } else {
-      statusFilter = showResolved ? 'matched' : 'approved'; 
+      statusFilter = showResolved ? 'matched' : 'approved';
     }
 
     this.filters.update(currentFilters => ({
@@ -231,7 +261,6 @@ export class UserItemListPage {
     }
 
     this.selectedLocationFilter.set(filter);
-
     const locationValue: string | undefined =
         filter === 'Any Location' ? undefined : filter;
 
@@ -244,7 +273,24 @@ export class UserItemListPage {
   }
 
   onTicketClick(item: Report): void {
-    console.log('Ticket clicked for', item.report_id);
+    if (!this.currentUserId()) {
+        console.warn('User must be logged in to claim item');
+        return;
+    }
+
+    this.claimService.submitClaim(item.report_id).subscribe({
+        next: (response) => {
+            const itemWithCode = { 
+                ...item, 
+                claim_code: response.claim_code 
+            };
+
+            this.viewCodeItem.set(itemWithCode);
+        },
+        error: (err) => {
+            console.error('Failed to generate ticket', err);
+        }
+    });
   }
 
   onEditClick(item: Report): void {
@@ -253,5 +299,9 @@ export class UserItemListPage {
 
   onDeleteClick(item: Report): void {
     console.log('Delete clicked for', item.report_id);
+  }
+
+  onViewCodeClick(item: Report): void {
+    this.viewCodeItem.set(item);
   }
 }

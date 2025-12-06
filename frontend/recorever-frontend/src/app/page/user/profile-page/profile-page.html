@@ -104,7 +104,8 @@
           [items]="displayedItems()"
           [currentUserId]="(currentUser$ | async)?.user_id ?? null"
           (cardDeleteClicked)="onDeleteItem($event)"
-          (cardEditClicked)="onEditItem($event)">
+          (cardEditClicked)="onEditItem($event)"
+          (cardViewCodeClicked)="onViewCode($event)">
       </app-report-item-grid>
 
       @if (displayedItems().length === 0) {
@@ -120,5 +121,13 @@
         (confirm)="confirmDelete()"
         (cancel)="cancelDelete()">
     </app-delete-report-modal>
+  }
+
+  @if (viewCodeItem()) {
+    <app-codes-modal
+        [title]="codeModalTitle()"
+        [code]="codeModalValue()"
+        (close)="viewCodeItem.set(null)">
+    </app-codes-modal>
   }
 </div>
