@@ -4,4 +4,13 @@
   <app-item-report-form [formType]="'found'"
       (formSubmitted)="handleSubmission($event)"
       (formCancelled)="handleCancel()" />
+
+  @if (showReferenceModal()) {
+    <app-codes-modal
+        title="Found Item Submitted"
+        [code]="referenceCode()"
+        [subtext]="submissionDate()"
+        (close)="onModalClose()">
+    </app-codes-modal>
+  }
 </div>

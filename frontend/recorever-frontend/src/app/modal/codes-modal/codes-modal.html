@@ -3,19 +3,41 @@
 
     <h2 class="modal-title">{{ title() }}</h2>
 
-    <div class="input-group">
-      <div class="code-display" title="Click to select">
-        {{ code() }}
+    @if (title() === 'Found Item Submitted') {
+      <p class="modal-subtext">
+        Thank you for submitting a <strong>found item</strong>!
+            Please keep this code safe. You may need it for item submission
+            with the administrator.
+      </p>
+    }
+
+    <div class="code-section">
+      <h3 class="input-label">Reference Code</h3>
+      <div class="input-group">
+        <div class="code-display" title="Click to select">
+          {{ code() }}
+        </div>
+
+        <button class="copy-btn"
+                [class.copied]="isCopied"
+                (click)="copyToClipboard($event)">
+          {{ copyLabel }}
+        </button>
       </div>
-      
-      <button class="copy-btn"
-              [class.copied]="isCopied"
-              (click)="copyToClipboard($event)">
-        {{ copyLabel }}
-      </button>
     </div>
 
-    <button class="done-btn" (click)="onDone()">Done</button>
+    @if (subtext()) {
+      <div class="code-section">
+        <h3 class="input-label">Submission Date & Time</h3>
+        <div class="input-group">
+          <div class="subtext-display">
+            {{ subtext() }}
+          </div>
+        </div>
+      </div>
+    }
+
+    <button class="done-btn" (click)="onDone()">Close</button>
 
   </div>
 </div>
