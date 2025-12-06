@@ -20,7 +20,7 @@ public class ClaimController {
 
     @Autowired
     private ClaimService service;
-    
+
     @Autowired
     private ReportService reportService; 
 

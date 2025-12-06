@@ -110,6 +110,7 @@ export class UserItemListPage {
   ];
 
   allReports = signal<Report[]>([]);
+  
   isLoading = signal(true);
   error = signal<string | null>(null);
 
