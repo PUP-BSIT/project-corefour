@@ -7,6 +7,19 @@
   </header>
 
   <div class="report-status-page__content">
-    <app-items-table-component></app-items-table-component>
+    <app-items-table-component
+        [reports]="reports()"
+        [isLoading]="isLoading()"
+        [isError]="isError()"
+        (viewDetails)="onViewDetails($event)">
+    </app-items-table-component>
   </div>
+
+  @if (selectedReport()) {
+    <app-report-detail-modal
+        [report]="selectedReport()!"
+        (close)="onCloseDetailView()"
+        (statusUpdated)="onStatusUpdated($event)">
+    </app-report-detail-modal>
+  }
 </div>
