@@ -8,7 +8,7 @@ import { User } from '../../models/user-model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
 
-type AdminStatus =  'approved' | 'claimed' | 'rejected' | 'matched';
+type AdminStatus =  'approved' | 'claimed' | 'closed' | 'matched';
 
 @Component({
   selector: 'app-report-detail-modal',
@@ -36,7 +36,7 @@ export class ReportDetailModal implements OnInit {
   protected readonly statusOptions: AdminStatus[] = [
     'approved',
     'claimed',
-    'rejected'
+    'closed'
   ];
 
   ngOnInit(): void {
@@ -61,8 +61,7 @@ export class ReportDetailModal implements OnInit {
         return 'Verified';
       case 'claimed':
         return 'Claimed';
-      case 'rejected':
-      case 'pending':
+      case 'closed':
       default:
         return 'Pending';
     }
