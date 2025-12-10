@@ -15,6 +15,7 @@ import { ClaimService } from '../../../core/services/claim-service';
 
 import { Report } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
+import { Claim } from '../../../models/claim-model';
 
 type TabType = 'all' | 'found' | 'lost' | 'claim';
 
@@ -124,7 +125,23 @@ export class ProfilePage implements OnInit {
     let source$: Observable<Report[]>;
 
     if (tab === 'claim') {
-      return this.claimService.getMyClaims(userId);
+      return this.claimService.getMyClaims(userId).pipe(
+        map((claims: Claim[]) => {
+          return claims.map((c) => ({
+            report_id: c.report_id,
+            user_id: c.user_id,
+            type: 'found',
+            item_name: c.item_name || 'Claimed Item',
+            location: 'See Details',
+            date_reported: c.created_at,
+            date_resolved: null,
+            description: c.admin_remarks || '',
+            status: c.status as any,
+            surrender_code: null,
+            claim_code: c.claim_code || null
+          } as Report));
+        })
+      );
     }
 
     if (tab === 'all') {
