@@ -62,6 +62,7 @@ export class ReportDetailModal implements OnInit {
       case 'claimed':
         return 'Claimed';
       case 'rejected':
+        return 'Rejected';
       case 'pending':
       default:
         return 'Pending';

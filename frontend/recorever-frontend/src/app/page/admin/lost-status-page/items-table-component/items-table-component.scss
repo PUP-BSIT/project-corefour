@@ -73,8 +73,13 @@
       color: white;
     }
 
-    &.claimed{  
-      background-color: #dc3545;
+    &.claimed {  
+      background-color: #D32F2F;
+      color: white;
+    }
+
+    &.rejected {
+      background-color: #000000;
       color: white;
     }
   }
