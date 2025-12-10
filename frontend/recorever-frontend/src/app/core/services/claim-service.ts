@@ -1,10 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import type { Claim } from '../../models/claim-model';
-import type { Report } from '../../models/item-model';
 
 @Injectable({
   providedIn: 'root',
@@ -13,43 +11,54 @@ export class ClaimService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
-  submitClaim(reportId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/claim`, { report_id: reportId });
+  getAllClaims(): Observable<Claim[]> {
+    return this.http.get<Claim[]>(`${this.apiUrl}/admin/claims`);
+  }
+
+  getClaimsForReport(reportId: number): Observable<Claim[]> {
+    return this.http.get<Claim[]>(
+        `${this.apiUrl}/claims/report/${reportId}`
+    );
   }
 
   getTicketCode(reportId: number): Observable<{ claim_code: string }> {
-    return this.http.get<{ claim_code: string }>(`${this.apiUrl}/claim/ticket/${reportId}`);
-  }
-
-  getClaimsForAdmin(reportId: number): Observable<Claim[]> {
-    return this.http.get<Claim[]>(`${this.apiUrl}/claims/report/${reportId}`);
-  }
-
-  updateClaimStatus(claimId: number, status: string, remarks: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/claim/${claimId}/status`, { 
-      status: status, 
-      admin_remarks: remarks 
-    });
-  }
-
-  getMyClaims(userId: number): Observable<Report[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/claims/user`).pipe(
-      map((claims) => {
-        if (!claims) return [];
-
-        return claims
-          .filter((claim) => claim && claim.report)
-          .map((claim) => {
-            return {
-              ...claim.report, 
-              reporter_name: claim.report.reporter_name || 'Anonymous', 
-              status: claim.status,         
-              claim_id: claim.claim_id,
-              claim_code: claim.claim_code,
-              type: 'claim',
-            } as Report;
-          });
-      })
+    return this.http.get<{ claim_code: string }>(
+        `${this.apiUrl}/claim/ticket/${reportId}`
     );
+  }
+
+  getMyClaims(userId: number): Observable<Claim[]> {
+    return this.http.get<Claim[]>(`${this.apiUrl}/claims/user`);
+  }
+
+  submitClaim(reportId: number): Observable<{ 
+      claim_id: number; 
+      claim_code: string 
+  }> {
+    return this.http.post<{ claim_id: number; claim_code: string }>(
+        `${this.apiUrl}/claim`, 
+        { report_id: reportId }
+    );
+  }
+
+  updateClaimStatus(
+      claimId: number, 
+      status: string, 
+      remarks: string
+  ): Observable<void> {
+    const payload = { admin_remarks: remarks };
+    let url = `${this.apiUrl}/claim/${claimId}/status`;
+
+    if (status === 'approved') {
+      url = `${this.apiUrl}/admin/claim/${claimId}/approve`;
+    } else if (status === 'rejected') {
+      url = `${this.apiUrl}/admin/claim/${claimId}/reject`;
+    } else if (status === 'claimed') {
+      url = `${this.apiUrl}/admin/claim/${claimId}/finalize`;
+    } else {
+        return this.http.put<void>(url, { status, ...payload });
+    }
+
+    return this.http.put<void>(url, payload);
   }
 }
