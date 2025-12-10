@@ -4,6 +4,11 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Report } from '../../models/item-model';
 
+type StatusUpdateResponse = {
+  success: boolean;
+  message?: string;
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -15,18 +20,15 @@ export class AdminService {
     return this.http.get<Report>(`${this.apiUrl}/report/${reportId}`);
   }
 
-  approveReport(reportId: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/admin/report/${reportId}/approve`, {});
-  }
-
-  updateReportStatus(reportId: number, status: string): Observable<any> {
-    if (status === 'approved') {
-      return this.approveReport(reportId);
-    }
-
-  //TODO: The backend needs to implement an endpoint for generic status updates
-    const genericUpdateEndpoint =
+  updateReportStatus(
+    reportId: number,
+    status: string
+  ): Observable<StatusUpdateResponse> {
+    const endpoint =
         `${this.apiUrl}/admin/report/${reportId}/status`;
-    return this.http.put(genericUpdateEndpoint, { status: status });
+    return this.http.put<StatusUpdateResponse>(
+      endpoint,
+      { status: status }
+    );
   }
 }
