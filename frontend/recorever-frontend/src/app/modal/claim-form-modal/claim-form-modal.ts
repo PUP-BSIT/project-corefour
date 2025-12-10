@@ -91,7 +91,7 @@ export class ClaimFormModal implements OnInit {
       this.report.set(foundReport || null);
 
       this.claimForm.patchValue({
-        remarks: foundReport?.remarks || '',
+        remarks: current.admin_remarks || '', 
         claimedBy: '' 
       });
 
@@ -107,7 +107,15 @@ export class ClaimFormModal implements OnInit {
       );
       const relatedWithNames = await Promise.all(
         sameItemClaims.map(async (c) => {
-          return { claim: c, userName: 'John Doe', code: '123' };
+          let name = 'Unknown';
+          if(c.user_id) {
+             try {
+                const u = await firstValueFrom(
+                        this.userService.getUserById(c.user_id));
+                name = u?.name || 'Unknown';
+             } catch(e) {}
+          }
+          return { claim: c, userName: name, code: c.claim_code || 'N/A' };
         })
       );
       this.relatedClaims.set(relatedWithNames);
@@ -164,9 +172,7 @@ export class ClaimFormModal implements OnInit {
 
     this.isSaving.set(true);
     const formValues = this.claimForm.value;
-    
     console.log('Saving Form Data:', formValues);
-    // TODO(Florido, Maydelyn) Call itemService.updateReport(...) here with formValues
 
     await new Promise((resolve) => setTimeout(resolve, 500));
     this.isSaving.set(false);
