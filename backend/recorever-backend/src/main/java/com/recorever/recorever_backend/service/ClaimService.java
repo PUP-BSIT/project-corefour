@@ -24,7 +24,11 @@ public class ClaimService {
     @Autowired
     private NotificationService notificationService; 
 
-    private static final int ADMIN_USER_ID = 1; // temporary admin user ID
+    private static final int ADMIN_USER_ID = 1; 
+
+    public List<ClaimResponseDTO> listAllClaimsForAdmin() {
+        return repo.getAllClaimsWithDetails();
+    }
 
     public Map<String, Object> create(int reportId, int userId) {
         Report targetReport = reportRepo.getReportById(reportId);
@@ -61,17 +65,21 @@ public class ClaimService {
         Claim claim = repo.getClaimById(claimId);
         if (claim == null) return false;
 
-        boolean updated = repo.updateClaimStatus(claimId, status, remarks);
+        String dbStatus = status;
+        if ("claimed".equalsIgnoreCase(status)) {
+            dbStatus = "approved"; 
+        }
+
+        boolean updated = repo.updateClaimStatus(claimId, dbStatus, remarks);
         if (!updated) return false;
 
-        if (status.equals("claimed")) {
+        if ("claimed".equalsIgnoreCase(status)) {
             reportRepo.updateStatus(claim.getReport_id(), "claimed"); 
 
             String msg = String.format("Success! You have successfully collected the item for Claim #%d.", claimId);
             notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
 
             List<ClaimResponseDTO> allClaims = repo.getClaimsForReport(claim.getReport_id());
-            
             for (ClaimResponseDTO otherClaim : allClaims) {
                 if (otherClaim.getClaim_id() != claimId && !otherClaim.getStatus().equals("rejected")) {
                     String autoRejectReason = "System Auto-Rejection: Item has been claimed by another user.";
@@ -82,7 +90,7 @@ public class ClaimService {
                     notificationService.create(otherClaim.getUser_id(), otherClaim.getReport_id(), loserMsg);
                 }
             }
-        } else if (status.equals("rejected")) {
+        } else if ("rejected".equalsIgnoreCase(status)) {
             String msg = String.format("Update: Your claim #%d was rejected. Admin Remarks: %s", 
                                     claimId, remarks);
             notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
@@ -96,6 +104,4 @@ public class ClaimService {
     }
     
     public Claim getById(int claimId) { return repo.getClaimById(claimId); }
-    
-    public List<Claim> listAllClaims() { return repo.getAllClaims(); }
 }
