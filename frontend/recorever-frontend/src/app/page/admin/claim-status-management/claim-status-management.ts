@@ -8,13 +8,17 @@ import {
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
+import { map, finalize } from 'rxjs/operators';
+
 import { ClaimService } from '../../../core/services/claim-service';
+import { ItemService } from '../../../core/services/item-service';
 import { Claim } from '../../../models/claim-model';
 import {
   SearchBarComponent
 } from '../../../share-ui-blocks/search-bar/search-bar';
-import { 
-  ClaimFormModal 
+import {
+  ClaimFormModal
 } from '../../../modal/claim-form-modal/claim-form-modal';
 
 type SortOption = 'all' | 'az' | 'date';
@@ -35,12 +39,14 @@ type SortOption = 'all' | 'az' | 'date';
 })
 export class ClaimStatusManagement implements OnInit {
   private claimService = inject(ClaimService);
+  private itemService = inject(ItemService);
 
+  // Guideline: Take advantage of TS inference type (no <Claim[]> needed if empty array implies it, 
+  // but kept for array clarity. Removed <string> and <boolean> for primitives). 
   protected claims = signal<Claim[]>([]);
-  protected searchQuery = signal<string>('');
+  protected searchQuery = signal(''); 
   protected currentSort = signal<SortOption>('all');
-  protected isLoading = signal<boolean>(true);
-  
+  protected isLoading = signal(true);
   protected selectedClaimId = signal<number | null>(null);
 
   protected filteredClaims = computed(() => {
@@ -50,18 +56,18 @@ export class ClaimStatusManagement implements OnInit {
 
     if (query) {
       data = data.filter((claim) =>
-        claim.item_name.toLowerCase().includes(query) ||
+        (claim.item_name || '').toLowerCase().includes(query) ||
         claim.claim_id.toString().includes(query) ||
-        claim.proof_description.toLowerCase().includes(query)
+        (claim.admin_remarks || '').toLowerCase().includes(query)
       );
     }
 
     return [...data].sort((a, b) => {
       if (sortType === 'az') {
-        return a.item_name.localeCompare(b.item_name);
+        return (a.item_name || '').localeCompare(b.item_name || '');
       }
       if (sortType === 'date') {
-        return new Date(b.created_at).getTime() - 
+        return new Date(b.created_at).getTime() -
                new Date(a.created_at).getTime();
       }
       return 0;
@@ -72,16 +78,33 @@ export class ClaimStatusManagement implements OnInit {
     this.loadClaims();
   }
 
+  // Guideline: Stop using Vanilla JS way (async/await) 
   protected loadClaims(): void {
     this.isLoading.set(true);
-    this.claimService.getAllClaims().subscribe({
-      next: (data) => {
-        this.claims.set(data);
-        this.isLoading.set(false);
+
+    // Guideline: Use pipe() and RXJS operators 
+    forkJoin({
+      claims: this.claimService.getAllClaims(),
+      reports: this.itemService.getReports({ type: 'found' })
+    }).pipe(
+      map(({ claims, reports }) => {
+        return claims.map(claim => {
+          const matchingReport = reports.find(
+            r => r.report_id === claim.report_id
+          );
+          return {
+            ...claim,
+            item_name: matchingReport ? matchingReport.item_name :'Unknown Item'
+          };
+        });
+      }),
+      finalize(() => this.isLoading.set(false))
+    ).subscribe({
+      next: (combinedClaims) => {
+        this.claims.set(combinedClaims);
       },
       error: (err) => {
         console.error('Failed to load claims', err);
-        this.isLoading.set(false);
       }
     });
   }

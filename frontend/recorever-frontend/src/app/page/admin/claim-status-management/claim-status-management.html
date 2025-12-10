@@ -1,7 +1,7 @@
 <div class="claim-management-container">
   <header class="page-header">
     <h1 class="page-title">Claim Status Management</h1>
-    
+
     <div class="search-wrapper">
       <app-search-bar (search)="onSearch($event)"></app-search-bar>
     </div>
@@ -9,22 +9,19 @@
 
   <div class="controls-bar">
     <div class="sort-tabs">
-      <button 
-        class="tab-btn" 
-        [class.active]="currentSort() === 'all'"
-        (click)="setSort('all')">
+      <button class="tab-btn" 
+          [class.active]="currentSort() === 'all'"
+          (click)="setSort('all')">
         All
       </button>
-      <button 
-        class="tab-btn" 
-        [class.active]="currentSort() === 'az'"
-        (click)="setSort('az')">
+      <button class="tab-btn" 
+          [class.active]="currentSort() === 'az'"
+          (click)="setSort('az')">
         A-Z ↑
       </button>
-      <button 
-        class="tab-btn" 
-        [class.active]="currentSort() === 'date'"
-        (click)="setSort('date')">
+      <button class="tab-btn" 
+          [class.active]="currentSort() === 'date'"
+          (click)="setSort('date')">
         Date ↑
       </button>
     </div>
@@ -50,19 +47,18 @@
               {{ claim.item_name }}
             </h3>
             <p class="proof-preview">
-              {{ claim.proof_description }}
+              {{ claim.admin_remarks || 'No remarks provided' }}
             </p>
             <div class="meta-info">
-               Status: <span [class]="claim.status.toLowerCase()">
-                    {{ claim.status }}</span>
-               &bull; {{ claim.created_at | date:'mediumDate' }}
+              Status: <span [class]="claim.status.toLowerCase()">
+                {{ claim.status }}</span>
+              &bull; {{ claim.created_at | date:'mediumDate' }}
             </div>
           </div>
 
           <div class="claim-actions">
-            <button 
-              class="view-details-btn" 
-              (click)="onViewDetails(claim.claim_id)">
+            <button class="view-details-btn" 
+                (click)="onViewDetails(claim.claim_id)">
               View Details
             </button>
           </div>
@@ -73,9 +69,9 @@
 
   @if (selectedClaimId()) {
     <app-claim-form-modal 
-      [claimId]="selectedClaimId()!" 
-      (close)="onCloseModal()"
-      (statusChange)="onStatusChanged()">
+        [claimId]="selectedClaimId()!" 
+        (close)="onCloseModal()"
+        (statusChange)="onStatusChanged()">
     </app-claim-form-modal>
   }
 </div>
