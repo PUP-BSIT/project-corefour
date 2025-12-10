@@ -8,13 +8,13 @@ import { ItemService } from '../../../core/services/item-service';
 import { tap, catchError, of, forkJoin, map } from 'rxjs'; 
 
 @Component({
-  selector: 'app-report-status-page',
+  selector: 'app-lost-status-page',
   standalone: true,
   imports: [CommonModule, ItemsTableComponent, SearchBarComponent, ReportDetailModal],
-  templateUrl: './report-status-page.html',
-  styleUrls: ['./report-status-page.scss'],
+  templateUrl: './lost-status-page.html',
+  styleUrls: ['./lost-status-page.scss'],
 })
-export class ReportStatusPage implements OnInit {
+export class LostStatusPage implements OnInit {
   private itemService = inject(ItemService); 
   
   protected selectedReport = signal<Report | null>(null);

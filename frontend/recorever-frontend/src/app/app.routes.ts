@@ -27,7 +27,7 @@ import { ProfilePage } from './page/user/profile-page/profile-page';
 import { AdminDashboardPage } from './page/admin/admin-dashboard-page/admin-dashboard-page';
 import { ManageItemsPage } from './page/admin/manage-items-page/manage-items-page';
 import { AdminItemListPage } from './page/admin/admin-item-list-page/admin-item-list-page';
-import { ReportStatusPage } from './page/admin/report-status-page/report-status-page';
+import { LostStatusPage } from './page/admin/lost-status-page/lost-status-page';
 
 export const AppRoutePaths = {
   REPORT_LOST: '/app/report-lost',
@@ -88,7 +88,7 @@ export const routes: Routes = [
           data: { itemType: 'lost', status: 'approved' } },
       { path: 'found-items', component: AdminItemListPage,
           data: { itemType: 'found', status: 'approved' } },
-      { path: 'report-status', component: ReportStatusPage },
+      { path: 'report-status', component: LostStatusPage },
       { path: 'archive/resolved', component: AdminItemListPage,
           data: { type: 'lost', status: 'matched' } },
       { path: 'archive/claimed', component: AdminItemListPage,
