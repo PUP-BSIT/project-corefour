@@ -79,8 +79,9 @@ public class ClaimController {
         ClaimResponseDTO dto = new ClaimResponseDTO();
         dto.setClaim_id(claim.getClaim_id());
         dto.setReport_id(claim.getReport_id());
-        dto.setProof_description(claim.getProof_description());
-        dto.setItem_name(claim.getItem_name());
+        dto.setUser_id(claim.getUser_id());
+        dto.setClaim_code(claim.getClaim_code());
+        dto.setAdmin_remarks(claim.getAdmin_remarks());
         dto.setStatus(claim.getStatus());
         dto.setCreated_at(claim.getCreated_at());
         return dto;
