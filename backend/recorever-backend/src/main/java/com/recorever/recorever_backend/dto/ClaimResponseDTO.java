@@ -9,8 +9,9 @@ import lombok.Data;
 public class ClaimResponseDTO {
     private int claim_id;
     private int report_id;
-    private String proof_description;
-    private String item_name;
-    private String status; // 'pending', 'approved', 'rejected'
+    private int user_id;
+    private String claim_code;
+    private String status; 
+    private String admin_remarks;
     private String created_at;
 }
