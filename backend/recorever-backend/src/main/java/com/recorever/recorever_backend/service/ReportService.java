@@ -23,13 +23,19 @@ public class ReportService {
 
     private static final int ADMIN_USER_ID = 1; // temporary admin user ID
 
-    public Map<String, Object> create(int userId, String type, String itemName, String location, String description) {
+    public Map<String, Object> create(int userId,
+                                      String type,
+                                      String itemName,
+                                      String location,
+                                      String description) {
         int id = repo.createReport(userId, type, itemName, location, description);
         
         // Generate and set SURRENDER CODE (only for found items)
         String surrenderCode = null;
         if ("found".equalsIgnoreCase(type)) {
-            surrenderCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            surrenderCode = UUID.randomUUID()
+                    .toString().substring(0, 8)
+                    .toUpperCase();
             repo.setInitialSurrenderCode(id, surrenderCode);
         }
 
@@ -45,21 +51,6 @@ public class ReportService {
         );
     }
 
-    public boolean approveAndPost(int reportId) {
-        boolean updated = repo.updateReport(reportId, "approved", null); 
-        
-        if (updated) {
-            Report postedReport = repo.getReportById(reportId);
-            if (postedReport != null) {
-                matchService.findAndCreateMatch(postedReport);
-
-                notificationService.create(postedReport.getUser_id(), reportId, 
-                    String.format("Your report (%s) has been APPROVED and posted to the public board.", postedReport.getItem_name()));
-            }
-        }
-        return updated;
-    }
-
     public List<Report> listAll() { return repo.getAllReports(); }
 
     public List<Report> listByStatus(String status) {
@@ -73,9 +64,35 @@ public class ReportService {
         return repo.getReportsByTypeAndStatus(type, status);
     }
 
+    public boolean adminUpdateStatus(int id, String status) {
+        String dateResolved = null;
+
+        if ("claimed".equalsIgnoreCase(status) || "rejected".equalsIgnoreCase(status)) {
+            dateResolved = java.time.LocalDateTime.now().toString();
+        }
+        
+        boolean updated = repo.updateReport(id, status, dateResolved);
+        
+        if (updated) {
+             Report report = repo.getReportById(id);
+             if (report != null) {
+
+                 if ("approved".equalsIgnoreCase(status)) {
+                    matchService.findAndCreateMatch(report); 
+                 }
+
+                 notificationService.create(report.getUser_id(), id, 
+                     String.format(
+                        "Your report for '%s' status changed to '%s'.",
+                        report.getItem_name(), status));
+            }
+        }
+        return updated;
+    }
+
     public Report getById(int id) {
         return repo.getReportById(id); }
-    
+
     public boolean updateEditableFields(int id, 
                                         String itemName,
                                         String location,
