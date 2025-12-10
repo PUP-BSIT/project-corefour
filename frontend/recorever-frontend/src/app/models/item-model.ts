@@ -69,4 +69,3 @@ export type FinalReportSubmission = {
   description: string;
   photoUrls: string[];
 };
-
