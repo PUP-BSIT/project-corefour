@@ -20,17 +20,20 @@ public class ClaimRepository {
         c.setClaim_id(rs.getInt("claim_id"));
         c.setReport_id(rs.getInt("report_id"));
         c.setUser_id(rs.getInt("user_id"));
-        c.setProof_description(rs.getString("proof_description"));
-        c.setItem_name(rs.getString("item_name"));
+        c.setClaim_code(rs.getString("claim_code"));
         c.setStatus(rs.getString("status"));
+        c.setAdmin_remarks(rs.getString("admin_remarks"));
         c.setCreated_at(rs.getString("created_at"));
         return c;
     };
 
-    public int createClaim(int reportId, int userId, String proofDescription, String itemName) {
-        String sql = "INSERT INTO claims (report_id, user_id, proof_description, item_name, status, created_at) " +
-                     "VALUES (?, ?, ?, ?, 'pending', NOW())";
-        jdbcTemplate.update(sql, reportId, userId, proofDescription, itemName);
+    public int createClaim(int reportId, int userId, String proofDescription) {
+        
+        String sql = "INSERT INTO claims (report_id, user_id, status, created_at) " +
+                     "VALUES (?, ?, 'pending', NOW())";
+        
+        jdbcTemplate.update(sql, reportId, userId);
+        
         return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
     }
 

@@ -32,12 +32,10 @@ public class ClaimService {
             throw new RuntimeException("Target Report ID " + reportId + " not found or is invalid for claim creation.");
         }
         
-        String itemName = targetReport.getItem_name();
-        
-        int id = repo.createClaim(reportId, userId, proofDescription, itemName);
+        int id = repo.createClaim(reportId, userId, proofDescription);
 
         notificationService.create(ADMIN_USER_ID, reportId, 
-                String.format("New PENDING claim (Claim #%d) submitted for item name: %s.", id, itemName));
+                String.format("New PENDING claim (Claim #%d) submitted for report #%d.", id, reportId));
 
         return Map.of(
             "claim_id", id,
@@ -77,8 +75,7 @@ public class ClaimService {
             notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
             
         } else if (status.equals("rejected")) {
-            String msg = String.format("Claim #%d for %s has been rejected by the administrator.", 
-                                       claimId, claim.getItem_name());
+            String msg = String.format("Claim #%d has been rejected by the administrator.", claimId);
             notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
         }
         

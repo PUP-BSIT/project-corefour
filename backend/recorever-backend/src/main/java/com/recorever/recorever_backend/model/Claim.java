@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import java.util.List; 
 
 @Entity 
-@Table(name = "claim") 
+@Table(name = "claims")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor 
@@ -18,12 +18,12 @@ public class Claim {
 
     private int report_id;
     private int user_id;
-    private String proof_description;
-    private String item_name;
+    
+    private String claim_code;
     private String status; 
+    private String admin_remarks;
     private String created_at;
 
     @OneToMany(mappedBy = "claimId", fetch = FetchType.LAZY) 
     private List<Image> proofImages;
-
 }
