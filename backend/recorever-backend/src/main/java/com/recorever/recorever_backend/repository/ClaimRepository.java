@@ -30,7 +30,6 @@ public class ClaimRepository {
         c.setAdmin_remarks(rs.getString("admin_remarks"));
         c.setStatus(rs.getString("status"));
         c.setCreated_at(rs.getString("created_at"));
-        
         return c;
     };
 
