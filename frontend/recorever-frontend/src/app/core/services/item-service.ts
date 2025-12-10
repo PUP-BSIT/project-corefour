@@ -20,11 +20,7 @@ export class ItemService {
   getReports(filters: ReportFilters): Observable<Report[]> {
     let params = new HttpParams();
 
-    let endpoint = `${this.apiUrl}/reports`;
-
-    if (filters.type) {
-      endpoint = `${this.apiUrl}/reports/type/${filters.type}`;
-    }
+    params = params.set('type', filters.type);
 
     if (filters.status) {
       params = params.set('status', filters.status);
@@ -36,7 +32,7 @@ export class ItemService {
       params = params.set('location', filters.location);
     }
 
-    return this.http.get<Report[]>(endpoint, { params });
+    return this.http.get<Report[]>(`${this.apiUrl}/reports`, { params });
   }
 
   deleteReport(reportId: number): Observable<void> {
@@ -49,13 +45,14 @@ export class ItemService {
         report_id: claim.report_id,
         user_id: userId,
         type: 'found',
-        item_name: claim.item_name,
+        item_name: claim.item_name || 'Unknown Item', 
         location: 'Claimed Item',
         date_reported: claim.created_at,
         date_resolved: null,
-        description: claim.proof_description,
-        status: claim.status,
+        description: claim.admin_remarks || '', 
+        status: claim.status as any, 
         surrender_code: null,
+        claim_code: claim.claim_code || null
       } as Report)))
     );
   }
