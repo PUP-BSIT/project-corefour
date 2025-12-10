@@ -1,16 +1,22 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ItemsTableComponent } from './items-table-component/items-table-component';
-import { SearchBarComponent } from '../../../share-ui-blocks/search-bar/search-bar';
+import { ItemsTableComponent }
+    from './items-table-component/items-table-component';
+import { SearchBarComponent }
+    from '../../../share-ui-blocks/search-bar/search-bar';
 import { Report, ReportFilters } from '../../../models/item-model';
-import { ReportDetailModal } from '../../../modal/report-detail-modal/report-detail-modal';
+import { ReportDetailModal }
+    from '../../../modal/report-detail-modal/report-detail-modal';
 import { ItemService } from '../../../core/services/item-service';
-import { tap, catchError, of, forkJoin, map } from 'rxjs'; 
+import { tap, catchError, of } from 'rxjs'; 
 
 @Component({
   selector: 'app-lost-status-page',
   standalone: true,
-  imports: [CommonModule, ItemsTableComponent, SearchBarComponent, ReportDetailModal],
+  imports: [CommonModule,
+            ItemsTableComponent,
+            SearchBarComponent,
+            ReportDetailModal],
   templateUrl: './lost-status-page.html',
   styleUrls: ['./lost-status-page.scss'],
 })
@@ -35,56 +41,29 @@ export class LostStatusPage implements OnInit {
 
     const query = this.currentSearchQuery();
 
-    const combos: ReportFilters[] = [
-      { type: 'lost', status: 'pending' },
-      { type: 'found', status: 'pending' },
-      { type: 'lost', status: 'approved' },
-      { type: 'found', status: 'approved' },
-      { type: 'lost', status: 'matched' },
-      { type: 'found', status: 'matched' },
-    ];
+    const filters: ReportFilters = {
+        type: 'lost',
+        status: undefined,
+        item_name: query || undefined,
+    };
 
-    const filtersWithQuery = combos.map(c => ({
-        ...c,
-        item_name: query 
-    } as ReportFilters));
+    this.itemService.getReports(filters).pipe(
+      tap((data: Report[]) => {
+        const finalReports = data.sort((reportA, reportB) =>
+          (Date.parse(reportB.date_reported || '') || 0) -
+          (Date.parse(reportA.date_reported || '') || 0)
+        );
 
-    const observables = filtersWithQuery.map(c =>
-      this.itemService.getReports(c).pipe(catchError(() => of([] as Report[])))
-    );
-
-    forkJoin(observables).pipe(
-      map(results => {
-        const combined = results.flat();
-        const unique = new Map<number, Report>();
-
-        for (const report of combined) {
-          if (!report || report.report_id == null) continue;
-          unique.set(Number(report.report_id), report);
-        }
-
-        const finalReports = Array.from(unique.values()).filter(report =>
-          report.status === 'pending' ||
-          report.status === 'approved' ||
-          report.status === 'matched'
-        );
-
-        return finalReports.sort((reportA, reportB) =>
-          (Date.parse(reportB.date_reported || '') || 0) -
-          (Date.parse(reportA.date_reported || '') || 0)
-        );
-      }),
-      tap((data: Report[]) => {
-        this.reports.set(data);
-        this.isLoading.set(false);
-      }),
-      catchError(err => {
-        this.isError.set(true);
-        this.isLoading.set(false);
-        console.error('Error fetching admin reports:', err);
-        return of([]);
-      })
-    ).subscribe();
+        this.reports.set(finalReports);
+        this.isLoading.set(false);
+      }),
+      catchError(err => {
+        this.isError.set(true);
+        this.isLoading.set(false);
+        console.error('Error fetching admin reports:', err);
+        return of([]);
+      })
+    ).subscribe();
   }
 
   onSearchSubmit(query: string): void {
@@ -106,9 +85,7 @@ export class LostStatusPage implements OnInit {
   }
 
   onStatusUpdated(updatedReport: Report): void {
-      console.log(`Report ${updatedReport.report_id} updated to ${updatedReport.status}. Re-fetching table data.`);
-
-      this.fetchReports(); 
-      this.onCloseDetailView(); 
+    this.fetchReports(); 
+    this.onCloseDetailView(); 
   }
 }
