@@ -8,8 +8,10 @@ export enum ClaimStatus {
 export type Claim = {
   claim_id: number;
   report_id: number;
-  proof_description: string;
-  item_name: string;
+  user_id: number;
+  claim_code?: string;
   status: ClaimStatus;
+  admin_remarks?: string;
   created_at: string;
+  item_name?: string;
 };
