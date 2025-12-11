@@ -28,26 +28,21 @@ public class AdminController {
         return ResponseEntity.ok(reportService.listByStatus("pending")); 
     }
 
-    @PutMapping("/report/{id}/approve")
-    public ResponseEntity<?> approveReport(@PathVariable int id) {
-        Report report = reportService.getById(id);
-        if (report == null) {
-            return ResponseEntity.status(404).body("Report not found.");
-        }
-        if (!"pending".equalsIgnoreCase(report.getStatus())) {
-            return ResponseEntity.badRequest().body("Report status is not 'pending'. Only pending reports can be approved.");
+    @PutMapping("/report/{id}/status")
+    public ResponseEntity<?> updateReportStatus(@PathVariable int id, 
+                                               @RequestBody Map<String, String> body) {
+        String status = body.get("status");
+        
+        if (status == null || status.isEmpty()) {
+            return ResponseEntity.badRequest().body("Status field is required.");
         }
 
-        boolean approved = reportService.approveAndPost(id); 
-
-        if (!approved) {
-             return ResponseEntity.badRequest().body("Report approval failed.");
+        boolean updated = reportService.adminUpdateStatus(id, status);
+        if (!updated) {
+            return ResponseEntity.badRequest().body("Report not found or status update failed.");
         }
         
-        return ResponseEntity.ok(Map.of("success", true, "message", 
-            report.getType().equals("lost") 
-                ? "Lost report approved and posted." 
-                : "Found report manually approved and posted."));
+        return ResponseEntity.ok(Map.of("success", true, "message", "Report status updated to " + status));
     }
 
     // --- CLAIM MANAGEMENT ENDPOINTS ---

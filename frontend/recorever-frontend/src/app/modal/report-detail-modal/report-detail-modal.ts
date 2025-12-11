@@ -1,14 +1,33 @@
-import { Component, Input, OnInit, inject, signal, EventEmitter, Output }
-    from '@angular/core';
-import { CommonModule, TitleCasePipe, DatePipe } from '@angular/common';
+import {
+  Component,
+  Input,
+  OnInit,
+  inject,
+  signal,
+  EventEmitter,
+  Output,
+} from '@angular/core';
+import {
+  CommonModule,
+  TitleCasePipe,
+  DatePipe,
+} from '@angular/common';
 import { Report } from '../../models/item-model';
 import { AdminService } from '../../core/services/admin-service';
 import { UserService } from '../../core/services/user-service';
 import { User } from '../../models/user-model';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
+import {
+  tap,
+  finalize,
+  catchError,
+} from 'rxjs';
+import { throwError } from 'rxjs';
+import {
+  ItemStatus,
+} from '../../share-ui-blocks/status-badge/status-badge';
 
-type AdminStatus =  'approved' | 'claimed' | 'closed' | 'matched';
+type AdminStatus =  'approved' | 'claimed' | 'closed' | 'matched' | 'rejected';
 
 @Component({
   selector: 'app-report-detail-modal',
@@ -36,7 +55,7 @@ export class ReportDetailModal implements OnInit {
   protected readonly statusOptions: AdminStatus[] = [
     'approved',
     'claimed',
-    'closed'
+    'rejected',
   ];
 
   ngOnInit(): void {
@@ -61,7 +80,9 @@ export class ReportDetailModal implements OnInit {
         return 'Verified';
       case 'claimed':
         return 'Claimed';
-      case 'closed':
+      case 'rejected':
+        return 'Rejected';
+      case 'pending':
       default:
         return 'Pending';
     }
@@ -73,26 +94,35 @@ export class ReportDetailModal implements OnInit {
   }
 
   protected updateReportStatus(newStatus: AdminStatus): void {
-    if (this.report.status === newStatus || this.isSubmitting()) return;
-   
+    if (this.report.status === newStatus || this.isSubmitting()) {
+      return;
+    }
+
     this.isDropdownOpen.set(false);
     this.isSubmitting.set(true);
     this.submissionError.set(null);
-    this.adminService.updateReportStatus(this.report.report_id, newStatus).subscribe({
-      next: () => {
-        const updatedReport: Report = { ...this.report, status: newStatus };
-        this.report = updatedReport;
-        this.statusUpdated.emit(updatedReport);
-        this.isSubmitting.set(false);
-      },
-      error: (err: HttpErrorResponse) => {
-        const errorMsg = err.error?.message || err.error?.error
-            || 'Failed to update status.';
-        this.submissionError.set(errorMsg);
-        this.isSubmitting.set(false);
-        console.error('Status Update Failed:', err);
-      }
-    });
+
+    this.adminService
+      .updateReportStatus(this.report.report_id, newStatus)
+      .pipe(
+        tap(() => {
+          const updatedReport: Report = {
+            ...this.report,
+            status: newStatus,
+          };
+          this.report = updatedReport;
+          this.statusUpdated.emit(updatedReport);
+        }),
+        finalize(() => this.isSubmitting.set(false)),
+        catchError((err: HttpErrorResponse) => {
+          const errorMsg = err.error?.message
+              || err.error?.error
+              || 'Failed to update status.';
+          this.submissionError.set(errorMsg);
+          return throwError(() => err);
+        })
+      )
+      .subscribe();
   }
 
   protected onClose(): void {
