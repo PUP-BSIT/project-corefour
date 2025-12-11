@@ -49,7 +49,7 @@ export class AdminSideBar implements OnDestroy {
       route: "/admin/dashboard",
     },
     {
-      label: "Report Status Management",
+      label: "Lost Status Management",
       iconPath: "/assets/report-status.png",
       route: AppRoutePaths.REPORT_STATUS_MANAGEMENT,
     },

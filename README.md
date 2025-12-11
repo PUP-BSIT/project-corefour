@@ -40,8 +40,8 @@ organized.
 - **Password:** Admin123  
 
 ### Test User Account
-- **Email:** test@example.com  
-- **Password:** Password123  
+- **Email:** janedee@gmail.com
+- **Password:** password123
 
 ---
 

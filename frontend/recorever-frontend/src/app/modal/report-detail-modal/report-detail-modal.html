@@ -1,1 +1,78 @@
-<p>report-detail-modal works!</p>
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-container-card"
+       (click)="$event.stopPropagation()"
+       [ngClass]="{'dropdown-active': isDropdownOpen()}">
+    <header class="card-header">
+      <div class="header-left">
+        <div class="avatar">
+          {{ userName().charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="info-text">
+          <h4 class="item-name-header">{{ userName() }}</h4>
+          <p class="post-date">Posted on
+              {{ report.date_reported | date: 'mediumDate' }}</p>
+        </div>
+      </div>
+
+      <button class="close-btn" (click)="onClose()">x</button>
+    </header>
+
+    <div class="item-image-area">
+      <div class="arrow left-arrow">
+        <img src="assets/Arrow-left.png" alt="Previous" class="arrow-icon" />
+      </div>
+
+      <img
+        src="assets/temp-photo-item.png"
+        alt="Item Placeholder Image"
+        class="main-item-photo"/>
+
+      <div class="arrow right-arrow">
+        <img src="assets/arrow-right.png" alt="Next" class="arrow-icon" />
+      </div>
+    </div>
+
+
+    <div class="card-body">
+      <h3 class="item-title">{{ report.item_name }}</h3>
+      <p class="item-location">Location: {{ report.location }}</p>
+      <p class="item-description">
+        {{ report.description }}
+      </p>
+
+      <div class="card-footer-actions">
+        <div class="status-tag" [ngClass]="getUnresolvedClass(report.status)">
+          {{ getUnresolvedClass(report.status) | titlecase }}
+        </div>
+
+        <div class="status-update-wrapper">
+          <button type="button" class="status-dropdown-toggle"
+                  [disabled]="isSubmitting()"
+                  (click)="toggleDropdown($event)">
+            {{ isSubmitting() ? 'Updating...' : 'Set Status' }}
+            <span class="arrow" [class.open]="isDropdownOpen()">▼</span>
+          </button>
+
+          @if (isDropdownOpen()) {
+            <div class="status-dropdown-menu">
+              @for (status of statusOptions; track status) {
+                <button
+                  type="button"
+                  class="dropdown-item"
+                  (click)="updateReportStatus(status)">
+                      {{ getDisplayStatus(status) }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (submissionError()) {
+        <div class="error-message">{{ submissionError() }}</div>
+      }
+    </div>
+  </div>
+</div>
+
