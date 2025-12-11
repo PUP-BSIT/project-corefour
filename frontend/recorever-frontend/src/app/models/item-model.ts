@@ -9,10 +9,16 @@ export type Report = {
   date_reported: string;
   date_resolved: string | null;
   description: string;
-  status: 'pending' | 'approved' | 'matched' | 'claimed' | 'closed';
+  status:
+      | 'pending'
+      | 'approved'
+      | 'matched'
+      | 'claimed'
+      | 'closed'
+      | 'rejected';
   surrender_code: string | null;
   claim_code: string | null;
-  reporter_name?: string; 
+  reporter_name?: string;
   remarks?: string;
 };
 
