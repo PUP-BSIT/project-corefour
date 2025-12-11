@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+// Fixed: Pure POJO, removed JPA Annotations and 'proofImages' to match JDBC/DB
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasRole('ADMIN')") // Global security: Only users with ROLE_ADMIN can access this controller
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     @Autowired
@@ -48,7 +48,7 @@ public class AdminController {
     // --- CLAIM MANAGEMENT ENDPOINTS ---
     @GetMapping("/claims")
     public ResponseEntity<?> getAllClaims() {
-        return ResponseEntity.ok(claimService.listAllClaims());
+        return ResponseEntity.ok(claimService.listAllClaimsForAdmin());
     }
 
     @PutMapping("/claim/{id}/approve")
