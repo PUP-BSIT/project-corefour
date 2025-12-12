@@ -20,6 +20,7 @@ export type Report = {
   claim_code: string | null;
   reporter_name?: string;
   remarks?: string;
+  photoUrls?: string[];
 };
 
 export type ReportFilters = {
@@ -69,3 +70,12 @@ export type FinalReportSubmission = {
   photoUrls: string[];
 };
 
+export type ReportSubmissionWithFiles = FinalReportSubmission & {
+  files: File[];
+};
+
+export type FilePreview = {
+  file: File;
+  url: string;
+  name: string;
+}

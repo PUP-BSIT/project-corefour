@@ -1,17 +1,17 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject }
-    from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormControl }
-    from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormControl, FormArray
+} from '@angular/forms';
 import {
     Report,
     ItemReportForm as ItemFormType,
     StandardLocations,
-    FinalReportSubmission,
-    ReportSubmissionPayload
+    ReportSubmissionPayload,
+    ReportSubmissionWithFiles,
+    FilePreview
 } from '../../models/item-model';
-import { CustomLocation }
-    from '../../modal/custom-location/custom-location';
+import { CustomLocation} from '../../modal/custom-location/custom-location';
 
 @Component({
   selector: 'app-item-report-form',
@@ -22,33 +22,43 @@ import { CustomLocation }
 })
 export class ItemReportForm implements OnInit {
 
-  protected isCustomLocationModalOpen: boolean = false;
-
-  private fb = inject(FormBuilder);
-
+  // Inputs
   @Input() existingItemData?: Report;
   @Input() formType: 'lost' | 'found' = 'lost';
 
-  @Output() formSubmitted = new EventEmitter<FinalReportSubmission>();
+  // Outputs
+  @Output() formSubmitted = new EventEmitter<ReportSubmissionWithFiles>();
   @Output() formCancelled = new EventEmitter<void>();
 
+  // Protected Properties
+  protected isCustomLocationModalOpen = false;
+  protected selectedFiles: File[] = [];
+  protected selectedFilesPreview: FilePreview[] = [];
+  protected reportForm: ItemFormType;
+  protected locationOptions = Object.values(StandardLocations);
+
+  // Private Properties
+  private fb = inject(FormBuilder);
+
+  // Getters
   public get locationLabel(): string {
-    return this.formType === 'lost' ? 'Location Lost:' :
-        'Location Found:';
+    return this.formType === 'lost' ? 'Location Lost:' : 'Location Found:';
   }
 
   public get dateLabel(): string {
     return this.formType === 'lost' ? 'Date Lost:' : 'Date Found:';
   }
 
-  protected reportForm: ItemFormType;
-  protected locationOptions = Object.values(StandardLocations);
+  private get photoUrlsFormArray(): FormArray<FormControl<string | null>> {
+    return this.reportForm.controls.photoUrls;
+  }
 
   constructor() {
     this.reportForm = this.fb.group({
       item_name: ['', {
-          validators: [Validators.required, Validators.maxLength(100)],
-          updateOn: 'blur' }],
+        validators: [Validators.required, Validators.maxLength(100)],
+        updateOn: 'blur'
+      }],
       location: [
         StandardLocations.ZONTA_PARK,
         { validators: [Validators.required] }
@@ -56,8 +66,9 @@ export class ItemReportForm implements OnInit {
       date_reported: ['', { validators: [Validators.required] }],
       description:
           ['', { validators: [Validators.required, Validators.minLength(10),
-          Validators.maxLength(500)] }],
-          photoUrls: this.fb.array([])
+              Validators.maxLength(500)]
+      }],
+      photoUrls: this.fb.array<FormControl<string | null>>([])
     }) as ItemFormType;
   }
 
@@ -69,10 +80,16 @@ export class ItemReportForm implements OnInit {
         date_reported: this.existingItemData.date_reported,
         description: this.existingItemData.description
       });
+
+      if (this.existingItemData.photoUrls) {
+        this.existingItemData.photoUrls.forEach((url: string) => {
+          this.photoUrlsFormArray.push(this.fb.control<string | null>(url));
+        });
+      }
     }
 
     this.reportForm.controls.location.valueChanges.subscribe
-        ((value: string | null) => {
+        ((value: string | null): void => {
       if (value === StandardLocations.OTHERS) {
         this.openCustomLocationModal();
       }
@@ -93,22 +110,72 @@ export class ItemReportForm implements OnInit {
     this.isCustomLocationModalOpen = false;
   }
 
-  onSubmit(): void {
-      if (this.reportForm.valid) {
-        const apiPayload: ReportSubmissionPayload = {
-            type: this.formType,
-            item_name: this.reportForm.controls.item_name.value!,
-            location: this.reportForm.controls.location.value!,
-            description: this.reportForm.controls.description.value!,
-        };
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
 
-        this.formSubmitted.emit(apiPayload as FinalReportSubmission);
-      } else {
-        this.reportForm.markAllAsTouched();
+    if (files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        if (!file.type.match('image/(jpeg|png)')) {
+          console.error(`File type not supported: ${file.name}`);
+          continue;
+        }
+
+        const url = URL.createObjectURL(file);
+
+        this.selectedFiles.push(file);
+        this.selectedFilesPreview.push({
+            file: file, url: url, name: file.name });
       }
-    }
 
-    onCancel(): void {
-      this.formCancelled.emit();
+      input.value = '';
     }
   }
+
+  removeLocalPhoto(index: number): void {
+    URL.revokeObjectURL(this.selectedFilesPreview[index].url);
+
+    this.selectedFilesPreview.splice(index, 1);
+    this.selectedFiles.splice(index, 1);
+  }
+
+  removeExistingPhoto(index: number): void {
+    this.photoUrlsFormArray.removeAt(index);
+  }
+
+  onSubmit(): void {
+    if (this.reportForm.valid) {
+      const basePayload: ReportSubmissionPayload = {
+        type: this.formType,
+        item_name: this.reportForm.controls.item_name.value!,
+        location: this.reportForm.controls.location.value!,
+        description: this.reportForm.controls.description.value!,
+      };
+
+      const finalPayload: ReportSubmissionWithFiles = {
+        ...basePayload,
+        status: 'pending',
+        date_reported: this.reportForm.controls.date_reported.value!,
+        photoUrls: this.photoUrlsFormArray.value.filter((url):
+            url is string => url !== null),
+        files: this.selectedFiles,
+      };
+
+      this.formSubmitted.emit(finalPayload);
+
+      this.selectedFilesPreview.forEach((p: FilePreview) =>
+          URL.revokeObjectURL(p.url));
+      this.selectedFiles = [];
+      this.selectedFilesPreview = [];
+
+    } else {
+      this.reportForm.markAllAsTouched();
+    }
+  }
+
+  onCancel(): void {
+    this.formCancelled.emit();
+  }
+}
