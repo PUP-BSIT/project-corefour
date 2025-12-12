@@ -3,6 +3,13 @@ import { Component, Input, Output, EventEmitter, OnInit, inject
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormControl, FormArray
 } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 import {
     Report,
     ItemReportForm as ItemFormType,
@@ -11,33 +18,37 @@ import {
     ReportSubmissionWithFiles,
     FilePreview
 } from '../../models/item-model';
-import { CustomLocation} from '../../modal/custom-location/custom-location';
 
 @Component({
   selector: 'app-item-report-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CustomLocation],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatAutocompleteModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatDatepickerModule,
+    MatNativeDateModule
+  ],
   templateUrl: './item-report-form.html',
   styleUrl: './item-report-form.scss',
 })
 export class ItemReportForm implements OnInit {
 
-  // Inputs
   @Input() existingItemData?: Report;
   @Input() formType: 'lost' | 'found' = 'lost';
 
-  // Outputs
   @Output() formSubmitted = new EventEmitter<ReportSubmissionWithFiles>();
   @Output() formCancelled = new EventEmitter<void>();
 
-  // Protected Properties
   protected isCustomLocationModalOpen = false;
   protected selectedFiles: File[] = [];
   protected selectedFilesPreview: FilePreview[] = [];
   protected reportForm: ItemFormType;
   protected locationOptions = Object.values(StandardLocations);
+  protected filteredLocations!: Observable<string[]>;
 
-  // Private Properties
   private fb = inject(FormBuilder);
 
   // Getters
@@ -60,7 +71,7 @@ export class ItemReportForm implements OnInit {
         updateOn: 'blur'
       }],
       location: [
-        StandardLocations.ZONTA_PARK,
+        '',
         { validators: [Validators.required] }
       ],
       date_reported: ['', { validators: [Validators.required] }],
@@ -73,6 +84,12 @@ export class ItemReportForm implements OnInit {
   }
 
   ngOnInit(): void {
+    this.filteredLocations =
+        this.reportForm.controls.location.valueChanges.pipe(
+      startWith(''),
+      map((value: string | null) => this.filterLocations(value || ''))
+    );
+
     if (this.existingItemData) {
       this.reportForm.patchValue({
         item_name: this.existingItemData.item_name,
@@ -88,26 +105,13 @@ export class ItemReportForm implements OnInit {
       }
     }
 
-    this.reportForm.controls.location.valueChanges.subscribe
-        ((value: string | null): void => {
-      if (value === StandardLocations.OTHERS) {
-        this.openCustomLocationModal();
-      }
-    });
   }
 
-  openCustomLocationModal(): void {
-    this.isCustomLocationModalOpen = true;
-  }
-
-  handleCustomLocationSelected(location: string): void {
-    this.reportForm.controls.location.setValue(location);
-    this.isCustomLocationModalOpen = false;
-  }
-
-  handleCustomLocationClose(): void {
-    this.reportForm.controls.location.setValue(StandardLocations.ZONTA_PARK);
-    this.isCustomLocationModalOpen = false;
+  private filterLocations(value: string): string[] {
+    const filterValue = value.toLowerCase();
+    return this.locationOptions.filter((option: string) =>
+      option.toLowerCase().includes(filterValue)
+    );
   }
 
   onFileSelected(event: Event): void {

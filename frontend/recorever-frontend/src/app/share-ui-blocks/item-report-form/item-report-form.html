@@ -1,50 +1,61 @@
 <form [formGroup]="reportForm" (ngSubmit)="onSubmit()" class="item-report-form">
 
   <div class="form-field">
-    <label for="itemName">Item Name:</label>
-    <input id="itemName" type="text" formControlName="item_name" />
-    @if (reportForm.controls.item_name.invalid &&
-        reportForm.controls.item_name.touched) {
-          <div class="error-message">Item name is required.</div>
-        }
-  </div>
-
-  <div class="form-field">
-    <label for="locationLost">{{ locationLabel }}</label>
-    <select id="locationLost" formControlName="location">
-      @for (location of locationOptions; track location) {
-        <option [value]="location">{{ location }}</option>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Item Name</mat-label>
+      <input matInput formControlName="item_name" />
+      @if (reportForm.controls.item_name.invalid && reportForm.controls.item_name.touched) {
+        <mat-error>Item name is required.</mat-error>
       }
-    </select>
-    @if (reportForm.controls.location.invalid &&
-        reportForm.controls.location.touched) {
-          <div class="error-message">Location is required.</div>
-    }
+    </mat-form-field>
   </div>
 
   <div class="form-field">
-    <label for="dateLost">{{ dateLabel }}</label>
-    <input
-        id="dateLost"
-        type="date"
-        formControlName="date_reported"
-        placeholder="mm/dd/yyyy" />
-    @if (reportForm.controls.date_reported.invalid &&
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ locationLabel }}</mat-label>
+      <input
+          type="text"
+          matInput
+          formControlName="location"
+          [matAutocomplete]="auto" />
+      <mat-autocomplete #auto="matAutocomplete">
+        @for (location of filteredLocations | async; track location) {
+          <mat-option [value]="location">{{ location }}</mat-option>
+        }
+      </mat-autocomplete>
+      @if (reportForm.controls.location.invalid && reportForm.controls.location.touched) {
+        <mat-error>Location is required.</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <div class="form-field">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ dateLabel }}</mat-label>
+      <input
+          matInput
+          type="date"
+          formControlName="date_reported"
+          placeholder="mm/dd/yyyy"
+       />
+      @if (reportForm.controls.date_reported.invalid &&
         reportForm.controls.date_reported.touched) {
-      <div class="error-message">Date is required.</div>
-    }
-
+        <mat-error>Date is required.</mat-error>
+      }
+    </mat-form-field>
   </div>
 
   <div class="form-field">
-    <label for="itemDescription">Item Description:</label>
-    <textarea id="itemDescription"
-              formControlName="description"></textarea>
-    @if (reportForm.controls.description.invalid &&
-        reportForm.controls.description.touched) {
-      <div class="error-message">
-        Description is required (min 10 characters).</div>
-    }
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Item Description</mat-label>
+      <textarea
+          matInput
+          formControlName="description"
+          rows="5"></textarea>
+      @if (reportForm.controls.description.invalid && reportForm.controls.description.touched) {
+        <mat-error>Description is required (min 10 characters).</mat-error>
+      }
+    </mat-form-field>
   </div>
 
   <div class="form-field photo-upload-field">
@@ -94,10 +105,3 @@
         (click)="onCancel()">Reset</button>
   </div>
 </form>
-
-@if (isCustomLocationModalOpen) {
-  <app-custom-location
-      (locationSelected)="handleCustomLocationSelected($event)"
-      (close)="handleCustomLocationClose()"
-  />
-}

@@ -18,60 +18,18 @@ $secondary-text: #666;
   .form-field {
     margin-bottom: 20px;
 
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 5px;
-      font-size: 16px;
-    }
-
-    input[type="text"],
-    input[type="date"],
-    select,
-    textarea {
-      width: 92%;
-      padding: 10px;
-      border: 1px solid $border-color;
-      border-radius: 5px;
-      background-color: $light-grey;
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-      font-size: 16px;
-
-      &:focus {
-        border-color: color.adjust($border-color, $lightness: -20%);
-        outline: none;
-      }
-    }
-
-    select {
-      width: 95%;
-      padding: 10px;
-      border: 1px solid $border-color;
-      border-radius: 5px;
-      background-color: $light-grey;
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-      font-size: 16px;
-
-      &:focus {
-        border-color: color.adjust($border-color, $lightness: -20%);
-        outline: none;
-      }
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    .error-message {
-      color: $error-red;
-      font-size: 12px;
-      margin-top: 5px;
+    .full-width {
+      width: 100%;
     }
   }
 
   .photo-upload-field {
     label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+      font-size: 16px;
+
       small {
         font-weight: 400;
         color: $secondary-text;
@@ -89,7 +47,7 @@ $secondary-text: #666;
     background-color: $light-grey;
     border: 2px dashed $border-color;
     border-radius: 5px;
-    width: 96%;
+    width: 100%;
     cursor: pointer;
     transition: all 0.2s ease;
 
