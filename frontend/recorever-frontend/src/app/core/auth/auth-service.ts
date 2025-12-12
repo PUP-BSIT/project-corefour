@@ -166,7 +166,7 @@ export class AuthService {
       return null;
     }
     try {
-      return JSON.parse(userJson) as User;
+      return JSON.parse(userJson) as User; 
     } catch (e) {
       console.error('Failed to parse user from localStorage', e);
       localStorage.removeItem('currentUser');
