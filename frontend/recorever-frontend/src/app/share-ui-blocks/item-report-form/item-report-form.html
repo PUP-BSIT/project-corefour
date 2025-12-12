@@ -4,7 +4,8 @@
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Item Name</mat-label>
       <input matInput formControlName="item_name" />
-      @if (reportForm.controls.item_name.invalid && reportForm.controls.item_name.touched) {
+      @if (reportForm.controls.item_name.invalid &&
+          reportForm.controls.item_name.touched) {
         <mat-error>Item name is required.</mat-error>
       }
     </mat-form-field>
@@ -23,7 +24,8 @@
           <mat-option [value]="location">{{ location }}</mat-option>
         }
       </mat-autocomplete>
-      @if (reportForm.controls.location.invalid && reportForm.controls.location.touched) {
+      @if (reportForm.controls.location.invalid &&
+          reportForm.controls.location.touched) {
         <mat-error>Location is required.</mat-error>
       }
     </mat-form-field>
@@ -52,7 +54,8 @@
           matInput
           formControlName="description"
           rows="5"></textarea>
-      @if (reportForm.controls.description.invalid && reportForm.controls.description.touched) {
+      @if (reportForm.controls.description.invalid &&
+           reportForm.controls.description.touched) {
         <mat-error>Description is required (min 10 characters).</mat-error>
       }
     </mat-form-field>
