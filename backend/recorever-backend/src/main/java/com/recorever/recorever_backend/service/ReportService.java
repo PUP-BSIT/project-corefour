@@ -48,16 +48,17 @@ public class ReportService {
             repo.setInitialSurrenderCode(id, surrenderCode);
         }
 
-        // Weekly Expiration Scheduling
-        LocalDateTime postTime = LocalDateTime.now(); 
-        LocalDate postDate = postTime.toLocalDate();
-        LocalTime midnight = LocalTime.MIDNIGHT;
+        if ("lost".equalsIgnoreCase(type)) { 
+            LocalDateTime postTime = LocalDateTime.now(); 
+            LocalDate postDate = postTime.toLocalDate();
+            LocalTime midnight = LocalTime.MIDNIGHT;
 
-        LocalDateTime notify1Time = postDate.plusDays(6).atTime(midnight);
-        LocalDateTime notify2Time = postDate.plusDays(7).atTime(midnight);
-        LocalDateTime deleteTime = postDate.plusDays(7).atTime(0, 15, 0); 
+            LocalDateTime notify1Time = postDate.plusDays(6).atTime(midnight);
+            LocalDateTime notify2Time = postDate.plusDays(7).atTime(midnight);
+            LocalDateTime deleteTime = postDate.plusDays(7).atTime(0, 15, 0); 
 
-        scheduleRepo.saveSchedule(id, notify1Time, notify2Time, deleteTime);
+            scheduleRepo.saveSchedule(id, notify1Time, notify2Time, deleteTime);
+        }
 
 
         notificationService.create(ADMIN_USER_ID, id, 
