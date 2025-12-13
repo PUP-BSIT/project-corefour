@@ -14,7 +14,7 @@ import {
   FormBuilder, 
   FormGroup 
 } from '@angular/forms';
-import { forkJoin, of, timer } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { switchMap, finalize, catchError } from 'rxjs/operators';
 
 import { Claim } from '../../models/claim-model';
@@ -140,7 +140,7 @@ export class ClaimFormModal implements OnInit {
     ).pipe(
       switchMap(() => {
         this.activeClaim.update(c => c ? { 
-            ...c, status: newStatus as any } : null);
+            ...c, status: newStatus as Claim['status'] } : null);
         this.statusChange.emit();
         return of(true);
       }),
