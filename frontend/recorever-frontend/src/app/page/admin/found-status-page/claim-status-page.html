@@ -1,0 +1,77 @@
+<div class="claim-management-container">
+  <header class="page-header">
+    <h1 class="page-title">Found Status Management</h1>
+
+    <div class="search-wrapper">
+      <app-search-bar (search)="onSearch($event)"></app-search-bar>
+    </div>
+  </header>
+
+  <div class="controls-bar">
+    <div class="sort-tabs">
+      <button class="tab-btn" 
+          [class.active]="currentSort() === 'all'"
+          (click)="setSort('all')">
+        All
+      </button>
+      <button class="tab-btn" 
+          [class.active]="currentSort() === 'az'"
+          (click)="setSort('az')">
+        A-Z ↑
+      </button>
+      <button class="tab-btn" 
+          [class.active]="currentSort() === 'date'"
+          (click)="setSort('date')">
+        Date ↑
+      </button>
+    </div>
+  </div>
+
+  <div class="claims-list">
+    @if (isLoading()) {
+      <div class="loading-state">
+        Loading reports...
+      </div>
+    } @else if (filteredReports().length === 0) {
+      <div class="empty-state">
+        No reports found.
+      </div>
+    } @else {
+      @for (report of filteredReports(); track report.report_id) {
+        <div class="claim-card">
+          <div class="claim-info">
+            <div class="ticket-number">
+              Reference Code: {{ report.surrender_code || 'N/A' }}
+            </div>
+            <h3 class="item-name">
+              {{ report.item_name }}
+            </h3>
+            <p class="proof-preview">
+              {{ report.description || 'No description provided' }}
+            </p>
+            <div class="meta-info">
+              Status: <span [class]="report.status.toLowerCase()">
+                {{ report.status }}</span>
+              &bull; {{ report.date_reported | date:'mediumDate' }}
+            </div>
+          </div>
+
+          <div class="claim-actions">
+            <button class="view-details-btn" 
+                (click)="onViewDetails(report.report_id)">
+              View Details
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  @if (selectedReport()) {
+    <app-claim-form-modal 
+        [claimData]="selectedReport()!" 
+        (close)="onCloseModal()"
+        (statusChange)="onStatusChanged()">
+    </app-claim-form-modal>
+  }
+</div>

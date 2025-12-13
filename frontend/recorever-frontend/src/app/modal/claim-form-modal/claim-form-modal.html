@@ -11,9 +11,9 @@
             {{ reportOwnerName().charAt(0).toUpperCase() }}
           </div>
           <div class="meta">
-            <div class="item-name-label">Item Name</div>
+            <div class="reporter-name">{{ reportOwnerName() }}</div>
             <div class="item-date">
-              {{ report()?.date_reported | date:'mediumDate' }}
+              {{ displayDate | date:'mediumDate' }}
             </div>
           </div>
         </div>
@@ -47,9 +47,9 @@
             <div class="status-dropdown-wrapper">
                <button 
                    class="status-btn" 
-                   [ngClass]="activeClaim()?.status?.toLowerCase() || 'pending'"
+                   [ngClass]="(report()?.status || 'pending').toLowerCase()"
                    (click)="toggleDropdown($event)">
-                 {{ activeClaim()?.status || 'Pending' }}
+                 {{ report()?.status || 'Pending' }}
                  <span class="arrow">▼</span>
                </button>
                
@@ -73,26 +73,31 @@
           <h3>Claimant Details:</h3>
           
           <div class="input-group">
-            <label>Claimant Name</label>
+            <label>Claimant Name <span style="color:red">*</span></label>
             <input 
               type="text" 
               class="input-field" 
+              [class.error]="claimForm.get('claimantName')?.invalid && claimForm.get('claimantName')?.touched"
               formControlName="claimantName"
-              placeholder="Name">
+              placeholder="Enter full name">
+              
+            @if (claimForm.get('claimantName')?.invalid && claimForm.get('claimantName')?.touched) {
+              <div class="error-msg">Name is required</div>
+            }
           </div>
           
           <div class="input-group">
             <label>Claim Date</label>
             <input 
               type="text" 
-              class="input-field" 
+              class="input-field readonly" 
               formControlName="claimDate"
-              placeholder="Date">
+              readonly>
           </div>
         </div>
 
         <div class="section contact-details-section">
-          <h3>Contact Details:</h3>
+          <h3>Contact Details (Optional):</h3>
           
           <div class="input-group">
             <label>Contact Email</label>
@@ -100,7 +105,7 @@
               type="email" 
               class="input-field" 
               formControlName="contactEmail"
-              placeholder="Email">
+              placeholder="Email address">
           </div>
           
           <div class="input-group">
@@ -109,7 +114,7 @@
               type="tel" 
               class="input-field" 
               formControlName="contactPhone"
-              placeholder="Phone">
+              placeholder="Phone number">
           </div>
         </div>
 
