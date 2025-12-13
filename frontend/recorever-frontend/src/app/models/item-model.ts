@@ -24,11 +24,12 @@ export type Report = {
 };
 
 export type ReportFilters = {
-  type: 'lost' | 'found';
+  type?: 'lost' | 'found';
   status?: 'pending' | 'approved' | 'matched' | 'claimed'
       | 'rejected' | 'closed';
   location?: string;
   item_name?: string;
+  user_id?: number;
 };
 
 export enum StandardLocations {
