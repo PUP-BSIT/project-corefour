@@ -2,9 +2,14 @@ package com.recorever.recorever_backend.service;
 
 import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.repository.ReportRepository;
+import com.recorever.recorever_backend.repository.ReportScheduleRepository; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; 
 
+import java.time.LocalDate; 
+import java.time.LocalDateTime; 
+import java.time.LocalTime; 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,8 +26,12 @@ public class ReportService {
     @Autowired
     private NotificationService notificationService;
 
-    private static final int ADMIN_USER_ID = 1; // temporary admin user ID
+    @Autowired 
+    private ReportScheduleRepository scheduleRepo;
 
+    private static final int ADMIN_USER_ID = 1;
+
+    @Transactional
     public Map<String, Object> create(int userId,
                                       String type,
                                       String itemName,
@@ -38,6 +47,19 @@ public class ReportService {
                     .toUpperCase();
             repo.setInitialSurrenderCode(id, surrenderCode);
         }
+
+        if ("lost".equalsIgnoreCase(type)) { 
+            LocalDateTime postTime = LocalDateTime.now(); 
+            LocalDate postDate = postTime.toLocalDate();
+            LocalTime midnight = LocalTime.MIDNIGHT;
+
+            LocalDateTime notify1Time = postDate.plusDays(6).atTime(midnight);
+            LocalDateTime notify2Time = postDate.plusDays(7).atTime(midnight);
+            LocalDateTime deleteTime = postDate.plusDays(7).atTime(0, 15, 0); 
+
+            scheduleRepo.saveSchedule(id, notify1Time, notify2Time, deleteTime);
+        }
+
 
         notificationService.create(ADMIN_USER_ID, id, 
             String.format("New PENDING report (ID #%d) submitted: %s.", id, itemName));

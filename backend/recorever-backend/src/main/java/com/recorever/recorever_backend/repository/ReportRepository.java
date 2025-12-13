@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -157,5 +158,15 @@ public class ReportRepository {
     public boolean setClaimCodes(int id, String surrenderCode, String claimCode) {
         String sql = "UPDATE reports SET surrender_code=?, claim_code=? WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, surrenderCode, claimCode, id) > 0;
+    }
+
+    public int softDeleteExpiredReports(LocalDateTime currentTime) {
+        String sql = """
+            UPDATE reports r
+            JOIN report_schedules rs ON r.report_id = rs.report_id
+            SET r.is_deleted = 1
+            WHERE r.is_deleted = 0 AND rs.delete_time <= ?
+            """;
+        return jdbcTemplate.update(sql, currentTime);
     }
 }
