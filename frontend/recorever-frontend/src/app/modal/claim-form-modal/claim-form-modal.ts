@@ -6,28 +6,31 @@ import {
   Output,
   inject,
   signal,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  computed
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { 
   ReactiveFormsModule, 
   FormBuilder, 
-  FormGroup 
+  FormGroup,
+  Validators 
 } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
-import { switchMap, finalize, catchError } from 'rxjs/operators';
+import { switchMap, finalize, catchError, tap } from 'rxjs/operators';
 
 import { Claim } from '../../models/claim-model';
 import { Report } from '../../models/item-model';
-import { User } from '../../models/user-model';
 import { ClaimService } from '../../core/services/claim-service';
 import { ItemService } from '../../core/services/item-service';
 import { UserService } from '../../core/services/user-service';
+import { AdminService } from '../../core/services/admin-service'; // <--- 1. Import AdminService
 
 @Component({
   selector: 'app-claim-form-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, DatePipe],
+  providers: [DatePipe], 
   templateUrl: './claim-form-modal.html',
   styleUrl: './claim-form-modal.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -36,17 +39,21 @@ export class ClaimFormModal implements OnInit {
   private claimService = inject(ClaimService);
   private itemService = inject(ItemService);
   private userService = inject(UserService);
+  private adminService = inject(AdminService);
   private fb = inject(FormBuilder);
+  private datePipe = inject(DatePipe);
 
-  @Input({ required: true }) claimData!: Claim; 
+  @Input({ required: true }) claimData!: Claim | Report; 
   @Output() close = new EventEmitter<void>();
   @Output() statusChange = new EventEmitter<void>();
 
   protected claimForm: FormGroup;
+  
   protected activeClaim = signal<Claim | null>(null);
-  protected report = signal<Report | null>(null);
-  protected claimant = signal<User | null>(null);
-  protected reportOwnerName = signal<string>('Loading...');
+  protected activeReport = signal<Report | null>(null);
+  protected report = signal<Report | null>(null); 
+  protected reportOwnerName = signal<string>('Loading...'); 
+  
   protected isLoading = signal(true);
   protected isSaving = signal(false);
   protected activeImageIndex = signal(0);
@@ -57,9 +64,18 @@ export class ClaimFormModal implements OnInit {
     'assets/temp-photo-item.png'
   ]);
 
+  protected isReportType = computed(() => 'type' in this.claimData);
+  
+  get displayDate(): Date | string {
+    if (this.isReportType()) {
+      return (this.claimData as Report).date_reported;
+    }
+    return (this.claimData as Claim).created_at;
+  }
+
   constructor() {
     this.claimForm = this.fb.group({
-      claimantName: [''],
+      claimantName: ['', Validators.required],
       claimDate: [''],
       contactEmail: [''],
       contactPhone: [''],
@@ -73,48 +89,115 @@ export class ClaimFormModal implements OnInit {
 
   private loadData(): void {
     this.isLoading.set(true);
-    const current = this.claimData;
-    this.activeClaim.set(current);
+    const data = this.claimData;
 
-    forkJoin({
-      reports: this.itemService.getReports({ type: 'found' }),
-      claimantUser: this.userService.getUserById(current.user_id).pipe(
-        catchError(() => of(null))
-      )
-    }).pipe(
-      switchMap(({ reports, claimantUser }) => {
-        this.claimant.set(claimantUser);
+    if ('type' in data) { 
+      const report = data as Report;
+      this.activeReport.set(report);
+      this.report.set(report); 
 
-        const datePipe = new DatePipe('en-US');
-        const formattedDate = 
-            datePipe.transform(current.created_at, 'mediumDate') || '';
+      const todayStr = this.datePipe.transform(new Date(), 'mediumDate');
+      this.claimForm.patchValue({ claimDate: todayStr });
 
-        this.claimForm.patchValue({
-            claimantName: claimantUser?.name || 'Unknown',
-            claimDate: formattedDate,
-            contactEmail: claimantUser?.email || '',
-            contactPhone: claimantUser?.phone_number || '',
-            remarks: current.admin_remarks || ''
-        });
+      this.userService.getUserById(report.user_id).pipe(
+        finalize(() => this.isLoading.set(false))
+      ).subscribe({
+        next: (user) => this.reportOwnerName.set(user?.name || 'Unknown User'),
+        error: (err) => console.error('Error loading report owner', err)
+      });
+    } 
+    else {
+      const claim = data as Claim;
+      this.activeClaim.set(claim);
+      
+      this.itemService.getReports({ type: 'found' }).pipe(
+        switchMap((reports) => {
+          const foundReport = reports.find(r => r.report_id === claim.report_id);
+          this.report.set(foundReport || null);
+          this.patchFormForExistingClaim(claim);
 
-        const foundReport = reports.find(
-          (r) => r.report_id === current.report_id
-        );
-        this.report.set(foundReport || null);
+          return foundReport 
+            ? this.userService.getUserById(foundReport.user_id)
+            : of(null);
+        }),
+        finalize(() => this.isLoading.set(false))
+      ).subscribe({
+        next: (owner) => {
+          if (owner) this.reportOwnerName.set(owner.name || 'Unknown User');
+        },
+        error: (err) => console.error('Error loading claim data', err)
+      });
+    }
+  }
 
-        return foundReport 
-          ? this.userService.getUserById(foundReport.user_id)
-          : of(null);
-      }),
-      finalize(() => this.isLoading.set(false))
-    ).subscribe({
-      next: (owner) => {
-        if (owner) {
-          this.reportOwnerName.set(owner.name || 'Unknown User');
-        }
-      },
-      error: (err) => console.error('Error loading modal data', err)
+  private patchFormForExistingClaim(claim: Claim): void {
+    const formattedDate = this.datePipe.transform(claim.created_at, 'mediumDate') || '';
+    this.claimForm.patchValue({
+        claimantName: claim.claimant_name || '',
+        claimDate: formattedDate,
+        contactEmail: claim.contact_email || '',
+        contactPhone: claim.contact_phone || '',
+        remarks: claim.admin_remarks || ''
     });
+  }
+
+  protected updateStatus(newStatus: string): void {
+    this.isSaving.set(true);
+    
+    const reportId = this.report()?.report_id;
+
+    if (reportId) {
+      this.adminService.updateReportStatus(reportId, newStatus).pipe(
+        tap(() => {
+          this.report.update(r => r ? { ...r, status: newStatus as any } : null);
+        }),
+        finalize(() => {
+          this.isSaving.set(false);
+          this.closeDropdown();
+          this.statusChange.emit(); 
+        })
+      ).subscribe();
+    } else {
+      console.error("No report ID found to update");
+      this.isSaving.set(false);
+    }
+  }
+
+  protected saveItemDetails(): void {
+    if (this.claimForm.invalid) {
+      this.claimForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSaving.set(true);
+    const formValues = this.claimForm.getRawValue();
+
+    if (this.activeReport()) {
+      const report = this.activeReport()!;
+      
+      const payload = {
+        report_id: report.report_id,
+        claimant_name: formValues.claimantName,
+        contact_email: formValues.contactEmail,
+        contact_phone: formValues.contactPhone,
+        admin_remarks: formValues.remarks
+      };
+
+      this.claimService.createManualClaim(payload).pipe(
+        tap(() => {
+          this.report.update(r => r ? { ...r, status: 'claimed' } : null);
+        }),
+        finalize(() => {
+          this.isSaving.set(false);
+          this.statusChange.emit();
+          this.onClose();
+        })
+      ).subscribe();
+    } 
+    else if (this.activeClaim()) {
+       this.isSaving.set(false);
+       this.onClose();
+    }
   }
 
   protected toggleDropdown(event: Event): void {
@@ -124,55 +207,6 @@ export class ClaimFormModal implements OnInit {
 
   protected closeDropdown(): void {
     this.isDropdownOpen.set(false);
-  }
-
-  protected updateStatus(newStatus: string): void {
-    const claim = this.activeClaim();
-    if (!claim) return;
-
-    this.isSaving.set(true);
-    const remarks = this.claimForm.get('remarks')?.value || '';
-    
-    this.claimService.updateClaimStatus(
-      claim.claim_id, 
-      newStatus, 
-      remarks
-    ).pipe(
-      switchMap(() => {
-        this.activeClaim.update(c => c ? { 
-            ...c, status: newStatus as Claim['status'] } : null);
-        this.statusChange.emit();
-        return of(true);
-      }),
-      finalize(() => {
-        this.isSaving.set(false);
-        this.closeDropdown();
-      })
-    ).subscribe();
-  }
-
-  protected saveItemDetails(): void {
-    if (this.claimForm.invalid) return;
-
-    this.isSaving.set(true);
-    const claim = this.activeClaim();
-    
-    if (claim) {
-      const remarks = this.claimForm.get('remarks')?.value || '';
-      this.claimService.updateClaimStatus(
-        claim.claim_id,
-        claim.status,
-        remarks
-      ).pipe(
-        finalize(() => {
-          this.isSaving.set(false);
-          this.onClose();
-        })
-      ).subscribe();
-    } else {
-      this.isSaving.set(false);
-      this.onClose();
-    }
   }
 
   protected nextImage(): void {
