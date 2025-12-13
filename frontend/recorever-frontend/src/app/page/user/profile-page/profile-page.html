@@ -61,13 +61,6 @@
                   (click)="setActiveTab('lost')">
         Lost
       </button>
-      <button type="button"
-          class="profile-page__tab-btn"
-          [class.profile-page__tab-btn--active]=
-            "(activeTab$ | async) === 'claim'"
-                (click)="setActiveTab('claim')">
-        Claim Items
-      </button>
     </div>
 
     <div class="profile-page__filter">

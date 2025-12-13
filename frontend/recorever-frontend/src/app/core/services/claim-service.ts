@@ -61,4 +61,8 @@ export class ClaimService {
 
     return this.http.put<void>(url, payload);
   }
+
+  createManualClaim(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/claims`, payload);
+  }
 }

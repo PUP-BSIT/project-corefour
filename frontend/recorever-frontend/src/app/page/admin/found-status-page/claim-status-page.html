@@ -1,6 +1,6 @@
 <div class="claim-management-container">
   <header class="page-header">
-    <h1 class="page-title">Claim Status Management</h1>
+    <h1 class="page-title">Found Status Management</h1>
 
     <div class="search-wrapper">
       <app-search-bar (search)="onSearch($event)"></app-search-bar>
@@ -30,35 +30,35 @@
   <div class="claims-list">
     @if (isLoading()) {
       <div class="loading-state">
-        Loading claims...
+        Loading reports...
       </div>
-    } @else if (filteredClaims().length === 0) {
+    } @else if (filteredReports().length === 0) {
       <div class="empty-state">
-        No claims found.
+        No reports found.
       </div>
     } @else {
-      @for (claim of filteredClaims(); track claim.claim_id) {
+      @for (report of filteredReports(); track report.report_id) {
         <div class="claim-card">
           <div class="claim-info">
             <div class="ticket-number">
-              Ticket no. {{ claim.claim_id }}
+              Reference Code: {{ report.surrender_code || 'N/A' }}
             </div>
             <h3 class="item-name">
-              {{ claim.item_name }}
+              {{ report.item_name }}
             </h3>
             <p class="proof-preview">
-              {{ claim.admin_remarks || 'No remarks provided' }}
+              {{ report.description || 'No description provided' }}
             </p>
             <div class="meta-info">
-              Status: <span [class]="claim.status.toLowerCase()">
-                {{ claim.status }}</span>
-              &bull; {{ claim.created_at | date:'mediumDate' }}
+              Status: <span [class]="report.status.toLowerCase()">
+                {{ report.status }}</span>
+              &bull; {{ report.date_reported | date:'mediumDate' }}
             </div>
           </div>
 
           <div class="claim-actions">
             <button class="view-details-btn" 
-                (click)="onViewDetails(claim.claim_id)">
+                (click)="onViewDetails(report.report_id)">
               View Details
             </button>
           </div>
@@ -67,9 +67,9 @@
     }
   </div>
 
-  @if (selectedClaim()) {
+  @if (selectedReport()) {
     <app-claim-form-modal 
-        [claimData]="selectedClaim()!" 
+        [claimData]="selectedReport()!" 
         (close)="onCloseModal()"
         (statusChange)="onStatusChanged()">
     </app-claim-form-modal>

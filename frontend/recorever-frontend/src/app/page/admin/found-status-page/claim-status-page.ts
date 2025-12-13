@@ -10,8 +10,9 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
-import { ClaimService } from '../../../core/services/claim-service';
-import { Claim } from '../../../models/claim-model';
+import { ItemService } from '../../../core/services/item-service';
+import { Report } from '../../../models/item-model';
+
 import { 
   SearchBarComponent 
 } from '../../../share-ui-blocks/search-bar/search-bar';
@@ -36,25 +37,25 @@ type SortOption = 'all' | 'az' | 'date';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ClaimStatusPage implements OnInit {
-  private claimService = inject(ClaimService);
+  private itemService = inject(ItemService);
 
-  protected claims = signal<Claim[]>([]);
+  protected reports = signal<Report[]>([]);
   protected searchQuery = signal(''); 
   protected currentSort = signal<SortOption>('all');
   protected isLoading = signal(true);
   
-  protected selectedClaim = signal<Claim | null>(null);
+  protected selectedReport = signal<Report | null>(null);
 
-  protected filteredClaims = computed(() => {
-    let data = this.claims();
+  protected filteredReports = computed(() => {
+    let data = this.reports();
     const query = this.searchQuery().toLowerCase();
     const sortType = this.currentSort();
 
     if (query) {
-      data = data.filter((claim) =>
-        (claim.item_name || '').toLowerCase().includes(query) ||
-        claim.claim_id.toString().includes(query) ||
-        (claim.admin_remarks || '').toLowerCase().includes(query)
+      data = data.filter((report) =>
+        (report.item_name || '').toLowerCase().includes(query) ||
+        (report.surrender_code || '').toLowerCase().includes(query) ||
+        (report.description || '').toLowerCase().includes(query)
       );
     }
 
@@ -63,28 +64,27 @@ export class ClaimStatusPage implements OnInit {
         return (a.item_name || '').localeCompare(b.item_name || '');
       }
       if (sortType === 'date') {
-        return new Date(b.created_at).getTime() - 
-               new Date(a.created_at).getTime();
+        return new Date(b.date_reported).getTime() - 
+               new Date(a.date_reported).getTime();
       }
       return 0;
     });
   });
 
   ngOnInit(): void {
-    this.loadClaims();
+    this.loadReports();
   }
 
-  protected loadClaims(): void {
+  protected loadReports(): void {
     this.isLoading.set(true);
-
-    this.claimService.getAllClaims().pipe(
+    this.itemService.getReports({ type: 'found' }).pipe(
       finalize(() => this.isLoading.set(false))
     ).subscribe({
       next: (data) => {
-        this.claims.set(data);
+        this.reports.set(data);
       },
       error: (err) => {
-        console.error('Failed to load claims', err);
+        console.error('Failed to load reports', err);
       }
     });
   }
@@ -97,18 +97,18 @@ export class ClaimStatusPage implements OnInit {
     this.currentSort.set(option);
   }
 
-  protected onViewDetails(claimId: number): void {
-    const claim = this.claims().find(c => c.claim_id === claimId);
-    if (claim) {
-      this.selectedClaim.set(claim);
+  protected onViewDetails(reportId: number): void {
+    const report = this.reports().find(r => r.report_id === reportId);
+    if (report) {
+      this.selectedReport.set(report);
     }
   }
 
   protected onCloseModal(): void {
-    this.selectedClaim.set(null);
+    this.selectedReport.set(null);
   }
 
   protected onStatusChanged(): void {
-    this.loadClaims();
+    this.loadReports();
   }
 }

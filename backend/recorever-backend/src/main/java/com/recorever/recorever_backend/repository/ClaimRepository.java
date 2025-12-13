@@ -25,13 +25,49 @@ public class ClaimRepository {
         Claim c = new Claim();
         c.setClaim_id(rs.getInt("claim_id"));
         c.setReport_id(rs.getInt("report_id"));
-        c.setUser_id(rs.getInt("user_id"));
-        c.setClaim_code(rs.getString("claim_code"));
+
+        c.setClaimant_name(rs.getString("claimant_name"));
+        c.setContact_email(rs.getString("contact_email"));
+        c.setContact_phone(rs.getString("contact_phone"));
         c.setAdmin_remarks(rs.getString("admin_remarks"));
-        c.setStatus(rs.getString("status"));
-        c.setCreated_at(rs.getString("created_at"));
+        c.setCreated_at(rs.getObject("created_at").toString());
         return c;
     };
+
+    public Claim save(Claim claim) {
+        if (claim.getClaim_id() != 0) {
+            String updateSql = "UPDATE claims SET admin_remarks = ?, claimant_name = ?, contact_email = ?, contact_phone = ? WHERE claim_id = ?";
+            jdbcTemplate.update(updateSql, 
+                claim.getAdmin_remarks(), 
+                claim.getClaimant_name(),
+                claim.getContact_email(),
+                claim.getContact_phone(),
+                claim.getClaim_id()
+            );
+            return claim;
+        } else {
+            String sql = "INSERT INTO claims (report_id, claimant_name, contact_email, contact_phone, admin_remarks, created_at) " +
+                         "VALUES (?, ?, ?, ?, ?, ?)";
+
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                ps.setInt(1, claim.getReport_id());
+                ps.setString(2, claim.getClaimant_name());
+                ps.setString(3, claim.getContact_email());
+                ps.setString(4, claim.getContact_phone());
+                ps.setString(5, claim.getAdmin_remarks());
+                ps.setObject(6, claim.getCreated_at());
+                return ps;
+            }, keyHolder);
+
+            if (keyHolder.getKey() != null) {
+                claim.setClaim_id(keyHolder.getKey().intValue());
+            }
+            return claim;
+        }
+    }
 
     // --- ADDED FOR ADMIN PAGE ---
     public List<ClaimResponseDTO> getAllClaimsWithDetails() {

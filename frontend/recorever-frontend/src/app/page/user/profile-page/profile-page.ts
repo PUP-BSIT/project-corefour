@@ -11,13 +11,11 @@ import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 import { ItemService } from '../../../core/services/item-service';
 import { UserService } from '../../../core/services/user-service';
-import { ClaimService } from '../../../core/services/claim-service';
 
-import { Report } from '../../../models/item-model';
+import { Report, ReportFilters } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
-import { Claim } from '../../../models/claim-model';
 
-type TabType = 'all' | 'found' | 'lost' | 'claim';
+type TabType = 'all' | 'found' | 'lost';
 
 @Component({
   selector: 'app-profile-page',
@@ -35,7 +33,6 @@ type TabType = 'all' | 'found' | 'lost' | 'claim';
 export class ProfilePage implements OnInit {
   private itemService = inject(ItemService);
   private userService = inject(UserService);
-  private claimService = inject(ClaimService);
 
   activeTab$ = new BehaviorSubject<TabType>('all');
   activeStatus$ = new BehaviorSubject<string>('');
@@ -56,9 +53,6 @@ export class ProfilePage implements OnInit {
     const item = this.viewCodeItem();
     if (!item) return '';
 
-    if (item.claim_code || item.type === 'lost') {
-      return 'Ticket ID';
-    }
     return 'Reference Code';
   });
 
@@ -68,10 +62,6 @@ export class ProfilePage implements OnInit {
 
     if (item.type === 'lost') {
       return 'Pending';
-    }
-
-    if (item.claim_code) {
-      return item.claim_code || 'N/A';
     }
 
     return item.surrender_code || 'N/A';
@@ -95,14 +85,9 @@ export class ProfilePage implements OnInit {
       switchMap(([user, tab, status]) => {
         if (!user) return of([]);
 
-        return this.fetchReportsByTab(tab, user.user_id).pipe(
+        return this.fetchReportsByTab(tab, user.user_id, status).pipe(
           map((items: Report[]) => {
-            if (!status || status === 'all') {
-              return items;
-            }
-            return items.filter((item: Report) =>
-              item.status.toLowerCase() === status.toLowerCase()
-            );
+            return items;
           })
         );
       })
@@ -120,53 +105,18 @@ export class ProfilePage implements OnInit {
 
   private fetchReportsByTab(
     tab: TabType,
-    userId: number
+    userId: number,
+    status: string
   ): Observable<Report[]> {
-    let source$: Observable<Report[]>;
+    
+    const filter: ReportFilters = {
+      user_id: userId,
+      ...(tab !== 'all' && { type: tab }),
+      ...(status && { status: status as any }) 
+    };
 
-    if (tab === 'claim') {
-      return this.claimService.getMyClaims(userId).pipe(
-        map((claims: Claim[]) => {
-          return claims.map((c) => ({
-            report_id: c.report_id,
-            user_id: c.user_id,
-            type: 'found',
-            item_name: c.item_name || 'Claimed Item',
-            location: 'See Details',
-            date_reported: c.created_at,
-            date_resolved: null,
-            description: c.admin_remarks || '',
-            status: c.status as any,
-            surrender_code: null,
-            claim_code: c.claim_code || null
-          } as Report));
-        })
-      );
-    }
-
-    if (tab === 'all') {
-      source$ = combineLatest([
-        this.itemService.getReports({ type: 'lost' }),
-        this.itemService.getReports({ type: 'found' })
-      ]).pipe(
-        map(([lost, found]) => {
-          const combined = [...lost, ...found];
-          const uniqueItems = new Map(
-            combined.map((item: Report) => [item.report_id, item])
-          );
-          return Array.from(uniqueItems.values());
-        })
-      );
-    } else {
-      source$ = this.itemService.getReports({ type: tab }).pipe(
-        map((items: Report[]) => items.filter((item: Report) =>
-            item.type === tab))
-      );
-    }
-
-    return source$.pipe(
-      map((reports: Report[]) => reports.filter((r: Report) =>
-            r.user_id === userId))
+    return this.itemService.getReports(filter).pipe(
+      map((reports: Report[]) => reports) 
     );
   }
 
