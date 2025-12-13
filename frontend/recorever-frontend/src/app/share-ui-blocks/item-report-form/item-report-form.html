@@ -1,64 +1,110 @@
 <form [formGroup]="reportForm" (ngSubmit)="onSubmit()" class="item-report-form">
 
   <div class="form-field">
-    <label for="itemName">Item Name:</label>
-    <input id="itemName" type="text" formControlName="item_name" />
-    @if (reportForm.controls.item_name.invalid && reportForm.controls.item_name.touched) {
-    <div class="error-message">Item name is required.</div>
-    }
-  </div>
-
-  <div class="form-field">
-    <label for="locationLost">{{ locationLabel }}</label>
-    <select id="locationLost" formControlName="location">
-      @for (location of locationOptions; track location) {
-      <option [value]="location">{{ location }}</option>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Item Name</mat-label>
+      <input matInput formControlName="item_name" />
+      @if (reportForm.controls.item_name.invalid &&
+          reportForm.controls.item_name.touched) {
+        <mat-error>Item name is required.</mat-error>
       }
-    </select>
-    @if (reportForm.controls.location.invalid && reportForm.controls.location.touched) {
-    <div class="error-message">Location is required.</div>
-    }
+    </mat-form-field>
   </div>
 
   <div class="form-field">
-    <label for="dateLost">{{ dateLabel }}</label>
-    <input id="dateLost" type="date" formControlName="date_reported" placeholder="mm/dd/yyyy" />
-    @if (reportForm.controls.date_reported.invalid && reportForm.controls.date_reported.touched) {
-    <div class="error-message">Date is required.</div>
-    }
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ locationLabel }}</mat-label>
+      <input
+          type="text"
+          matInput
+          formControlName="location"
+          [matAutocomplete]="auto" />
+      <mat-autocomplete #auto="matAutocomplete">
+        @for (location of filteredLocations | async; track location) {
+          <mat-option [value]="location">{{ location }}</mat-option>
+        }
+      </mat-autocomplete>
+      @if (reportForm.controls.location.invalid &&
+          reportForm.controls.location.touched) {
+        <mat-error>Location is required.</mat-error>
+      }
+    </mat-form-field>
   </div>
 
   <div class="form-field">
-    <label for="itemDescription">Item Description:</label>
-    <textarea id="itemDescription" formControlName="description"></textarea>
-    @if (reportForm.controls.description.invalid && reportForm.controls.description.touched) {
-    <div class="error-message">Description is required (min 100 characters).</div>
-    }
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ dateLabel }}</mat-label>
+      <input
+          matInput
+          type="date"
+          formControlName="date_reported"
+          placeholder="mm/dd/yyyy"
+       />
+      @if (reportForm.controls.date_reported.invalid &&
+        reportForm.controls.date_reported.touched) {
+        <mat-error>Date is required.</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <div class="form-field">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Item Description</mat-label>
+      <textarea
+          matInput
+          formControlName="description"
+          rows="5"></textarea>
+      @if (reportForm.controls.description.invalid &&
+           reportForm.controls.description.touched) {
+        <mat-error>Description is required (min 10 characters).</mat-error>
+      }
+    </mat-form-field>
   </div>
 
   <div class="form-field photo-upload-field">
     <label>Upload Photo: <small>(Upload if available)</small></label>
-    <div class="upload-area">
+
+    <input
+        #fileInput
+        type="file"
+        accept="image/png, image/jpeg"
+        multiple
+        hidden
+        (change)="onFileSelected($event)"
+    />
+
+    <div class="upload-area" (click)="fileInput.click()">
       <span class="upload-icon">↑</span>
+      <p>Click to select photos</p>
     </div>
 
-    <div formArrayName="photoUrls" class="photo-thumbnails">
-      @for (photoControl of reportForm.controls.photoUrls.controls; track $index) {
-      <div class="photo-box">
-        <span class="remove-photo">x</span>
-      </div>
+    <div class="photo-thumbnails">
+      @for (photo of selectedFilesPreview; track $index) {
+        <div class="photo-box">
+          <img [src]="photo.url" [alt]="photo.name" class="photo-thumbnail" />
+          <span class="remove-photo" (click)="removeLocalPhoto($index)">
+            <img src="assets/remove.png" alt="Remove">
+          </span>
+        </div>
+      }
+      @for (photoUrlControl of reportForm.controls.photoUrls.controls;
+          track $index) {
+        @if (photoUrlControl.value) {
+          <div class="photo-box existing-photo">
+            <img [src]="photoUrlControl.value" alt="Existing Item Photo"
+                class="photo-thumbnail" />
+            <span class="remove-photo" (click)="removeExistingPhoto($index)">
+              <img src="assets/remove.png" alt="Remove">
+            </span>
+          </div>
+        }
       }
     </div>
   </div>
 
   <div class="form-actions">
     <button type="submit" class="btn btn-submit">Submit</button>
-    <button type="button" class="btn btn-reset" (click)="onCancel()">Reset</button>
+    <button type="button" class="btn btn-reset"
+        (click)="onCancel()">Reset</button>
   </div>
-  </form>
-
-  @if (isCustomLocationModalOpen) {
-  <app-custom-location
-      (locationSelected)="handleCustomLocationSelected($event)"
-    (close)="handleCustomLocationClose()" />
-  }
+</form>
