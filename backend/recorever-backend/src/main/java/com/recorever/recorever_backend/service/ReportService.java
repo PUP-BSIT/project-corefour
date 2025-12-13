@@ -53,6 +53,13 @@ public class ReportService {
 
     public List<Report> listAll() { return repo.getAllReports(); }
 
+    public List<Report> searchReports(Integer userId,
+                                      String type,
+                                      String status) {
+
+        return repo.searchReports(userId, type, status);
+    }
+
     public List<Report> listByStatus(String status) {
         return repo.getReportsByStatus(status); }
 

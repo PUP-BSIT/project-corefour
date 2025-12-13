@@ -59,8 +59,12 @@ public class ReportController {
     }
 
     @GetMapping("/reports")
-    public ResponseEntity<List<ReportResponseDTO>> getAllReports() {
-        List<Report> reports = service.listAll();
+    public ResponseEntity<List<ReportResponseDTO>> getReports(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer user_id) {
+        
+        List<Report> reports = service.searchReports(user_id, type, status);
 
         List<ReportResponseDTO> responseList = reports.stream()
             .map(this::mapToReportResponseDTO)
