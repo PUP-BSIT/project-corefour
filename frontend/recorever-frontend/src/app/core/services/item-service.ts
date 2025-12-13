@@ -1,14 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import type { 
   Report, 
   ReportFilters, 
   FinalReportSubmission 
 } from '../../models/item-model';
-import type { Claim } from '../../models/claim-model';
 
 @Injectable({
   providedIn: 'root',
@@ -24,15 +22,22 @@ export class ItemService {
   getReports(filters: ReportFilters): Observable<Report[]> {
     let params = new HttpParams();
 
-    let endpoint = `${this.apiUrl}/reports`;
+    const endpoint = `${this.apiUrl}/reports`;
 
+    // Query params
     if (filters.type) {
-      endpoint = `${this.apiUrl}/reports/type/${filters.type}`;
+      params = params.set('type', filters.type);
     }
 
     if (filters.status) {
       params = params.set('status', filters.status);
     }
+
+    if (filters.user_id) {
+        params = params.set('user_id', filters.user_id.toString());
+    }
+
+    // Additional filters
     if (filters.item_name) {
       params = params.set('item_name', filters.item_name);
     }
@@ -45,27 +50,5 @@ export class ItemService {
 
   deleteReport(reportId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/report/${reportId}`);
-  }
-
-  getClaimedReports(userId: number): Observable<Report[]> {
-    return this.http.get<Claim[]>(`${this.apiUrl}/claims/user`).pipe(
-      map((claims) => {
-        if (!claims) return [];
-        
-        return claims.map((claim) => ({
-            report_id: claim.report_id,
-            user_id: userId,
-            type: 'found',
-            item_name: claim.item_name || 'Unknown Item', 
-            location: 'Claimed Item',
-            date_reported: claim.created_at,
-            date_resolved: null,
-            description: claim.admin_remarks || '', 
-            status: claim.status as any, 
-            surrender_code: null,
-            claim_code: claim.claim_code || null
-          } as Report));
-      })
-    );
   }
 }
