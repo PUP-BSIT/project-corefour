@@ -2,6 +2,8 @@ package com.recorever.recorever_backend.controller;
 
 import com.recorever.recorever_backend.dto.ClaimCreationDTO;
 import com.recorever.recorever_backend.dto.ClaimResponseDTO;
+import com.recorever.recorever_backend.dto.ManualClaimRequestDTO;
+import com.recorever.recorever_backend.model.Claim;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.service.ClaimService;
 import com.recorever.recorever_backend.service.ReportService;
@@ -22,7 +24,21 @@ public class ClaimController {
     private ClaimService service;
 
     @Autowired
-    private ReportService reportService; 
+    private ReportService reportService;
+
+    @PostMapping("/claims")
+    public ResponseEntity<?> createManualClaim(@RequestBody ManualClaimRequestDTO request) {
+        try {
+            if (reportService.getById(request.getReport_id().intValue()) == null) {
+                return ResponseEntity.status(404).body("Target report not found.");
+            }
+
+            Claim newClaim = service.createManualClaim(request);
+            return ResponseEntity.status(201).body(newClaim);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error creating claim: " + e.getMessage());
+        }
+    }
 
     @PostMapping("/claim")
     public ResponseEntity<?> submitClaim(Authentication authentication, 
@@ -62,20 +78,21 @@ public class ClaimController {
         return ResponseEntity.ok(Map.of("claim_code", ticketCode));
     }
 
-    @PutMapping("/claim/{claimId}/status")
-    public ResponseEntity<?> updateStatus(@PathVariable int claimId, 
-                                          @RequestBody Map<String, String> body) {
-        String status = body.get("status");
-        String remarks = body.get("admin_remarks");
+    // for future cleaning up
+    // @PutMapping("/claim/{claimId}/status")
+    // public ResponseEntity<?> updateStatus(@PathVariable int claimId, 
+    //                                       @RequestBody Map<String, String> body) {
+    //     String status = body.get("status");
+    //     String remarks = body.get("admin_remarks");
         
-        boolean updated = service.updateStatus(claimId, status, remarks);
+    //     boolean updated = service.updateStatus(claimId, status, remarks);
         
-        if (updated) {
-            return ResponseEntity.ok("Status updated successfully.");
-        } else {
-            return ResponseEntity.status(400).body("Failed to update status.");
-        }
-    }
+    //     if (updated) {
+    //         return ResponseEntity.ok("Status updated successfully.");
+    //     } else {
+    //         return ResponseEntity.status(400).body("Failed to update status.");
+    //     }
+    // }
 
     @GetMapping("/claims/user")
     public ResponseEntity<List<ClaimResponseDTO>> getMyClaims(Authentication authentication) {
