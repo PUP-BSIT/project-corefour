@@ -54,7 +54,7 @@ export class AdminSideBar implements OnDestroy {
       route: AppRoutePaths.REPORT_STATUS_MANAGEMENT,
     },
     {
-      label: "Claim Status Management",
+      label: "Found Status Management",
       iconPath: "/assets/claim-status.png",
       route: "/admin/claim-status",
     },
