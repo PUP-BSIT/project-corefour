@@ -62,6 +62,39 @@ public class ReportRepository {
         return jdbcTemplate.query(sql, reportMapper);
     }
 
+    public List<Report> searchReports(Integer userId,
+                                      String type,
+                                      String status) {
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT r.*, u.name AS reporter_name 
+            FROM reports r 
+            LEFT JOIN users u ON r.user_id = u.user_id 
+            WHERE r.is_deleted = 0
+            """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (userId != null) {
+            sql.append(" AND r.user_id = ?");
+            params.add(userId);
+        }
+
+        if (type != null && !type.isEmpty()) {
+            sql.append(" AND r.type = ?");
+            params.add(type);
+        }
+
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND r.status = ?");
+            params.add(status);
+        }
+
+        sql.append(" ORDER BY r.date_reported DESC");
+
+        return jdbcTemplate.query(sql.toString(), reportMapper, params.toArray());
+    }
+
     public List<Report> getReportsByStatus(String status) {
         String sql = """
             SELECT r.*, u.name AS reporter_name 
