@@ -128,6 +128,17 @@ public class ReportRepository {
         return jdbcTemplate.query(sql, reportMapper, type, status);
     }
 
+    public List<Report> getReportsReadyForSoftDelete(LocalDateTime currentTime) {
+        String sql = """
+            SELECT r.*, u.name AS reporter_name 
+            FROM reports r
+            JOIN report_schedules rs ON r.report_id = rs.report_id
+            LEFT JOIN users u ON r.user_id = u.user_id
+            WHERE r.is_deleted = 0 AND rs.delete_time <= ?
+            """;
+        return jdbcTemplate.query(sql, reportMapper, currentTime);
+    }
+
     public Report getReportById(int id) {
         try {
             String sql = """
