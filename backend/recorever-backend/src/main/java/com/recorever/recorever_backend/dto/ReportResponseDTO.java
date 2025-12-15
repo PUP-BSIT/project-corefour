@@ -1,6 +1,7 @@
 package com.recorever.recorever_backend.dto;
 
 import lombok.Data;
+import java.util.List;
 
 /**
  * Output DTO for returning Report data.
@@ -20,4 +21,5 @@ public class ReportResponseDTO {
     
     private String surrender_code;
     private String reporter_name;
+    private List<ImageResponseDTO> images;
 }
