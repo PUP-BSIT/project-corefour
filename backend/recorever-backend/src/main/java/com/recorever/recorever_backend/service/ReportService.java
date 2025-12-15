@@ -3,6 +3,8 @@ package com.recorever.recorever_backend.service;
 import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import com.recorever.recorever_backend.repository.ReportScheduleRepository; 
+import com.recorever.recorever_backend.repository.ImageRepository;
+import com.recorever.recorever_backend.model.Image;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; 
@@ -29,6 +31,9 @@ public class ReportService {
     @Autowired 
     private ReportScheduleRepository scheduleRepo;
 
+    @Autowired
+    private ImageRepository imageRepo; 
+
     private static final int ADMIN_USER_ID = 1;
 
     @Transactional
@@ -38,8 +43,7 @@ public class ReportService {
                                       String location,
                                       String description) {
         int id = repo.createReport(userId, type, itemName, location, description);
-        
-        // Generate and set SURRENDER CODE (only for found items)
+
         String surrenderCode = null;
         if ("found".equalsIgnoreCase(type)) {
             surrenderCode = UUID.randomUUID()
@@ -103,7 +107,7 @@ public class ReportService {
         boolean updated = repo.updateReport(id, status, dateResolved);
         
         if (updated) {
-             Report report = repo.getReportById(id);
+             Report report = this.getById(id);
              if (report != null) {
 
                  if ("approved".equalsIgnoreCase(status)) {
@@ -120,7 +124,14 @@ public class ReportService {
     }
 
     public Report getById(int id) {
-        return repo.getReportById(id); }
+        Report report = repo.getReportById(id);
+
+        if (report != null) {
+             List<Image> images = imageRepo.findByReportIdAndIsDeletedFalse(id);
+             report.setImages(images);
+        }
+        return report;
+    }
 
     public boolean updateEditableFields(int id, 
                                         String itemName,
