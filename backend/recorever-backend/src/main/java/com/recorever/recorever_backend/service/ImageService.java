@@ -1,8 +1,11 @@
 package com.recorever.recorever_backend.service;
-
+import com.recorever.recorever_backend.repository.ImageRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.recorever.recorever_backend.model.Image;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,9 +16,11 @@ import java.util.UUID;
 @Service
 public class ImageService {
 
+    private final ImageRepository imageRepository;
+
     private final Path fileStorageLocation;
 
-    public ImageService(@Value("${file.upload-dir}") String uploadDir) {
+    public ImageService(@Value("${file.upload-dir}") String uploadDir, ImageRepository imageRepository) {
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
         
         try {
@@ -23,6 +28,12 @@ public class ImageService {
         } catch (Exception ex) {
             throw new RuntimeException("Could not create the storage directory: " + this.fileStorageLocation, ex);
         }
+        
+        this.imageRepository = imageRepository;
+    }
+
+    public Image saveImageMetadata(Image image) {
+        return imageRepository.save(image);
     }
 
     public String storeFile(MultipartFile file) {
