@@ -7,7 +7,6 @@ import com.recorever.recorever_backend.service.ReportService;
 
 // Image Imports
 import com.recorever.recorever_backend.service.ImageService;
-// import com.recorever.recorever_backend.repository.ImageRepository; // <--- REMOVED
 import com.recorever.recorever_backend.model.Image;
 
 // DTO imports
@@ -36,9 +35,6 @@ public class ReportController {
 
     @Autowired
     private ImageService imageService;
-    
-    // @Autowired
-    // private ImageRepository imageRepository; // <--- REMOVED
 
     private ImageResponseDTO convertToImageDto(Image image) {
         if (image == null || image.isDeleted()) return null;
@@ -91,7 +87,6 @@ public class ReportController {
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();
 
-        // 1. Create Report Metadata
         Map<String, Object> creationResult = service.create( 
             userId, 
             reportDto.getType(), 
@@ -102,12 +97,11 @@ public class ReportController {
 
         Integer newReportId = (Integer) creationResult.get("report_id");
 
-        // 2. Process File Uploads and Link
         List<MultipartFile> files = reportDto.getFiles();
 
         if (files != null && !files.isEmpty() && files.get(0).getSize() > 0) {
             files.forEach(file -> {
-                String uniqueFileName = imageService.storeFile(file); // File storage (disk)
+                String uniqueFileName = imageService.storeFile(file);
                 
                 Image image = new Image(
                     file.getOriginalFilename(),
@@ -115,20 +109,17 @@ public class ReportController {
                     uniqueFileName, 
                     newReportId 
                 );
-                
-                // CRITICAL CHANGE: Delegate database saving to ImageService
+
                 imageService.saveImageMetadata(image);
             });
         }
 
-        // 3. Retrieve Final Report Entity
         Report finalReport = service.getById(newReportId);
         
         if (finalReport == null) {
              return ResponseEntity.status(500).body(null); 
         }
 
-        // 4. Return Response DTO
         return ResponseEntity.status(201).body(mapToReportResponseDTO(finalReport));
     }
 
