@@ -96,6 +96,7 @@
       <app-report-item-grid
           [items]="displayedItems()"
           [currentUserId]="(currentUser$ | async)?.user_id ?? null"
+          [isUserProfilePage]="true"
           (cardDeleteClicked)="onDeleteItem($event)"
           (cardEditClicked)="onEditItem($event)"
           (cardViewCodeClicked)="onViewCode($event)">
