@@ -6,7 +6,9 @@ export type Report = {
   type: 'lost' | 'found';
   item_name: string;
   location: string;
+  date_lost_found?: string;
   date_reported: string;
+  date_posted?: string;
   date_resolved: string | null;
   description: string;
   status:
@@ -50,7 +52,7 @@ export const StandardRelativeDateFilters: string[] = [
 export type ItemReportForm = FormGroup<{
   item_name: FormControl<string | null>;
   location: FormControl<string | null>;
-  date_reported: FormControl<string | null>;
+  date_lost_found: FormControl<string | null>;
   description: FormControl<string | null>;
   photoUrls: FormArray<FormControl<string | null>>;
 }>;
@@ -67,6 +69,7 @@ export type FinalReportSubmission = {
   status: 'pending';
   item_name: string;
   location: string;
+  date_lost_found: string;
   date_reported: string;
   description: string;
   photoUrls: string[];
