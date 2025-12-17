@@ -1,271 +1,150 @@
 @use "sass:color";
 
 $primary-purple: #5d50d0;
-$light-grey-bg: #f5f5f5;
-$border-color: #eee;
-$text-color: #333;
-$secondary-text: #666;
-$danger-color: #dc3545;
+$text-main: #1c1c1e;
+$text-secondary: #8e8e93;
 
 :host {
   display: block;
-}
 
-.item-card {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: visible;
-  width: 100%;
-  max-width: 300px;
-  border: 1px solid $border-color;
-  position: relative;
-  font-family: 'Arial', sans-serif;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  }
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 15px;
-    background-color: $light-grey-bg;
-    border-bottom: 1px solid $border-color;
-    border-radius: 12px 12px 0 0;
-
-    .header-left {
-      display: flex;
-      align-items: center;
-    }
-
-    .avatar {
-      background-color: #6b5b95; 
-      color: white;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      margin-right: 12px;
-      text-align: center;
-      line-height: 36px;
-      font-size: 14px;
-      font-weight: 600;
-      flex-shrink: 0;
-      user-select: none;
-    }
-
-    .info-text {
-      display: flex;
-      flex-direction: column;
-
-      .item-name {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 700;
-        color: $text-color;
-        line-height: 1.2;
-      }
-
-      .post-date {
-        margin: 2px 0 0 0;
-        font-size: 12px;
-        color: $secondary-text;
-      }
-    }
-
-    .action-menu-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-
-      .menu-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: background-color 0.2s;
-        
-        &:hover {
-          background-color: rgba(0,0,0,0.05);
-        }
-
-        img {
-          width: 20px;
-          height: 20px;
-          opacity: 0.6;
-          object-fit: contain;
-          
-          &:hover {
-            opacity: 1;
-          }
-        }
-      }
-
-      .dropdown-menu {
-        position: absolute;
-        top: 100%;
-        right: 0;
-        margin-top: 5px;
-        background-color: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 100;
-        min-width: 180px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        padding: 5px 0;
-        
-        .dropdown-item {
-          padding: 10px 16px;
-          background: none;
-          border: none;
-          text-align: left;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          color: $text-color;
-          width: 100%;
-          transition: background-color 0.1s;
-          
-          &:hover {
-            background-color: #f5f5f5;
-          }
-
-          &.delete {
-            color: $danger-color;
-            &:hover {
-              background-color: #fff0f0;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .item-image-area {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .modern-item-card {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    background: #fff;
     overflow: hidden;
 
-    .main-item-photo {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      display: block;
-      mix-blend-mode: multiply;
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(93, 80, 208, 0.15);
+    }
+  }
+
+  .card-media {
+    position: relative;
+    height: 220px;
+    background: #f2f2f7;
+
+    .carousel-viewport {
+      position: relative;
+      width: 100%;
+      height: 100%;
     }
 
-    .arrow {
+    .item-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .carousel-btn {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      cursor: pointer;
-      padding: 5px;
-      z-index: 10;
-      background-color: rgba(255, 255, 255, 0.5);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s;
+      background: rgba(255, 255, 255, 0.9);
+      color: $text-main;
+      z-index: 2;
+      transition: background 0.2s ease;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.9);
-        .arrow-icon {
-            opacity: 1;
-        }
+        background: rgba(255, 255, 255, 1);
       }
 
-      .arrow-icon {
-        width: 24px;
-        height: 24px;
-        opacity: 0.6;
-        transition: opacity 0.2s ease;
-        display: block;
-      }
-
-      &.left-arrow {
+      &--prev {
         left: 8px;
       }
 
-      &.right-arrow {
+      &--next {
         right: 8px;
       }
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .carousel-indicators {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      z-index: 2;
+
+      .indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transition: background 0.3s ease;
+
+        &--active {
+          background: rgba(255, 255, 255, 1);
+        }
+      }
+    }
+
+    .status-overlay {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+    }
+
+    .floating-menu-trigger {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      color: $text-main;
+      transform: scale(0.85);
+      z-index: 2;
     }
   }
 
-  .card-body {
-    padding: 16px;
+  ::ng-deep {
+    .mat-mdc-card-content { padding: 20px 16px !important; }
+    .text-danger { color: #ff3b30 !important; }
 
-    .item-title {
-      margin-top: 0;
-      margin-bottom: 6px;
-      font-size: 16px;
-      font-weight: 700;
-      color: $text-color;
-      
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .view-ticket-btn {
+      color: $primary-purple !important;
+      font-weight: 700 !important;
+      mat-icon { margin-left: -4px; }
     }
+  }
+}
 
-    .item-location {
-      margin-top: 0;
-      margin-bottom: 12px;
-      font-size: 13px;
-      color: $secondary-text;
-      display: flex;
-      align-items: center;
-      
-    }
+.header-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 8px;
 
-    .item-description {
-      font-size: 13px;
-      color: #555;
-      line-height: 1.5;
-      margin-bottom: 20px;
-      min-height: 40px;
-      
-    }
+  .poster-identity { color: $primary-purple; letter-spacing: 0.5px; }
+  .post-timestamp { color: $text-secondary; }
+}
 
-    .card-footer-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: auto;
-    }
+.details-group {
+  margin: 12px 0;
 
-    .ticket-btn {
-      background-color: $primary-purple;
-      color: white;
-      padding: 8px 24px;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
+  .detail-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: $text-secondary;
+    margin-bottom: 6px;
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; margin-right: 6px; }
+
+    &.highlighted {
+      color: $text-main;
       font-weight: 600;
-      font-size: 13px;
-      transition: background-color 0.15s ease;
-      box-shadow: 0 2px 4px rgba($primary-purple, 0.2);
-
-      &:hover {
-        background-color: color.adjust($primary-purple, $lightness: -5%);
-        box-shadow: 0 4px 8px rgba($primary-purple, 0.3);
-      }
-      
-      &:active {
-        transform: scale(0.98);
-      }
+      .label { color: $text-secondary; font-weight: 400; margin-right: 4px; }
     }
   }
 }
