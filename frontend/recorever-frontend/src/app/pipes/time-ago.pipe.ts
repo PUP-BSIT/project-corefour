@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format, differenceInHours } from 'date-fns';
 
 @Pipe({
   name: 'timeAgo',
@@ -12,10 +12,18 @@ export class TimeAgoPipe implements PipeTransform {
       return '';
     }
 
+    const date = new Date(value);
+    const now = new Date();
+
     try {
-      return formatDistanceToNow(new Date(value), { addSuffix: true });
-    } catch (e) {
-      console.error('Invalid date for TimeAgoPipe:', value);
+      const hoursDiff = differenceInHours(now, date);
+
+      if (hoursDiff >= 24) {
+        return format(date, 'MMM d, yyyy');
+      }
+
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (e: unknown) {
       return 'Invalid date';
     }
   }
