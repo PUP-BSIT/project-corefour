@@ -38,7 +38,7 @@ export class ReportItemCard {
   currentUserId = input<number | null>(null);
   isUserProfilePage = input<boolean>(false);
 
-  // Grouped outputs [cite: 78]
+  @Output() cardClicked = new EventEmitter<void>();
   @Output() ticketClicked = new EventEmitter<void>();
   @Output() editClicked = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
@@ -115,7 +115,10 @@ export class ReportItemCard {
   previousImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
-    this.currentImageIndex =
-        (this.currentImageIndex - 1 + urls.length) % urls.length;
+    this.currentImageIndex = (this.currentImageIndex - 1 + urls.length) % urls.length;
+  }
+
+  onCardClick(): void {
+    this.cardClicked.emit();
   }
 }

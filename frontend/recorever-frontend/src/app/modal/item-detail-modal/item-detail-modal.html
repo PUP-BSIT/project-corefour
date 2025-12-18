@@ -1,0 +1,136 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="user-info">
+          <div class="avatar-circle">
+            <img [src]="getUserProfilePicture()"
+                 [alt]="getUserName()"
+                 class="avatar-img">
+          </div>
+          <div class="user-details">
+            <span class="username">{{ getUserName() }}</span>
+            <span class="timestamp">{{ (item().date_posted ||
+                item().date_reported) | timeAgo }}</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <app-status-badge [status]="displayStatus()"></app-status-badge>
+
+          @if (isOwner() || item().claim_code) {
+            <button mat-icon-button
+                    [matMenuTriggerFor]="modalMenu"
+                    class="modal-menu-trigger">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #modalMenu="matMenu" xPosition="before">
+              @if (item().type !== 'lost' || item().claim_code) {
+                <button mat-menu-item (click)="onViewCode($event)">
+                  <mat-icon>qr_code_2</mat-icon>
+                  <span>{{ getCodeButtonLabel() }}</span>
+                </button>
+              }
+              @if (isOwner()) {
+                <button mat-menu-item (click)="onEdit($event)">
+                  <mat-icon>edit_square</mat-icon>
+                  <span>Edit Report</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button
+                  mat-menu-item (click)="onDelete($event)"
+                  class="delete-option">
+                  <mat-icon color="warn">auto_delete</mat-icon>
+                  <span class="text-danger">Remove</span>
+                </button>
+              }
+            </mat-menu>
+          }
+        </div>
+      </div>
+
+      <div class="image-section">
+        <div class="carousel-container">
+          <img [src]="currentImageUrl()"
+               [alt]="item().item_name"
+               class="modal-image">
+
+          @if (hasMultipleImages()) {
+            <button mat-icon-button
+                    class="carousel-btn carousel-btn--prev"
+                    (click)="previousImage($event)">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+
+            <button mat-icon-button
+                    class="carousel-btn carousel-btn--next"
+                    (click)="nextImage($event)">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+
+            <div class="carousel-indicators">
+              @for (url of photoUrls(); track $index) {
+                <span class="indicator"
+                      [class.indicator--active]="currentImageIndex === $index">
+                </span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="details-section">
+        <h2 class="item-title">{{ item().item_name }}</h2>
+
+        <div class="detail-row">
+          <mat-icon>label</mat-icon>
+          <span class="detail-label">Type:</span>
+          <span class="detail-value">{{ item().type === 'lost' ?
+              'Lost Item' : 'Found Item' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <mat-icon>location_on</mat-icon>
+          <span class="detail-label">Location:</span>
+          <span class="detail-value">{{ item().location }}</span>
+        </div>
+
+        <div class="detail-row">
+          <mat-icon>calendar_today</mat-icon>
+          <span class="detail-label">Date {{ item().type === 'lost' ?
+              'Lost' : 'Found' }}:</span>
+          <span class="detail-value">{{ (item().date_lost_found ||
+              item().date_reported) | date: 'mediumDate' }}</span>
+        </div>
+
+        <div class="description-section">
+          <h3>Description</h3>
+          <p>{{ item().description }}</p>
+        </div>
+
+        @if (item().remarks) {
+          <div class="remarks-section">
+            <h3>Remarks</h3>
+            <p>{{ item().remarks }}</p>
+          </div>
+        }
+      </div>
+
+      <div class="modal-actions">
+        @if (item().type === 'found' && !isOwner()) {
+          <button mat-raised-button
+                  color="primary"
+                  class="action-btn"
+                  (click)="onViewTicket()">
+            REFERECE CODE
+          </button>
+        }
+        <button mat-stroked-button
+                class="action-btn"
+                (click)="onClose()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

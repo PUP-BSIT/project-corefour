@@ -1,4 +1,4 @@
-<mat-card class="modern-item-card">
+<mat-card class="modern-item-card" (click)="onCardClick()">
   <div class="card-media">
     <div class="carousel-viewport">
       <img mat-card-image
@@ -55,8 +55,9 @@
             <span>Edit Report</span>
           </button>
           <mat-divider></mat-divider>
-          <button mat-menu-item (click)="onDelete($event)"
-              class="delete-option">
+          <button
+            mat-menu-item (click)="onDelete($event)"
+            class="delete-option">
             <mat-icon color="warn">auto_delete</mat-icon>
             <span class="text-danger">Remove</span>
           </button>
@@ -84,7 +85,8 @@
         <mat-icon>calendar_today</mat-icon>
         <span class="label">Date {{
             report().type === 'lost' ? 'Lost' : 'Found' }}:</span>
-        <span class="value">{{ (report().date_lost_found ||
+        <span class="value">{{
+            (report().date_lost_found ||
             report().date_reported) | date: 'mediumDate' }}</span>
       </div>
     </div>
@@ -93,9 +95,12 @@
   </mat-card-content>
 
   <mat-card-actions align="end" class="card-footer">
-    @if (report().type === 'found') {
-      <button mat-button class="view-ticket-btn" (click)="onTicketClick()">
-        REFERENCE CODE
+    @if (report().type === 'found' && !isOwner()) {
+      <button
+        mat-button class="view-ticket-btn"
+        (click)="onTicketClick();
+        $event.stopPropagation()">
+        REFERECE CODE
         <mat-icon>keyboard_arrow_right</mat-icon>
       </button>
     }

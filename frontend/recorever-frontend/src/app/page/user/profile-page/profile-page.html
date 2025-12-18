@@ -97,6 +97,7 @@
           [items]="displayedItems()"
           [currentUserId]="(currentUser$ | async)?.user_id ?? null"
           [isUserProfilePage]="true"
+          (cardClicked)="onCardClick($event)"
           (cardDeleteClicked)="onDeleteItem($event)"
           (cardEditClicked)="onEditItem($event)"
           (cardViewCodeClicked)="onViewCode($event)">
@@ -123,5 +124,17 @@
         [code]="codeModalValue()"
         (close)="viewCodeItem.set(null)">
     </app-codes-modal>
+  }
+
+  @if (selectedItem(); as item) {
+    <app-item-detail-modal
+        [item]="item"
+        [currentUserId]="(currentUser$ | async)?.user_id ?? null"
+        [userProfilePicture]="getUserProfilePicture()"
+        (close)="selectedItem.set(null)"
+        (editClicked)="onModalEdit()"
+        (deleteClicked)="onModalDelete()"
+        (viewCodeClicked)="onModalViewCode()">
+    </app-item-detail-modal>
   }
 </div>

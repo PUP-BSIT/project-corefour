@@ -26,6 +26,9 @@ import { StandardLocations, StandardRelativeDateFilters }
     from '../../../models/item-model';
 import { CustomLocation } from '../../../modal/custom-location/custom-location';
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
+import {
+  ItemDetailModal
+} from '../../../modal/item-detail-modal/item-detail-modal';
 
 type FilterType = 'all' | 'az' | 'date' | 'location';
 type ActiveDropdown = 'date' | 'location' | null;
@@ -40,6 +43,7 @@ type ItemType = 'lost' | 'found';
     ReportItemGrid,
     CustomLocation,
     CodesModal,
+    ItemDetailModal,
   ],
   templateUrl: './user-item-list-page.html',
   styleUrl: './user-item-list-page.scss',
@@ -55,7 +59,7 @@ export class UserItemListPage {
   currentUserId = computed(() => this.currentUser()?.user_id ?? null);
 
   itemType = signal<ItemType>('lost');
-  
+
   pageTitle = computed(() =>
     this.itemType() === 'lost' ? 'Lost Items' : 'Found Items'
   );
@@ -74,6 +78,7 @@ export class UserItemListPage {
   showResolved = signal(false);
 
   viewCodeItem = signal<Report | null>(null);
+  selectedItem = signal<Report | null>(null);
 
   codeModalTitle = computed(() => {
     const item = this.viewCodeItem();
@@ -110,13 +115,13 @@ export class UserItemListPage {
   ];
 
   allReports = signal<Report[]>([]);
-  
+
   isLoading = signal(true);
   error = signal<string | null>(null);
 
-  filters = signal<ReportFilters>({ 
+  filters = signal<ReportFilters>({
       type: 'found',
-      location: undefined, 
+      location: undefined,
       status: 'approved',
   });
 
@@ -131,11 +136,11 @@ export class UserItemListPage {
           status: 'approved',
           location: undefined,
         });
-        
+
         this.selectedDateFilter.set('Any time');
         this.selectedLocationFilter.set('Any Location');
         this.showResolved.set(false);
-        
+
         this.fetchReports();
       });
   }
@@ -273,6 +278,10 @@ export class UserItemListPage {
     this.fetchReports(query);
   }
 
+  onCardClick(item: Report): void {
+    this.selectedItem.set(item);
+  }
+
   onTicketClick(item: Report): void {
     if (!this.currentUserId()) {
         console.warn('User must be logged in to claim item');
@@ -281,9 +290,9 @@ export class UserItemListPage {
 
     this.claimService.submitClaim(item.report_id).subscribe({
         next: (response) => {
-            const itemWithCode = { 
-                ...item, 
-                claim_code: response.claim_code 
+            const itemWithCode = {
+                ...item,
+                claim_code: response.claim_code
             };
 
             this.viewCodeItem.set(itemWithCode);
@@ -304,5 +313,43 @@ export class UserItemListPage {
 
   onViewCodeClick(item: Report): void {
     this.viewCodeItem.set(item);
+  }
+
+  onModalViewTicket(): void {
+    const item = this.selectedItem();
+    if (item) {
+      this.selectedItem.set(null);
+      this.onTicketClick(item);
+    }
+  }
+
+  onModalEdit(): void {
+    const item = this.selectedItem();
+    if (item) {
+      this.selectedItem.set(null);
+      this.onEditClick(item);
+    }
+  }
+
+  onModalDelete(): void {
+    const item = this.selectedItem();
+    if (item) {
+      this.selectedItem.set(null);
+      this.onDeleteClick(item);
+    }
+  }
+
+  onModalViewCode(): void {
+    const item = this.selectedItem();
+    if (item) {
+      this.selectedItem.set(null);
+      this.onViewCodeClick(item);
+    }
+  }
+
+  getUserProfilePicture(): string | null {
+    const item = this.selectedItem();
+    if (!item) return null;
+    return null;
   }
 }
