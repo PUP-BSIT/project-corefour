@@ -115,7 +115,8 @@ export class ReportItemCard {
   previousImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
-    this.currentImageIndex = (this.currentImageIndex - 1 + urls.length) % urls.length;
+    this.currentImageIndex = (this.currentImageIndex - 1 + urls.length)
+        % urls.length;
   }
 
   onCardClick(): void {
