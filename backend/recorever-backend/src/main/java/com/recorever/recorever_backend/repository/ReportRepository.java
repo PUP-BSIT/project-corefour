@@ -213,4 +213,28 @@ public class ReportRepository {
             """;
         return jdbcTemplate.update(sql, currentTime);
     }
+
+    public int countTotalReports() {
+        String sql = "SELECT COUNT(*) FROM reports WHERE is_deleted = 0";
+        return jdbcTemplate.queryForObject(sql, Integer.class);
+    }
+
+    public int countReportsByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM reports WHERE status = ? AND is_deleted = 0";
+        return jdbcTemplate.queryForObject(sql, Integer.class, status);
+    }
+
+    public int countReportsByType(String type) {
+        String sql = "SELECT COUNT(*) FROM reports WHERE type = ? AND is_deleted = 0";
+        return jdbcTemplate.queryForObject(sql, Integer.class, type);
+    }
+
+    public List<java.util.Map<String, Object>> getReportsOverTime(int days) {
+        String sql = "SELECT DATE_FORMAT(date_reported, '%Y-%m-%d') as label, COUNT(*) as value " +
+                     "FROM reports " +
+                     "WHERE date_reported >= DATE_SUB(NOW(), INTERVAL ? DAY) AND is_deleted = 0 " +
+                     "GROUP BY DATE_FORMAT(date_reported, '%Y-%m-%d') " +
+                     "ORDER BY label ASC";
+        return jdbcTemplate.queryForList(sql, days);
+    }
 }

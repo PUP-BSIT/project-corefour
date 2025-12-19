@@ -13,6 +13,8 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 @Service
 public class ReportService {
@@ -135,4 +137,29 @@ public class ReportService {
 
     public boolean updateCodes(int id, String surrenderCode, String claimCode) {
         return repo.setClaimCodes(id, surrenderCode, claimCode); }
+
+    public Map<String, Object> getDashboardData(int days) {
+        int total = repo.countTotalReports();
+        int claimed = repo.countReportsByStatus("claimed");
+        int pending = repo.countReportsByStatus("pending");
+        
+        int lost = repo.countReportsByType("lost");
+        int found = repo.countReportsByType("found");
+        
+        String ratio = lost + "/" + found; 
+
+        List<Map<String, Object>> chartData = repo.getReportsOverTime(days);
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalReports", total);
+        stats.put("successfullyClaimed", claimed);
+        stats.put("pendingAction", pending);
+        stats.put("lostFoundRatio", ratio);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("stats", stats);
+        response.put("reportsOverTime", chartData);
+
+        return response;
+    }
 }
