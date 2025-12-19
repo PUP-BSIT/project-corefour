@@ -3,18 +3,18 @@
     <div class="header-content">
       <h1 class="page-title">Dashboard Overview</h1>
       
-      <div class="filter-container">
+      <form [formGroup]="filterForm" class="filter-container">
         <label for="dateRange" class="filter-label">Report Last:</label>
+
         <select 
           id="dateRange" 
-          [(ngModel)]="selectedRange" 
-          (ngModelChange)="onRangeChange()"
+          formControlName="range"
           class="range-select">
           <option value="7">7 Days</option>
           <option value="15">15 Days</option>
           <option value="30">30 Days</option>
         </select>
-      </div>
+      </form>
     </div>
   </header>
 
@@ -22,8 +22,7 @@
     <div class="content-area">
       
       <div class="chart-section">
-        <app-chart-component [data]="
-                dashboardData.reportsOverTime">
+        <app-chart-component [data]="dashboardData.reportsOverTime">
         </app-chart-component>
       </div>
 
