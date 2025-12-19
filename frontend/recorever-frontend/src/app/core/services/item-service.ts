@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type { 
+import { 
   Report, 
   ReportFilters, 
   FinalReportSubmission 
@@ -15,29 +15,45 @@ export class ItemService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
-  createReport(report: FinalReportSubmission): Observable<Report> {
-    return this.http.post<Report>(`${this.apiUrl}/report`, report);
+  submitFullReport(
+      report: FinalReportSubmission, 
+      files: File[]
+  ): Observable<Report> {
+    const formData = new FormData();
+
+    formData.append('type', report.type);
+    formData.append('item_name', report.item_name);
+    formData.append('location', report.location);
+    formData.append('description', report.description);
+
+    if (files && files.length > 0) {
+      files.forEach((file: File) => {
+        formData.append('files', file, file.name);
+      });
+    }
+
+    return this.http.post<Report>(
+        `${this.apiUrl}/reports/full-submit`, 
+        formData
+    );
   }
 
   getReports(filters: ReportFilters): Observable<Report[]> {
     let params = new HttpParams();
-
     const endpoint = `${this.apiUrl}/reports`;
 
-    // Query params
     if (filters.type) {
       params = params.set('type', filters.type);
     }
-
     if (filters.status) {
       params = params.set('status', filters.status);
     }
-
     if (filters.user_id) {
-        params = params.set('user_id', filters.user_id.toString());
+      params = params.set(
+          'user_id', 
+          filters.user_id.toString()
+      );
     }
-
-    // Additional filters
     if (filters.item_name) {
       params = params.set('item_name', filters.item_name);
     }
@@ -49,6 +65,15 @@ export class ItemService {
   }
 
   deleteReport(reportId: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/report/${reportId}`);
+    return this.http.delete<void>(
+        `${this.apiUrl}/report/${reportId}`
+    );
+  }
+
+  createReport(report: FinalReportSubmission): Observable<Report> {
+    return this.http.post<Report>(
+        `${this.apiUrl}/report`, 
+        report
+    );
   }
 }
