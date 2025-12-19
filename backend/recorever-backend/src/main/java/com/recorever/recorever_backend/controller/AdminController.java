@@ -51,6 +51,11 @@ public class AdminController {
         return ResponseEntity.ok(claimService.listAllClaimsForAdmin());
     }
 
+    @GetMapping("/dashboard-stats")
+    public ResponseEntity<?> getDashboardStats(@RequestParam(defaultValue = "15") int days) {
+        return ResponseEntity.ok(reportService.getDashboardData(days));
+    }
+
     // for future cleaning up
     // @PutMapping("/claim/{id}/approve")
     // public ResponseEntity<?> approveClaim(@PathVariable int id, @RequestBody(required = false) Map<String, String> body) {
