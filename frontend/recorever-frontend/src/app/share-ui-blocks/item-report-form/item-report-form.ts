@@ -74,7 +74,7 @@ export class ItemReportForm implements OnInit {
         '',
         { validators: [Validators.required] }
       ],
-      date_reported: ['', { validators: [Validators.required] }],
+      date_lost_found: ['', { validators: [Validators.required] }],
       description:
           ['', { validators: [Validators.required, Validators.minLength(10),
               Validators.maxLength(500)]
@@ -94,7 +94,8 @@ export class ItemReportForm implements OnInit {
       this.reportForm.patchValue({
         item_name: this.existingItemData.item_name,
         location: this.existingItemData.location,
-        date_reported: this.existingItemData.date_reported,
+        date_lost_found: this.existingItemData.date_lost_found ||
+            this.existingItemData.date_reported,
         description: this.existingItemData.description
       });
 
@@ -161,7 +162,8 @@ export class ItemReportForm implements OnInit {
       const finalPayload: ReportSubmissionWithFiles = {
         ...basePayload,
         status: 'pending',
-        date_reported: this.reportForm.controls.date_reported.value!,
+        date_lost_found: this.reportForm.controls.date_lost_found.value!,
+        date_reported: new Date().toISOString(),
         photoUrls: this.photoUrlsFormArray.value.filter((url):
             url is string => url !== null),
         files: this.selectedFiles,

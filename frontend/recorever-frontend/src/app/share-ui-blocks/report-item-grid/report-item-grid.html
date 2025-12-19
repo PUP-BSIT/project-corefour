@@ -3,6 +3,8 @@
     <app-report-item-card
       [report]="item"
       [currentUserId]="currentUserId()"
+      [isUserProfilePage]="isUserProfilePage()"
+      (cardClicked)="handleCardClick(item)"
       (ticketClicked)="handleTicketClick(item)"
       (editClicked)="handleEditClick(item)"
       (deleteClicked)="handleDeleteClick(item)"

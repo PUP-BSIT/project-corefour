@@ -4,10 +4,21 @@ import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { map, switchMap, catchError, shareReplay, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
-import { EditProfileModal } from '../../../modal/edit-profile-modal/edit-profile-modal';
-import { DeleteReportModal } from '../../../modal/delete-report-modal/delete-report-modal';
-import { CodesModal } from '../../../modal/codes-modal/codes-modal';
+import {
+  ReportItemGrid
+} from '../../../share-ui-blocks/report-item-grid/report-item-grid';
+import {
+  EditProfileModal
+} from '../../../modal/edit-profile-modal/edit-profile-modal';
+import {
+  DeleteReportModal
+} from '../../../modal/delete-report-modal/delete-report-modal';
+import {
+  CodesModal
+  } from '../../../modal/codes-modal/codes-modal';
+import {
+ ItemDetailModal
+} from '../../../modal/item-detail-modal/item-detail-modal';
 
 import { ItemService } from '../../../core/services/item-service';
 import { UserService } from '../../../core/services/user-service';
@@ -25,7 +36,8 @@ type TabType = 'all' | 'found' | 'lost';
     ReportItemGrid,
     EditProfileModal,
     DeleteReportModal,
-    CodesModal
+    CodesModal,
+    ItemDetailModal
   ],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss'
@@ -48,6 +60,7 @@ export class ProfilePage implements OnInit {
   itemToDelete: Report | null = null;
 
   viewCodeItem = signal<Report | null>(null);
+  selectedItem = signal<Report | null>(null);
 
   codeModalTitle = computed(() => {
     const item = this.viewCodeItem();
@@ -108,15 +121,15 @@ export class ProfilePage implements OnInit {
     userId: number,
     status: string
   ): Observable<Report[]> {
-    
+
     const filter: ReportFilters = {
       user_id: userId,
       ...(tab !== 'all' && { type: tab }),
-      ...(status && { status: status as any }) 
+      ...(status && { status: status as any })
     };
 
     return this.itemService.getReports(filter).pipe(
-      map((reports: Report[]) => reports) 
+      map((reports: Report[]) => reports)
     );
   }
 
@@ -150,6 +163,10 @@ export class ProfilePage implements OnInit {
         }
       }
     });
+  }
+
+  onCardClick(item: Report): void {
+    this.selectedItem.set(item);
   }
 
   onDeleteItem(item: Report): void {
@@ -191,5 +208,33 @@ export class ProfilePage implements OnInit {
 
   onViewCode(item: Report): void {
     this.viewCodeItem.set(item);
+  }
+
+  onModalEdit(): void {
+    const item = this.selectedItem();
+    if (item) {
+      this.selectedItem.set(null);
+      this.onEditItem(item);
+    }
+  }
+
+  onModalDelete(): void {
+    const item = this.selectedItem();
+    if (item) {
+      this.selectedItem.set(null);
+      this.onDeleteItem(item);
+    }
+  }
+
+  onModalViewCode(): void {
+    const item = this.selectedItem();
+    if (item) {
+      this.selectedItem.set(null);
+      this.onViewCode(item);
+    }
+  }
+
+  getUserProfilePicture(): string | null {
+    return null;
   }
 }

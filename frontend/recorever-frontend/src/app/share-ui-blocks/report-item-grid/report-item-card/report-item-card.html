@@ -1,111 +1,108 @@
-<div class="item-card">
-  <div class="card-header">
-    <div class="header-left">
-      <div class="avatar">
-        {{ userName().charAt(0).toUpperCase() }}
-      </div>
-      
-      <div class="info-text">
-        <h4 class="item-name">{{ userName() }}</h4>
-        <p class="post-date">
-          {{ report().date_reported | date: 'mediumDate' }}
-        </p>
-      </div>
+<mat-card class="modern-item-card" (click)="onCardClick()">
+  <div class="card-media">
+    <div class="carousel-viewport">
+      <img mat-card-image
+           [src]="currentImageUrl()"
+           [alt]="report().item_name"
+           class="item-image">
+
+      @if (hasMultipleImages()) {
+        <button mat-icon-button
+                class="carousel-btn carousel-btn--prev"
+                (click)="previousImage($event)"
+                aria-label="Previous image">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+
+        <button mat-icon-button
+                class="carousel-btn carousel-btn--next"
+                (click)="nextImage($event)"
+                aria-label="Next image">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+
+        <div class="carousel-indicators">
+          @for (url of photoUrls(); track $index) {
+            <span class="indicator"
+                  [class.indicator--active]="currentImageIndex === $index">
+            </span>
+          }
+        </div>
+      }
     </div>
 
-    @if (isOwner() && report().type === 'lost') {
-      <div class="action-menu-container">
-        <button type="button" 
-                class="menu-btn" 
-                (click)="toggleMenu($event)"
-                aria-label="Options menu">
-          <img src="assets/menu.png" alt="" aria-hidden="true"> 
-        </button>
-  
-        @if (isMenuOpen()) {
-          <div class="dropdown-menu">
-            <button class="dropdown-item" (click)="onEdit($event)">
-              Edit
-            </button>
-            
-            <button class="dropdown-item delete" (click)="onDelete($event)">
-              Delete
-            </button>
-          </div>
-        }
-      </div>
-    } @else if (isOwner()) {
-      <div class="action-menu-container">
-        <button type="button" 
-                class="menu-btn" 
-                (click)="toggleMenu($event)"
-                aria-label="Options menu">
-          <img src="assets/menu.png" alt="" aria-hidden="true"> 
-        </button>
-  
-        @if (isMenuOpen()) {
-          <div class="dropdown-menu">
-            <button class="dropdown-item" (click)="onViewCode($event)">
-              {{ getCodeButtonLabel() }}
-            </button>
+    <div class="status-overlay">
+      <app-status-badge [status]="displayStatus()"></app-status-badge>
+    </div>
 
-            <button class="dropdown-item" (click)="onEdit($event)">
-              Edit
-            </button>
-            
-            <button class="dropdown-item delete" (click)="onDelete($event)">
-              Delete
-            </button>
-          </div>
+    @if (isOwner() || report().claim_code) {
+      <button mat-mini-fab
+              class="floating-menu-trigger"
+              [matMenuTriggerFor]="cardMenu"
+              (click)="$event.stopPropagation()">
+        <mat-icon>more_horiz</mat-icon>
+      </button>
+      <mat-menu #cardMenu="matMenu" xPosition="before">
+        @if (report().type !== 'lost' || report().claim_code) {
+          <button mat-menu-item (click)="onViewCode($event)">
+            <mat-icon>qr_code_2</mat-icon>
+            <span>{{ getCodeButtonLabel() }}</span>
+          </button>
         }
-      </div>
-    } @else if (!isOwner() && report().claim_code) {
-      <div class="action-menu-container">
-        <button type="button" 
-                class="menu-btn" 
-                (click)="toggleMenu($event)"
-                aria-label="Options menu">
-          <img src="assets/menu.png" alt="" aria-hidden="true"> 
-        </button>
-  
-        @if (isMenuOpen()) {
-          <div class="dropdown-menu">
-            <button class="dropdown-item" (click)="onViewCode($event)">
-              {{ getCodeButtonLabel() }}
-            </button>
-          </div>
+        @if (isOwner()) {
+          <button mat-menu-item (click)="onEdit($event)">
+            <mat-icon>edit_square</mat-icon>
+            <span>Edit Report</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button
+            mat-menu-item (click)="onDelete($event)"
+            class="delete-option">
+            <mat-icon color="warn">auto_delete</mat-icon>
+            <span class="text-danger">Remove</span>
+          </button>
         }
-      </div>
+      </mat-menu>
     }
   </div>
 
-  <div class="item-image-area">
-    <div class="arrow left-arrow" role="button" aria-label="Previous image">
-      <img src="assets/Arrow-left.png" class="arrow-icon" aria-hidden="true" />
+  <mat-card-content class="card-body">
+    <div class="header-meta">
+      <span class="poster-identity">{{ userName() }}</span>
+      <span class="post-timestamp">{{
+          (report().date_posted || report().date_reported) | timeAgo }}</span>
     </div>
 
-    <img
-      src="assets/temp-photo-item.png"
-      alt="Item photo for {{ report().item_name }}"
-      class="main-item-photo"
-    />
-
-    <div class="arrow right-arrow" role="button" aria-label="Next image">
-      <img src="assets/arrow-right.png" class="arrow-icon" aria-hidden="true" />
-    </div>
-  </div>
-
-  <div class="card-body">
     <h3 class="item-title">{{ report().item_name }}</h3>
-    <p class="item-location">{{ report().location }}</p>
-    <p class="item-description">
-      {{ report().description }}
-    </p>
 
-    <div class="card-footer-actions">
-      <button class="ticket-btn" (click)="onTicketClick()">
-        Ticket
-      </button>
+    <div class="details-group">
+      <div class="detail-item">
+        <mat-icon>location_on</mat-icon>
+        <span class="text">{{ report().location }}</span>
+      </div>
+
+      <div class="detail-item highlighted">
+        <mat-icon>calendar_today</mat-icon>
+        <span class="label">Date {{
+            report().type === 'lost' ? 'Lost' : 'Found' }}:</span>
+        <span class="value">{{
+            (report().date_lost_found ||
+            report().date_reported) | date: 'mediumDate' }}</span>
+      </div>
     </div>
-  </div>
-</div>
+
+    <p class="summary">{{ report().description }}</p>
+  </mat-card-content>
+
+  <mat-card-actions align="end" class="card-footer">
+    @if (report().type === 'found' && !isOwner()) {
+      <button
+        mat-button class="view-ticket-btn"
+        (click)="onTicketClick();
+        $event.stopPropagation()">
+        REFERENCE CODE
+        <mat-icon>keyboard_arrow_right</mat-icon>
+      </button>
+    }
+  </mat-card-actions>
+</mat-card>
