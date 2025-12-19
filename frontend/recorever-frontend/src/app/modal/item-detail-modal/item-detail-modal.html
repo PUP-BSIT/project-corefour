@@ -5,9 +5,10 @@
       <div class="modal-header">
         <div class="user-info">
           <div class="avatar-circle">
-            <img [src]="getUserProfilePicture()"
-                 [alt]="getUserName()"
-                 class="avatar-img">
+            <img
+                [src]="getUserProfilePicture()"
+                [alt]="getUserName()"
+                class="avatar-img">
           </div>
           <div class="user-details">
             <span class="username">{{ getUserName() }}</span>
@@ -122,7 +123,7 @@
                   color="primary"
                   class="action-btn"
                   (click)="onViewTicket()">
-            REFERECE CODE
+            REFERENCE CODE
           </button>
         }
         <button mat-stroked-button
