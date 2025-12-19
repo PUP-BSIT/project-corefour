@@ -1,18 +1,8 @@
-<div class="chart-wrapper">
+<div class="chart-container">
   <div class="chart-header">
+    <h3>Reports Over Last {{ data.length }} Days</h3>
   </div>
-  <div class="chart-area">
-    <div class="bars-container">
-      @for (item of data; track item.label) {
-        <div class="bar-group">
-          <div class="bar-fill-area">
-            <div class="bar" [style.height.px]="item.value * 2">
-              <span class="tooltip">{{ item.value }}</span>
-            </div>
-          </div>
-          <span class="label">{{ item.label }}</span>
-        </div>
-      }
-    </div>
+  <div class="canvas-wrapper">
+    <canvas #chartCanvas></canvas>
   </div>
 </div>
