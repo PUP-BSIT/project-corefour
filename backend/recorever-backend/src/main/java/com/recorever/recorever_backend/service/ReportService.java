@@ -9,12 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate; 
 import java.time.LocalDateTime; 
-import java.time.LocalTime; 
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class ReportService {
@@ -139,27 +142,48 @@ public class ReportService {
         return repo.setClaimCodes(id, surrenderCode, claimCode); }
 
     public Map<String, Object> getDashboardData(int days) {
-        int total = repo.countTotalReports();
-        int claimed = repo.countReportsByStatus("claimed");
-        int pending = repo.countReportsByStatus("pending");
+    int total = repo.countTotalReports();
+    int claimed = repo.countReportsByStatus("claimed");
+    int pending = repo.countReportsByStatus("pending");
+    
+    int lost = repo.countReportsByType("lost");
+    int found = repo.countReportsByType("found");
+    
+    String ratio = lost + "/" + found; 
+
+    List<Map<String, Object>> dbData = repo.getReportsOverTime(days);
+    
+    Map<String, Long> dataMap = dbData.stream().collect(Collectors.toMap(
+        m -> (String) m.get("label"),
+        m -> ((Number) m.get("value")).longValue()
+    ));
+
+    List<Map<String, Object>> chartData = new ArrayList<>();
+    LocalDate today = LocalDate.now();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd");
+
+    for (int i = days - 1; i >= 0; i--) {
+        LocalDate date = today.minusDays(i);
+        String dateKey = date.format(formatter);
         
-        int lost = repo.countReportsByType("lost");
-        int found = repo.countReportsByType("found");
-        
-        String ratio = lost + "/" + found; 
+        long count = dataMap.getOrDefault(dateKey, 0L);
 
-        List<Map<String, Object>> chartData = repo.getReportsOverTime(days);
-
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalReports", total);
-        stats.put("successfullyClaimed", claimed);
-        stats.put("pendingAction", pending);
-        stats.put("lostFoundRatio", ratio);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("stats", stats);
-        response.put("reportsOverTime", chartData);
-
-        return response;
+        Map<String, Object> entry = new HashMap<>();
+        entry.put("date", dateKey);
+        entry.put("count", count);
+        chartData.add(entry);
     }
+
+    Map<String, Object> stats = new HashMap<>();
+    stats.put("totalReports", total);
+    stats.put("successfullyClaimed", claimed);
+    stats.put("pendingAction", pending);
+    stats.put("lostFoundRatio", ratio);
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("stats", stats);
+    response.put("reportsOverTime", chartData);
+
+    return response;
+}
 }
