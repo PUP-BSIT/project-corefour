@@ -95,7 +95,15 @@
   </mat-card-content>
 
   <mat-card-actions align="end" class="card-footer">
-    @if (report().type === 'found' && !isOwner()) {
+    @if (isArchiveView()) {
+      <button
+          mat-button class="unarchive-btn"
+          (click)="onUnarchive($event);
+          $event.stopPropagation()">
+        <mat-icon>unarchive</mat-icon>
+        UNARCHIVE
+      </button>
+    } @else if (report().type === 'found' && !isOwner()) {
       <button
         mat-button class="view-ticket-btn"
         (click)="onTicketClick();
