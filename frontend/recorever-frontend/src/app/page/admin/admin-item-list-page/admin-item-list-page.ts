@@ -252,6 +252,7 @@ export class AdminItemListPage implements OnInit {
     this.selectedDateFilter.set('Any time');
     this.selectedLocationFilter.set('Any Location');
     this.searchQuery.set('');
+    this.activeDropdown.set(null);
   }
 
   private updatePageTitle(data: any): void {
