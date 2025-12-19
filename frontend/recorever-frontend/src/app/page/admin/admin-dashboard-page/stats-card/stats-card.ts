@@ -1,11 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-stats-card',
-  imports: [],
+  standalone: true,
   templateUrl: './stats-card.html',
   styleUrl: './stats-card.scss',
 })
-export class StatsCard {
-
+export class StatsCardComponent {
+  @Input() title: string = '';
+  @Input() count: number | string = 0; 
+  @Input() icon: string = '';
 }
