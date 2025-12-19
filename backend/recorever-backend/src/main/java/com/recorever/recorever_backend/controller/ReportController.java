@@ -5,9 +5,14 @@ import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.service.ReportService;
 
-//DTO imports
+// Image Imports
+import com.recorever.recorever_backend.service.ImageService;
+import com.recorever.recorever_backend.model.Image;
+
+// DTO imports
 import com.recorever.recorever_backend.dto.ReportCreationDTO;
 import com.recorever.recorever_backend.dto.ReportResponseDTO;
+import com.recorever.recorever_backend.dto.ImageResponseDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +23,38 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
 @RestController
 @RequestMapping("/api")
 public class ReportController {
 
     @Autowired
     private ReportService service;
+
+    @Autowired
+    private ImageService imageService;
+
+    private ImageResponseDTO convertToImageDto(Image image) {
+        if (image == null || image.isDeleted()) return null;
+        
+        ImageResponseDTO dto = new ImageResponseDTO();
+        dto.setImageId(image.getImageId());
+        dto.setFileName(image.getFileName());
+        dto.setFileType(image.getFileType());
+        dto.setReportId(image.getReportId());
+        dto.setClaimId(image.getClaimId());
+        dto.setUploadedAt(image.getUploadedAt());
+
+        String imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/image/download/")
+                .path(image.getFilePath()) 
+                .toUriString();
+        dto.setImageUrl(imageUrl);
+        
+        return dto;
+    }
 
     private ReportResponseDTO mapToReportResponseDTO(Report report) {
         ReportResponseDTO dto = new ReportResponseDTO();
@@ -38,8 +69,60 @@ public class ReportController {
         dto.setStatus(report.getStatus());
         dto.setSurrender_code(report.getSurrender_code());
         dto.setReporter_name(report.getReporter_name());
+
+        if (report.getImages() != null) {
+            dto.setImages(report.getImages().stream()
+                .filter(img -> !img.isDeleted())
+                .map(this::convertToImageDto)
+                .collect(Collectors.toList()));
+        }
         return dto;
     }
+
+    @PostMapping("/reports/full-submit") 
+    public ResponseEntity<ReportResponseDTO> submitFullReport(
+            Authentication authentication,
+            @Valid @ModelAttribute ReportCreationDTO reportDto) {
+
+        User authenticatedUser = (User) authentication.getPrincipal();
+        int userId = authenticatedUser.getUser_id();
+
+        Map<String, Object> creationResult = service.create( 
+            userId, 
+            reportDto.getType(), 
+            reportDto.getItem_name(), 
+            reportDto.getLocation(), 
+            reportDto.getDescription()
+        );
+
+        Integer newReportId = (Integer) creationResult.get("report_id");
+
+        List<MultipartFile> files = reportDto.getFiles();
+
+        if (files != null && !files.isEmpty() && files.get(0).getSize() > 0) {
+            files.forEach(file -> {
+                String uniqueFileName = imageService.storeFile(file);
+                
+                Image image = new Image(
+                    file.getOriginalFilename(),
+                    file.getContentType(), 
+                    uniqueFileName, 
+                    newReportId 
+                );
+
+                imageService.saveImageMetadata(image);
+            });
+        }
+
+        Report finalReport = service.getById(newReportId);
+        
+        if (finalReport == null) {
+             return ResponseEntity.status(500).body(null); 
+        }
+
+        return ResponseEntity.status(201).body(mapToReportResponseDTO(finalReport));
+    }
+
 
     @PostMapping("/report")
     public ResponseEntity<?> createReport( Authentication authentication,

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "report")
@@ -31,5 +32,5 @@ public class Report {
   private String reporter_name;
 
   @OneToMany(mappedBy = "reportId", fetch = FetchType.LAZY)
-  private List<Image> images;
+  private List<Image> images = new ArrayList<>();
 }
