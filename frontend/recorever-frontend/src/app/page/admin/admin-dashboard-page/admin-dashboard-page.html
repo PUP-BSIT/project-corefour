@@ -1,1 +1,62 @@
-<p>admin-dashboard-page works!</p>
+<div class="dashboard-page">
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Dashboard Overview</h1>
+      
+      <div class="filter-container">
+        <label for="dateRange" class="filter-label">Report Last:</label>
+        <select 
+          id="dateRange" 
+          [(ngModel)]="selectedRange" 
+          (ngModelChange)="onRangeChange()"
+          class="range-select">
+          <option value="7">7 Days</option>
+          <option value="15">15 Days</option>
+          <option value="30">30 Days</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  @if (dashboardData) {
+    <div class="content-area">
+      
+      <div class="chart-section">
+        <app-chart-component [data]="
+                dashboardData.reportsOverTime">
+        </app-chart-component>
+      </div>
+
+      <div class="stats-grid">
+        <app-stats-card
+          title="Total Report"
+          [count]="dashboardData.stats.totalReports"
+          icon="assets/report-status.png">
+        </app-stats-card>
+
+        <app-stats-card
+          title="Successfully Claimed"
+          [count]="dashboardData.stats.successfullyClaimed"
+          icon="assets/claimed-item.png">
+        </app-stats-card>
+
+        <app-stats-card
+          title="Pending Action"
+          [count]="dashboardData.stats.pendingAction"
+          icon="assets/claim-status.png">
+        </app-stats-card>
+
+        <app-stats-card
+          title="Lost/Found Ratio"
+          [count]="dashboardData.stats.lostFoundRatio"
+          icon="assets/found-items.png">
+        </app-stats-card>
+      </div>
+
+    </div>
+  } @else {
+    <div class="loading-state">
+      <p>Loading dashboard data...</p>
+    </div>
+  }
+</div>
