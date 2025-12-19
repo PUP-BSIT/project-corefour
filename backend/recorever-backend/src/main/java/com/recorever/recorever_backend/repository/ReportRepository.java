@@ -230,11 +230,15 @@ public class ReportRepository {
     }
 
     public List<java.util.Map<String, Object>> getReportsOverTime(int days) {
-        String sql = "SELECT DATE_FORMAT(date_reported, '%Y-%m-%d') as label, COUNT(*) as value " +
-                     "FROM reports " +
-                     "WHERE date_reported >= DATE_SUB(NOW(), INTERVAL ? DAY) AND is_deleted = 0 " +
-                     "GROUP BY DATE_FORMAT(date_reported, '%Y-%m-%d') " +
-                     "ORDER BY label ASC";
-        return jdbcTemplate.queryForList(sql, days);
-    }
+    String sql = """
+        SELECT DATE_FORMAT(date_reported, '%m-%d') as label, 
+               COUNT(*) as value 
+        FROM reports 
+        WHERE date_reported >= DATE_SUB(NOW(), INTERVAL ? DAY) 
+          AND is_deleted = 0 
+        GROUP BY DATE_FORMAT(date_reported, '%m-%d') 
+        ORDER BY label ASC
+    """;
+    return jdbcTemplate.queryForList(sql, days);
+}
 }
