@@ -51,7 +51,7 @@ type ItemType = 'lost' | 'found';
     SearchBarComponent,
     ItemDetailModal,
     CodesModal,
-    UnarchiveConfirmationModal // Updated import
+    UnarchiveConfirmationModal
   ],
   templateUrl: './admin-item-list-page.html',
   styleUrl: './admin-item-list-page.scss',
@@ -173,6 +173,11 @@ export class AdminItemListPage implements OnInit {
     if (this.activeFilter() === 'az') {
       reports = [...reports].sort((a, b) =>
         a.item_name.localeCompare(b.item_name)
+      );
+    } else {
+      reports = [...reports].sort((a, b) =>
+        new Date(b.date_reported).getTime() -
+            new Date(a.date_reported).getTime()
       );
     }
 
