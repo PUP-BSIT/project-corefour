@@ -204,6 +204,17 @@ $claimed-dark: #333333;
       text-align: center;
       
       &:hover { background-color: #f0f0f0; }
+
+      &.disabled-option {
+        color: #999;
+        cursor: not-allowed;
+        background-color: #f9f9f9;
+        font-style: italic;
+
+        &:hover {
+          background-color: #f9f9f9;
+        }
+      }
     }
   }
 }

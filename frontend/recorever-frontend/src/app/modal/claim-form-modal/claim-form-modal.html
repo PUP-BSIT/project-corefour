@@ -44,27 +44,30 @@
         </div>
 
         <div class="status-section">
-            <div class="status-dropdown-wrapper">
-               <button 
-                   class="status-btn" 
-                   [ngClass]="(report()?.status || 'pending').toLowerCase()"
-                   (click)="toggleDropdown($event)">
-                 {{ report()?.status || 'Pending' }}
-                 <span class="arrow">▼</span>
-               </button>
-               
-               @if (isDropdownOpen()) {
-                 <div 
-                     class="dropdown-content" 
-                     (click)="$event.stopPropagation()">
-                    <div (click)="updateStatus('pending')">Pending</div>
-                    <div (click)="updateStatus('approved')">Verified</div>
-                    <div (click)="updateStatus('claimed')">Claimed</div>
-                    <div (click)="updateStatus('rejected')">Denied</div>
-                 </div>
-               }
-             </div>
-         </div>
+          <div class="status-dropdown-wrapper">
+            <button 
+                  class="status-btn" 
+                  [ngClass]="(report()?.status || 'pending').toLowerCase()"
+                  (click)="toggleDropdown($event)">
+              {{ report()?.status || 'Pending' }}
+              <span class="arrow">▼</span>
+            </button>
+            
+            @if (isDropdownOpen()) {
+              <div 
+                    class="dropdown-content"
+                    (click)="$event.stopPropagation()">
+                @for (option of STATUS_OPTIONS; track option.value) {
+                  <div
+                        [class.disabled-option]="isStatusDisabled(option.value)"
+                        (click)="onStatusOptionClick(option.value)">
+                    {{ option.label }}
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
       </div>
 
       <div class="right-panel" [formGroup]="claimForm">
