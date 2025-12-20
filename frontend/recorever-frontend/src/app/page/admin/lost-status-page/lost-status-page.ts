@@ -1,5 +1,3 @@
-// app/page/admin/lost-status-page/lost-status-page.ts
-
 import {
   Component,
   OnInit,
@@ -8,8 +6,8 @@ import {
   computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ItemsTableComponent } from
-  './items-table-component/items-table-component';
+import { ReportItemGrid } from
+  '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import { SearchBarComponent } from
   '../../../share-ui-blocks/search-bar/search-bar';
 import { Report, ReportFilters } from '../../../models/item-model';
@@ -30,7 +28,7 @@ type LostReportStatusFilter =
   selector: 'app-lost-status-page',
   standalone: true,
   imports: [CommonModule,
-            ItemsTableComponent,
+            ReportItemGrid,
             SearchBarComponent,
             ReportDetailModal],
   templateUrl: './lost-status-page.html',
@@ -62,15 +60,12 @@ export class LostStatusPage implements OnInit {
 
     return [...data].sort((a, b) => {
       if (sortType === 'az') {
-        // Sort by Item Name A-Z
         return (a.item_name || '').localeCompare(b.item_name || '');
       }
       if (sortType === 'date') {
-        // Sort by Date Reported (Newest first)
         return (Date.parse(b.date_reported || '') || 0) -
                (Date.parse(a.date_reported || '') || 0);
       }
-      // 'all' uses the natural order (already newest first from fetchReports)
       return 0;
     });
   });
@@ -89,7 +84,9 @@ export class LostStatusPage implements OnInit {
 
     const filters: ReportFilters = {
         type: 'lost',
-        status: selectedStatus !== 'All Statuses' ? selectedStatus : undefined,
+        status: selectedStatus === 'All Statuses' 
+          ? undefined 
+          : (selectedStatus as ReportFilters['status']),
         item_name: query || undefined,
     };
 
@@ -112,7 +109,6 @@ export class LostStatusPage implements OnInit {
     ).subscribe();
   }
 
-  // This method is now unused due to HTML restructure, but kept for future feature scope if needed.
   protected setStatusFilter(status: string): void {
     this.currentStatusFilter.set(status as LostReportStatusFilter);
     this.fetchReports();
@@ -129,16 +125,13 @@ export class LostStatusPage implements OnInit {
     this.fetchReports(); 
   }
 
-  // Update setSort to handle 'all' as a way to reset the status filter
   protected setSort(option: SortOption): void {
     if (option === 'all') {
-        // When 'All' tab is clicked, reset sort to default date and reset status filter
         this.currentStatusFilter.set('All Statuses');
-        this.currentSort.set('all'); // Set sort to 'all' (no internal sorting, uses natural fetched order)
+        this.currentSort.set('all');
         this.fetchReports();
         return;
     }
-
     this.currentSort.set(option);
   }
 
