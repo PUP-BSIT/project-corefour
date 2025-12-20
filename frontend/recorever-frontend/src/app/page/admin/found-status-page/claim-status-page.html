@@ -45,44 +45,14 @@
 
   <div class="claims-list">
     @if (isLoading()) {
-      <div class="loading-state">
-        Loading reports...
-      </div>
+      <div class="loading-state">Loading reports...</div>
     } @else if (filteredReports().length === 0) {
-      <div class="empty-state">
-        No reports found.
-      </div>
+      <div class="empty-state">No reports found.</div>
     } @else {
-      @for (report of filteredReports(); track report.report_id) {
-        <div class="claim-card">
-          <div class="claim-info">
-            <div class="ticket-number">
-              Reference Code: {{ report.surrender_code || 'N/A' }}
-            </div>
-
-            <h3 class="item-name">
-              {{ report.item_name }}
-            </h3>
-
-            <p class="proof-preview">
-              {{ report.description || 'No description provided' }}
-            </p>
-
-            <div class="meta-info">
-              Status: <span [class]="report.status.toLowerCase()">
-                {{ report.status }}</span>
-              &bull; {{ report.date_reported | date:'mediumDate' }}
-            </div>
-          </div>
-
-          <div class="claim-actions">
-            <button class="view-details-btn"
-                    (click)="onViewDetails(report.report_id)">
-              View Details
-            </button>
-          </div>
-        </div>
-      }
+      <app-report-item-grid
+        [items]="filteredReports()"
+        (cardClicked)="onViewDetails($event.report_id)">
+      </app-report-item-grid>
     }
   </div>
 
