@@ -28,15 +28,16 @@ export class CustomLocation {
     ]
   });
 
-  onGo(): void {
+  onConfirm(): void {
     if (this.locationForm.valid) {
-      this.locationSelected.emit(this.locationForm.controls.customLocation.value!);
+      this.locationSelected.emit(
+          this.locationForm.controls.customLocation.value!);
     } else {
       this.locationForm.markAllAsTouched();
     }
   }
 
-  onClose(): void {
+  onCancel(): void {
     this.close.emit();
   }
 }
