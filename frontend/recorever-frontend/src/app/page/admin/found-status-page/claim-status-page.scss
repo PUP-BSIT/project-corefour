@@ -136,30 +136,3 @@ $link-color: #3b82f6;
   width: 100%;
   margin-top: 1rem;
 }
-
-.claim-card {
-  background-color: $card-bg;
-  border: 1px solid $border-color;
-  border-radius: 12px;
-  padding: 1.5rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-
-  .item-name {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.25rem;
-  }
-
-  .meta-info span {
-    font-weight: bold;
-    &.pending { color: #eab308; }
-    &.approved { color: #22c55e; }
-  }
-}
-
-.claim-actions .view-details-btn {
-  background: none; border: none; color: $link-color; font-weight: 600; cursor: pointer;
-  &:hover { text-decoration: underline; }
-}

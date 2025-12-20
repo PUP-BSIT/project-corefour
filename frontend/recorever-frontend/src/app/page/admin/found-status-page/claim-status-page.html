@@ -45,13 +45,17 @@
 
   <div class="claims-list">
     @if (isLoading()) {
-      <div class="loading-state">Loading reports...</div>
+      <div class="loading-state">
+        Loading reports...
+      </div>
     } @else if (filteredReports().length === 0) {
-      <div class="empty-state">No reports found.</div>
+      <div class="empty-state">
+        No reports found.
+      </div>
     } @else {
       <app-report-item-grid
-        [items]="filteredReports()"
-        (cardClicked)="onViewDetails($event.report_id)">
+            [items]="filteredReports()"
+            (cardClicked)="onViewDetails($event.report_id)">
       </app-report-item-grid>
     }
   </div>
