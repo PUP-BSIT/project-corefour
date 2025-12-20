@@ -176,8 +176,29 @@ $shadow-color: #000000;
 
   &__content {
     margin-top: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    min-height: 400px;
+
+    .status-message {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+      font-size: 1.1rem;
+      color: $text-muted;
+
+      &.error {
+        color: #ef4444;
+      }
+    }
+  }
+}
+
+::ng-deep .modern-item-card {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
   }
 }

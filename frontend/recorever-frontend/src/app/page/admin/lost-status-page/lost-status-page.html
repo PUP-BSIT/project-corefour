@@ -42,12 +42,16 @@
   </div>
 
   <div class="report-status-page__content">
-    <app-items-table-component
-        [reports]="sortedReports()"
-        [isLoading]="isLoading()"
-        [isError]="isError()"
-        (viewDetails)="onViewDetails($event)">
-    </app-items-table-component>
+    @if (isLoading()) {
+      <div class="status-message">Loading reports...</div>
+    } @else if (isError()) {
+      <div class="status-message error">Error fetching reports. Please try again.</div>
+    } @else {
+      <app-report-item-grid
+          [items]="sortedReports()"
+          (cardClicked)="onViewDetails($event)">
+      </app-report-item-grid>
+    }
   </div>
 
   @if (selectedReport()) {
