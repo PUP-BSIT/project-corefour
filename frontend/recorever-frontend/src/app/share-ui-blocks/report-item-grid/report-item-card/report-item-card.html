@@ -104,13 +104,22 @@
         UNARCHIVE
       </button>
     } @else if (report().type === 'found' && !isOwner()) {
-      <button
-        mat-button class="view-ticket-btn"
-        (click)="onTicketClick();
-        $event.stopPropagation()">
-        REFERENCE CODE
-        <mat-icon>keyboard_arrow_right</mat-icon>
-      </button>
+      @if (shouldShowCodeAutomatically()) {
+        <div class="admin-reference-display">
+          <span class="label">REF CODE:</span>
+          <span class="code">{{ referenceCodeValue() }}</span>
+        </div>
+      } 
+      
+      @else {
+        <button 
+              mat-button class="view-ticket-btn"
+              (click)="onTicketClick();
+              $event.stopPropagation()">
+          REFERENCE CODE
+          <mat-icon>keyboard_arrow_right</mat-icon>
+        </button>
+      }
     }
   </mat-card-actions>
 </mat-card>

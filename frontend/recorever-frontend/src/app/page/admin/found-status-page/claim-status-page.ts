@@ -11,6 +11,8 @@ import { RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import { ItemService } from '../../../core/services/item-service';
+import { AuthService } from '../../../core/auth/auth-service';
+
 import { Report } from '../../../models/item-model';
 
 import { 
@@ -43,6 +45,7 @@ type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'claimed' | 'rejec
 })
 export class ClaimStatusPage implements OnInit {
   private itemService = inject(ItemService);
+  private authService = inject(AuthService);
 
   protected reports = signal<Report[]>([]);
   protected searchQuery = signal(''); 
@@ -53,6 +56,12 @@ export class ClaimStatusPage implements OnInit {
   protected selectedReport = signal<Report | null>(null);
 
   protected readonly statusFilters: StatusFilter[] = ['All Statuses', 'pending', 'approved', 'claimed', 'rejected'];
+
+  protected isAdmin = computed(() => {
+    const user = this.authService.currentUserValue;
+    const roleCheck = user?.role === 'admin';
+    return roleCheck;
+  });
 
   protected filteredReports = computed(() => {
     let data = this.reports();
