@@ -17,6 +17,14 @@ html {
   ));
 }
 
+.success-snackbar {
+  --mdc-snackbar-container-color: #2e7d32; 
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+  border-radius: 8px !important;
+  font-weight: 500;
+}
+
 body {
   // Default the application to a light color theme. This can be changed to
   // `dark` to enable the dark color theme, or to `light dark` to defer to the

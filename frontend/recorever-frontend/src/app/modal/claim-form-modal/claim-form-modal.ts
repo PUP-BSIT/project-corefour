@@ -45,7 +45,7 @@ export class ClaimFormModal implements OnInit {
 
   @Input({ required: true }) claimData!: Claim | Report; 
   @Output() close = new EventEmitter<void>();
-  @Output() statusChange = new EventEmitter<void>();
+  @Output() statusChange = new EventEmitter<string>();
 
   protected readonly STATUS_OPTIONS = [
     { value: 'pending', label: 'Pending' },
@@ -175,7 +175,7 @@ export class ClaimFormModal implements OnInit {
         finalize(() => {
           this.isSaving.set(false);
           this.closeDropdown();
-          this.statusChange.emit(); 
+          this.statusChange.emit(newStatus); 
         })
       ).subscribe();
     } else {
@@ -210,7 +210,7 @@ export class ClaimFormModal implements OnInit {
         }),
         finalize(() => {
           this.isSaving.set(false);
-          this.statusChange.emit();
+          this.statusChange.emit('claimed');
           this.onClose();
         })
       ).subscribe();
