@@ -36,7 +36,7 @@
       class="filters__button"
       [class.filters__button--active]="activeFilter() === 'az'"
       (click)="activeFilter.set('az'); activeDropdown.set(null)">
-      A-Z ↑
+      A-Z →
     </button>
 
     <div class="filters__dropdown-container">
@@ -111,6 +111,7 @@
     <app-report-item-grid
       [items]="visibleReports()"
       [currentUserId]="currentUserId()"
+      (cardClicked)="onCardClick($event)"
       (cardTicketClicked)="onTicketClick($event)"
       (cardEditClicked)="onEditClick($event)"
       (cardDeleteClicked)="onDeleteClick($event)"
@@ -162,4 +163,17 @@
       [code]="codeModalValue()"
       (close)="viewCodeItem.set(null)">
   </app-codes-modal>
+}
+
+@if (selectedItem(); as item) {
+  <app-item-detail-modal
+      [item]="item"
+      [currentUserId]="currentUserId()"
+      [userProfilePicture]="getUserProfilePicture()"
+      (close)="selectedItem.set(null)"
+      (viewTicket)="onModalViewTicket()"
+      (editClicked)="onModalEdit()"
+      (deleteClicked)="onModalDelete()"
+      (viewCodeClicked)="onModalViewCode()">
+  </app-item-detail-modal>
 }

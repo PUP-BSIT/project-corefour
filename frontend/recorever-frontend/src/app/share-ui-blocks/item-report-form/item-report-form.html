@@ -37,11 +37,11 @@
       <input
           matInput
           type="date"
-          formControlName="date_reported"
+          formControlName="date_lost_found"
           placeholder="mm/dd/yyyy"
        />
-      @if (reportForm.controls.date_reported.invalid &&
-        reportForm.controls.date_reported.touched) {
+      @if (reportForm.controls.date_lost_found.invalid &&
+        reportForm.controls.date_lost_found.touched) {
         <mat-error>Date is required.</mat-error>
       }
     </mat-form-field>

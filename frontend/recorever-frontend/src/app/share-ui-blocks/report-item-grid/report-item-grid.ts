@@ -13,11 +13,17 @@ import { Report } from '../../models/item-model';
 export class ReportItemGrid {
   items = input.required<Report[]>();
   currentUserId = input<number | null>(null);
+  isUserProfilePage = input<boolean>(false);
 
+  @Output() cardClicked = new EventEmitter<Report>();
   @Output() cardTicketClicked = new EventEmitter<Report>();
   @Output() cardEditClicked = new EventEmitter<Report>();
   @Output() cardDeleteClicked = new EventEmitter<Report>();
   @Output() cardViewCodeClicked = new EventEmitter<Report>();
+
+  handleCardClick(itemData: Report): void {
+    this.cardClicked.emit(itemData);
+  }
 
   handleTicketClick(itemData: Report): void {
     this.cardTicketClicked.emit(itemData);
