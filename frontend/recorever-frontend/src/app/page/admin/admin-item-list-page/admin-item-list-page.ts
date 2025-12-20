@@ -20,16 +20,18 @@ import {
 } from '../../../share-ui-blocks/search-bar/search-bar';
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
+import { AdminService } from '../../../core/services/admin-service';
 import {
   ItemDetailModal
 } from '../../../modal/item-detail-modal/item-detail-modal';
-//import { EditItemModal } from '../../../modal/edit-item-modal/edit-item-modal';
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
+import {
+  UnarchiveConfirmationModal
+} from '../../../modal/unarchive-confirmation-modal/unarchive-confirmation-modal';
 
 import type {
   Report,
-  ReportFilters,
-  ReportSubmissionWithFiles
+  ReportFilters
 } from '../../../models/item-model';
 import {
   StandardLocations,
@@ -48,8 +50,8 @@ type ItemType = 'lost' | 'found';
     ReportItemGrid,
     SearchBarComponent,
     ItemDetailModal,
-    //EditItemModal,
-    CodesModal
+    CodesModal,
+    UnarchiveConfirmationModal // Updated import
   ],
   templateUrl: './admin-item-list-page.html',
   styleUrl: './admin-item-list-page.scss',
@@ -58,6 +60,7 @@ export class AdminItemListPage implements OnInit {
   private route = inject(ActivatedRoute);
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
+  private adminService = inject(AdminService);
 
   currentUser = toSignal(this.authService.currentUser$);
   currentUserId = computed<number | null>(
@@ -88,6 +91,7 @@ export class AdminItemListPage implements OnInit {
   selectedItem = signal<Report | null>(null);
   editingItem = signal<Report | null>(null);
   viewCodeItem = signal<Report | null>(null);
+  itemToUnarchive = signal<Report | null>(null);
 
   codeModalTitle = computed(() => {
     const item = this.viewCodeItem();
@@ -266,8 +270,34 @@ export class AdminItemListPage implements OnInit {
   }
 
   onUnarchive(item: Report): void {
-    console.log('Unarchive triggered for:', item.report_id);
-    // TODO: Implement unarchive API call
+    this.itemToUnarchive.set(item);
+  }
+
+  processUnarchive(): void {
+    const item = this.itemToUnarchive();
+    if (!item) return;
+
+    const targetStatus: string = 'approved';
+
+    this.adminService.updateReportStatus(item.report_id, targetStatus)
+      .pipe(
+        tap(() => {
+          this.allReports.update((reports: Report[]) =>
+            reports.filter((r: Report) => r.report_id !== item.report_id)
+          );
+          this.itemToUnarchive.set(null);
+        }),
+        catchError((err: HttpErrorResponse) => {
+          console.error('Failed to unarchive item', err);
+          alert('Failed to unarchive item.');
+          return of(null);
+        })
+      )
+      .subscribe();
+  }
+
+  cancelUnarchive(): void {
+    this.itemToUnarchive.set(null);
   }
 
   onCardClick(item: Report): void {
@@ -321,28 +351,6 @@ export class AdminItemListPage implements OnInit {
       this.onUnarchive(item);
     }
   }
-
-  // onSaveEdit(formData: ReportSubmissionWithFiles): void {
-  //   const item = this.editingItem();
-  //   if (!item) return;
-
-  //   this.itemService.updateReport(item.report_id, formData).subscribe({
-  //     next: (updatedReport: Report) => {
-  //       this.allReports.update((items: Report[]) =>
-  //         items.map((i: Report) =>
-  //           i.report_id === updatedReport.report_id ? updatedReport : i
-  //         )
-  //       );
-
-  //       this.editingItem.set(null);
-  //       alert('Report updated successfully!');
-  //     },
-  //     error: (err: HttpErrorResponse) => {
-  //       console.error('Failed to update report', err);
-  //       alert('Failed to update report. Please try again.');
-  //     }
-  //   });
-  // }
 
   getUserProfilePicture(): string | null {
     return null;

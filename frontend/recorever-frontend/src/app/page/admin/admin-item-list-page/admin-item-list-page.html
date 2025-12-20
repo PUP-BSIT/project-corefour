@@ -136,10 +136,9 @@
   </app-item-detail-modal>
 }
 
-<!-- @if (editingItem(); as item) {
-  <app-edit-item-modal
-      [item]="item"
-      (close)="editingItem.set(null)"
-      (save)="onSaveEdit($event)">
-  </app-edit-item-modal>
-} -->
+@if (itemToUnarchive()) {
+  <app-unarchive-confirmation-modal
+    (confirm)="processUnarchive()"
+    (cancel)="cancelUnarchive()">
+  </app-unarchive-confirmation-modal>
+}

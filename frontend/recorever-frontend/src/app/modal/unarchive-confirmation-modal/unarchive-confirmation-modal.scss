@@ -1,0 +1,74 @@
+:host {
+  display: block;
+  z-index: 2000;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-container {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 30px 50px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  font-family: Arial, sans-serif;
+
+  .modal-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #000;
+    margin: 0 0 10px 0;
+  }
+
+  .modal-message {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 30px;
+    font-style: italic;
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+
+    .btn {
+      flex: 1;
+      padding: 12px 0;
+      border-radius: 6px;
+      font-size: 20px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      color: #fff;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    .btn-yes {
+      background-color: #000;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    .btn-cancel {
+      background-color: #a0a0a0;
+      border: 1px solid #808080;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+  }
+}
