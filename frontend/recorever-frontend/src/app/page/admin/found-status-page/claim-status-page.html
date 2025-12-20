@@ -65,7 +65,7 @@
     <app-claim-form-modal 
         [claimData]="selectedReport()!" 
         (close)="onCloseModal()"
-        (statusChange)="onStatusChanged()">
+        (statusChange)="onStatusChanged($event)">
     </app-claim-form-modal>
   }
 </div>

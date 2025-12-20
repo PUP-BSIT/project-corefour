@@ -12,6 +12,7 @@ import { finalize } from 'rxjs/operators';
 
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
+import { ToastService } from '../../../core/services/toast-service';
 
 import { Report } from '../../../models/item-model';
 
@@ -26,7 +27,7 @@ import {
 } from '../../../modal/claim-form-modal/claim-form-modal';
 
 type SortOption = 'all' | 'az' | 'date';
-type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'claimed' | 'rejected';
+type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'rejected';
 
 @Component({
   selector: 'app-claim-status-page',
@@ -46,6 +47,7 @@ type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'claimed' | 'rejec
 export class ClaimStatusPage implements OnInit {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
+  private toast = inject(ToastService);
 
   protected reports = signal<Report[]>([]);
   protected searchQuery = signal(''); 
@@ -55,7 +57,7 @@ export class ClaimStatusPage implements OnInit {
   
   protected selectedReport = signal<Report | null>(null);
 
-  protected readonly statusFilters: StatusFilter[] = ['All Statuses', 'pending', 'approved', 'claimed', 'rejected'];
+  protected readonly statusFilters: StatusFilter[] = ['All Statuses', 'pending', 'approved', 'rejected'];
 
   protected isAdmin = computed(() => {
     const user = this.authService.currentUserValue;
@@ -68,6 +70,8 @@ export class ClaimStatusPage implements OnInit {
     const query = this.searchQuery().toLowerCase();
     const status = this.currentStatusFilter();
     const sortType = this.currentSort();
+
+    data = data.filter(r => r.status.toLowerCase() !== 'claimed');
 
     if (status !== 'All Statuses') {
       data = data.filter(r => r.status.toLowerCase() === status.toLowerCase());
@@ -136,7 +140,30 @@ export class ClaimStatusPage implements OnInit {
     this.selectedReport.set(null);
   }
 
-  protected onStatusChanged(): void {
+  protected onStatusChanged(newStatus: string): void {
     this.loadReports();
+    this.onCloseModal();
+
+    let message = '';
+    let actionLabel = '';
+    let actionRoute = '';
+
+    switch (newStatus.toLowerCase()) {
+      case 'claimed':
+        message = 'Item successfully marked as Claimed';
+        actionLabel = 'View Archive';
+        actionRoute = '/admin/archive/claimed';
+        break;
+      case 'approved':
+        message = 'Item status updated to Verified';
+        break;
+      case 'rejected':
+        message = 'Item status updated to Denied';
+        break;
+      default:
+        message = 'Status updated successfully';
+    }
+
+    this.toast.showSuccess(message, actionLabel, actionRoute);
   }
 }
