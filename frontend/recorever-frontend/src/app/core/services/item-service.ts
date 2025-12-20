@@ -2,10 +2,10 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { 
-  Report, 
-  ReportFilters, 
-  FinalReportSubmission 
+import {
+  Report,
+  ReportFilters,
+  FinalReportSubmission
 } from '../../models/item-model';
 
 @Injectable({
@@ -16,7 +16,7 @@ export class ItemService {
   private apiUrl = environment.apiUrl;
 
   submitFullReport(
-      report: FinalReportSubmission, 
+      report: FinalReportSubmission,
       files: File[]
   ): Observable<Report> {
     const formData = new FormData();
@@ -33,7 +33,7 @@ export class ItemService {
     }
 
     return this.http.post<Report>(
-        `${this.apiUrl}/reports/full-submit`, 
+        `${this.apiUrl}/reports/full-submit`,
         formData
     );
   }
@@ -50,7 +50,7 @@ export class ItemService {
     }
     if (filters.user_id) {
       params = params.set(
-          'user_id', 
+          'user_id',
           filters.user_id.toString()
       );
     }
@@ -72,8 +72,14 @@ export class ItemService {
 
   createReport(report: FinalReportSubmission): Observable<Report> {
     return this.http.post<Report>(
-        `${this.apiUrl}/report`, 
+        `${this.apiUrl}/report`,
         report
     );
   }
+
+  updateReportStatus(reportId: number, status: string): Observable<Report> {
+  return this.http.put<Report>(
+    `${this.apiUrl}/report/${reportId}/status`,
+    { status }
+  );}
 }

@@ -30,59 +30,46 @@
     font-size: 24px;
     font-weight: 700;
     color: #000;
-    margin: 0 0 10px 0;
-  }
-
-  .modal-message {
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 20px;
+    margin: 0 0 25px 0;
   }
 
   .input-group {
-    width: 100%;
-    margin-bottom: 15px;
-    position: relative;
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+
+    .date-field {
+      flex: 1;
+      text-align: left;
+
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+      }
+    }
   }
 
   .modal-input {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 16px;
     box-sizing: border-box;
-    transition: border-color 0.2s;
 
     &:focus {
       outline: none;
       border-color: #000;
     }
-
-    &.error {
-      border-color: #dc3545;
-    }
-  }
-
-  .char-count {
-    text-align: right;
-    font-size: 12px;
-    color: #666;
-    margin-top: 5px;
-  }
-
-  .error-text {
-    color: #dc3545;
-    font-size: 14px;
-    margin-bottom: 15px;
-    text-align: left;
   }
 
   .button-group {
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-top: 20px;
 
     .btn {
       flex: 1;
@@ -95,7 +82,7 @@
       color: #fff;
 
       &:hover {
-        opacity: 0.7;
+        opacity: 0.9;
       }
 
       &:disabled {

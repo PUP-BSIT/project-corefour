@@ -1,14 +1,16 @@
-<div class="item-grid-container">
-  @for (item of items(); track $index) {
+<div class="report-item-grid">
+  @for (item of items(); track item.report_id) {
     <app-report-item-card
       [report]="item"
       [currentUserId]="currentUserId()"
       [isUserProfilePage]="isUserProfilePage()"
+      [isArchiveView]="isArchiveView()"
       (cardClicked)="handleCardClick(item)"
       (ticketClicked)="handleTicketClick(item)"
       (editClicked)="handleEditClick(item)"
       (deleteClicked)="handleDeleteClick(item)"
-      (viewCodeClicked)="handleViewCodeClick(item)">
+      (viewCodeClicked)="handleViewCodeClick(item)"
+      (unarchiveClicked)="handleUnarchive(item)">
     </app-report-item-card>
   }
 </div>
