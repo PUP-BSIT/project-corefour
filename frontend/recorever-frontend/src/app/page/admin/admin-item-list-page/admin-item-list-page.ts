@@ -7,7 +7,7 @@ import {
   HostBinding
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Data } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, catchError, of, tap } from 'rxjs';
@@ -28,17 +28,22 @@ import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 import {
   UnarchiveConfirmationModal
 } from '../../../modal/unarchive-confirmation-modal/unarchive-confirmation-modal';
+import {
+  CustomLocation
+} from '../../../modal/custom-location/custom-location';
+import {
+  DateRangeModal
+} from '../../../modal/date-range-modal/date-range-modal';
 
 import type {
   Report,
   ReportFilters
 } from '../../../models/item-model';
 import {
-  StandardLocations,
   StandardRelativeDateFilters
 } from '../../../models/item-model';
 
-type FilterType = 'all' | 'az' | 'date' | 'location';
+type FilterType = 'all' | 'az' | 'za' | 'date' | 'location';
 type ActiveDropdown = 'date' | 'location' | null;
 type ItemType = 'lost' | 'found';
 
@@ -51,7 +56,9 @@ type ItemType = 'lost' | 'found';
     SearchBarComponent,
     ItemDetailModal,
     CodesModal,
-    UnarchiveConfirmationModal
+    UnarchiveConfirmationModal,
+    CustomLocation,
+    DateRangeModal
   ],
   templateUrl: './admin-item-list-page.html',
   styleUrl: './admin-item-list-page.scss',
@@ -64,7 +71,7 @@ export class AdminItemListPage implements OnInit {
 
   currentUser = toSignal(this.authService.currentUser$);
   currentUserId = computed<number | null>(
-    () => this.currentUser()?.user_id ?? null
+      () => this.currentUser()?.user_id ?? null
   );
 
   itemType = signal<ItemType>('lost');
@@ -86,6 +93,7 @@ export class AdminItemListPage implements OnInit {
   activeDropdown = signal<ActiveDropdown>(null);
   selectedDateFilter = signal<string>('Any time');
   selectedLocationFilter = signal<string>('Any Location');
+  customDateRange = signal<{start: Date, end: Date} | null>(null);
   searchQuery = signal<string>('');
 
   selectedItem = signal<Report | null>(null);
@@ -93,36 +101,16 @@ export class AdminItemListPage implements OnInit {
   viewCodeItem = signal<Report | null>(null);
   itemToUnarchive = signal<Report | null>(null);
 
-  codeModalTitle = computed(() => {
-    const item = this.viewCodeItem();
-    if (!item) return '';
+  showLocationModal = signal<boolean>(false);
+  showDateRangeModal = signal<boolean>(false);
 
-    if (item.type === 'lost' || item.claim_code) {
-        return 'Ticket ID';
-    }
-
-    return 'Reference Code';
+  readonly locationFilters = computed<string[]>(() => {
+    const reports = this.allReports();
+    const usedLocations =
+        new Set(reports.map(r => r.location).filter(l => !!l));
+    const sortedLocations = Array.from(usedLocations).sort();
+    return ['Any Location', ...sortedLocations, 'Custom Location...'];
   });
-
-  codeModalValue = computed(() => {
-    const item = this.viewCodeItem();
-    if (!item) return '';
-
-    if (item.claim_code) {
-      return item.claim_code;
-    }
-
-    if (item.type === 'lost') {
-      return item.report_id ? `Report #${item.report_id}` : 'Pending';
-    }
-
-    return item.surrender_code || 'N/A';
-  });
-
-  readonly locationFilters: string[] = [
-    'Any Location',
-    ...Object.values(StandardLocations) as string[],
-  ];
 
   readonly availableDateFilters = computed<string[]>(() => {
     const reports = this.allReports();
@@ -139,7 +127,7 @@ export class AdminItemListPage implements OnInit {
             dynamicFilters.push(filter);
         }
     }
-    return ['Any time', ...dynamicFilters];
+    return ['Any time', ...dynamicFilters, 'Custom Range...'];
   });
 
   readonly dateFilters = this.availableDateFilters;
@@ -162,7 +150,15 @@ export class AdminItemListPage implements OnInit {
     }
 
     const dateFilter = this.selectedDateFilter();
-    if (dateFilter !== 'Any time') {
+    if (dateFilter === 'Custom Range...') {
+       const range = this.customDateRange();
+       if (range) {
+         reports = reports.filter(report => {
+           const rDate = new Date(report.date_reported);
+           return rDate >= range.start && rDate <= range.end;
+         });
+       }
+    } else if (dateFilter !== 'Any time') {
       const cutoffTime = this.getCutoffTime(dateFilter);
       reports = reports.filter(report => {
         const reportTime = new Date(report.date_reported).getTime();
@@ -174,27 +170,40 @@ export class AdminItemListPage implements OnInit {
       reports = [...reports].sort((a, b) =>
         a.item_name.localeCompare(b.item_name)
       );
-    } else {
+    } else if (this.activeFilter() === 'za') {
       reports = [...reports].sort((a, b) =>
-        new Date(b.date_reported).getTime() -
-            new Date(a.date_reported).getTime()
+        b.item_name.localeCompare(a.item_name)
       );
     }
 
     return reports;
   });
 
+  codeModalTitle = computed(() => {
+    const item = this.viewCodeItem();
+    if (!item) return '';
+    if (item.type === 'lost' || item.claim_code) return 'Ticket ID';
+    return 'Reference Code';
+  });
+
+  codeModalValue = computed(() => {
+    const item = this.viewCodeItem();
+    if (!item) return '';
+    if (item.claim_code) return item.claim_code;
+    if (item.type === 'lost') return item.report_id ? `Report #${item.report_id}` : 'Pending';
+    return item.surrender_code || 'N/A';
+  });
+
   ngOnInit(): void {
     this.route.data.pipe(
-      tap((data) => {
+      tap((data: Data) => {
         this.isLoading.set(true);
         const status = data['status'];
         const type = data['type'] || data['itemType'];
-
         this.itemType.set(type);
         this.isArchiveView.set(status === 'matched' || status === 'claimed');
       }),
-      switchMap((data) => {
+      switchMap((data: Data) => {
         const filters: ReportFilters = {
           type: data['type'] || data['itemType'],
           status: data['status'] || 'approved'
@@ -241,19 +250,49 @@ export class AdminItemListPage implements OnInit {
 
   toggleDropdown(dropdown: ActiveDropdown): void {
     this.activeDropdown.set(
-      this.activeDropdown() === dropdown ? null : dropdown
-    );
+      this.activeDropdown() === dropdown ? null : dropdown);
+  }
+
+  toggleSort(): void {
+    if (this.activeFilter() === 'az') {
+        this.activeFilter.set('za');
+    } else {
+        this.activeFilter.set('az');
+    }
+    this.activeDropdown.set(null);
   }
 
   selectDateFilter(filter: string): void {
-    this.selectedDateFilter.set(filter);
+    if (filter === 'Custom Range...') {
+      this.showDateRangeModal.set(true);
+    } else {
+      this.selectedDateFilter.set(filter);
+      this.customDateRange.set(null);
+    }
     this.activeDropdown.set(null);
   }
 
   selectLocationFilter(filter: string): void {
-    this.activeFilter.set('location');
-    this.selectedLocationFilter.set(filter);
+    if (filter === 'Other... (Custom Location)') {
+      this.showLocationModal.set(true);
+    } else {
+      this.activeFilter.set('location');
+      this.selectedLocationFilter.set(filter);
+    }
     this.activeDropdown.set(null);
+  }
+
+  onCustomLocationSelected(location: string): void {
+    this.showLocationModal.set(false);
+    this.activeFilter.set('location');
+    this.selectedLocationFilter.set(location);
+  }
+
+  onDateRangeConfirm(range: {start: Date, end: Date}): void {
+    this.showDateRangeModal.set(false);
+    range.end.setHours(23, 59, 59, 999);
+    this.customDateRange.set(range);
+    this.selectedDateFilter.set('Custom Range...');
   }
 
   clearFilters(): void {
@@ -262,16 +301,16 @@ export class AdminItemListPage implements OnInit {
     this.selectedLocationFilter.set('Any Location');
     this.searchQuery.set('');
     this.activeDropdown.set(null);
+    this.customDateRange.set(null);
   }
 
-  private updatePageTitle(data: any): void {
-    if (data['status'] === 'matched') {
-      this.pageTitle.set('Archive: Resolved Items');
-    } else if (data['status'] === 'claimed') {
-      this.pageTitle.set('Archive: Claimed Items');
-    } else {
-      this.pageTitle.set('Admin Item List');
-    }
+  private updatePageTitle(data: Data): void {
+    if (data['status'] === 'matched')
+        this.pageTitle.set('Archive: Resolved Items');
+    else if (data['status'] === 'claimed')
+        this.pageTitle.set('Archive: Claimed Items');
+    else
+        this.pageTitle.set('Admin Item List');
   }
 
   onUnarchive(item: Report): void {

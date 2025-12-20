@@ -19,9 +19,10 @@
     <button
       type="button"
       class="filters__button"
-      [class.filters__button--active]="activeFilter() === 'az'"
-      (click)="activeFilter.set('az'); activeDropdown.set(null)">
-      A-Z ↓
+      [class.filters__button--active]="activeFilter() === 'az' ||
+          activeFilter() === 'za'"
+      (click)="toggleSort()">
+      {{ activeFilter() === 'za' ? 'Z-A ↑' : 'A-Z ↓' }}
     </button>
 
     <div class="filters__dropdown-container">
@@ -64,7 +65,7 @@
 
       @if (activeDropdown() === 'location') {
         <div class="dropdown-panel dropdown-panel--location">
-          @for (location of locationFilters; track location) {
+          @for (location of locationFilters(); track location) {
             <button
               class="dropdown-panel__item"
               (click)="selectLocationFilter(location)">
@@ -141,4 +142,18 @@
     (confirm)="processUnarchive()"
     (cancel)="cancelUnarchive()">
   </app-unarchive-confirmation-modal>
+}
+
+@if (showLocationModal()) {
+  <app-custom-location
+    (locationSelected)="onCustomLocationSelected($event)"
+    (close)="showLocationModal.set(false)">
+  </app-custom-location>
+}
+
+@if (showDateRangeModal()) {
+  <app-date-range-modal
+    (confirm)="onDateRangeConfirm($event)"
+    (cancel)="showDateRangeModal.set(false)">
+  </app-date-range-modal>
 }
