@@ -17,6 +17,9 @@ import {
   SearchBarComponent 
 } from '../../../share-ui-blocks/search-bar/search-bar';
 import { 
+  ReportItemGrid 
+} from '../../../share-ui-blocks/report-item-grid/report-item-grid';
+import { 
   ClaimFormModal 
 } from '../../../modal/claim-form-modal/claim-form-modal';
 
@@ -31,7 +34,8 @@ type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'claimed' | 'rejec
     RouterModule, 
     SearchBarComponent, 
     DatePipe, 
-    ClaimFormModal
+    ClaimFormModal,
+    ReportItemGrid
   ],
   templateUrl: './claim-status-page.html',
   styleUrl: './claim-status-page.scss',
