@@ -1,6 +1,8 @@
 $verified-color: #4CAF50;
 $claimed-color: #D32F2F;
 $pending-color: #e3cf14;
+$matched-color: #1976D2;
+$rejected-color: #000000;
 
 .status-badge {
   display: inline-block;
@@ -29,5 +31,17 @@ $pending-color: #e3cf14;
     background-color: $pending-color;
     color: white;
     box-shadow: 0 2px 5px rgba($pending-color, 0.4);
+  }
+
+  &.matched {
+    background-color: $matched-color;
+    color: white;
+    box-shadow: 0 2px 5px rgba($pending-color, 0.4);
+  }
+  
+  &.rejected {
+  background-color: $rejected-color;
+  color: white;
+  box-shadow: 0 2px 5px rgba($pending-color, 0.4);
   }
 }
