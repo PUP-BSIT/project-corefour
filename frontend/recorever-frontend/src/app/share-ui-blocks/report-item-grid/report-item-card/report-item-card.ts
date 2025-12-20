@@ -37,6 +37,7 @@ export class ReportItemCard {
   report = input.required<Report>();
   currentUserId = input<number | null>(null);
   isUserProfilePage = input<boolean>(false);
+  isAdmin = input<boolean>(false);
 
   @Output() cardClicked = new EventEmitter<void>();
   @Output() ticketClicked = new EventEmitter<void>();
@@ -45,6 +46,11 @@ export class ReportItemCard {
   @Output() viewCodeClicked = new EventEmitter<void>();
 
   currentImageIndex = 0;
+
+  shouldShowCodeAutomatically = computed(() => {
+    const adminStatus = this.isAdmin();
+    return adminStatus;
+  });
 
   photoUrls = computed((): string[] => {
     const urls = this.report().photoUrls;
@@ -86,6 +92,11 @@ export class ReportItemCard {
       ? 'View Ticket ID'
       : 'View Reference Code';
   }
+
+  referenceCodeValue = computed(() => {
+    const r = this.report();
+    return r.surrender_code || r.claim_code || 'N/A';
+  });
 
   onTicketClick(): void {
     this.ticketClicked.emit();

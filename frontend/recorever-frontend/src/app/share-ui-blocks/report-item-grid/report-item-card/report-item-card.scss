@@ -150,3 +150,27 @@ $text-secondary: #8e8e93;
     }
   }
 }
+
+.card-footer {
+  padding: 8px 16px;
+
+  .admin-reference-display {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    font-family: 'Monaco', 'Consolas', monospace;
+    
+    .label {
+      font-size: 0.65rem;
+      color: $text-secondary;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .code {
+      font-size: 0.9rem;
+      color: $primary-purple;
+      font-weight: 700;
+    }
+  }
+}
