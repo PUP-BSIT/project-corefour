@@ -2,10 +2,20 @@
   <input
     class="search-input"
     type="text"
-    placeholder="Item Name"
+    placeholder="Search"
     [formControl]="searchControl"
+    [matAutocomplete]="auto"
     (keyup.enter)="onSearch()"
   />
+
+  <mat-autocomplete #auto="matAutocomplete"
+                    (optionSelected)="onOptionSelected()">
+    @for (option of suggestions; track option) {
+      <mat-option [value]="option">
+        {{ option }}
+      </mat-option>
+    }
+  </mat-autocomplete>
 
   <button class="search-button" type="button" (click)="onSearch()">
     <img src="assets/search-icon.png" alt="Search">
