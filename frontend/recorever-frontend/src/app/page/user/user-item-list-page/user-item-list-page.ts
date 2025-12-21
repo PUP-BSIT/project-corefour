@@ -79,6 +79,8 @@ export class UserItemListPage {
 
   viewCodeItem = signal<Report | null>(null);
   selectedItem = signal<Report | null>(null);
+  
+  searchSuggestions = signal<string[]>([]);
 
   codeModalTitle = computed(() => {
     const item = this.viewCodeItem();
@@ -274,8 +276,32 @@ export class UserItemListPage {
     this.fetchReports();
   }
 
+  onQueryChange(query: string): void {
+    if (!query || query.trim().length === 0) {
+        this.searchSuggestions.set([]);
+        return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const reports = this.allReports();
+
+    const suggestions = new Set<string>();
+
+    reports.forEach(report => {
+        if (report.item_name.toLowerCase().includes(lowerQuery)) {
+            suggestions.add(report.item_name);
+        }
+        if (report.location.toLowerCase().includes(lowerQuery)) {
+            suggestions.add(report.location);
+        }
+    });
+
+    this.searchSuggestions.set(Array.from(suggestions).slice(0, 5));
+  }
+
   onSearchSubmit(query: string): void {
     this.fetchReports(query);
+    this.searchSuggestions.set([]);
   }
 
   onCardClick(item: Report): void {
