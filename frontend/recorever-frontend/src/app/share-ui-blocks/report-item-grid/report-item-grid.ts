@@ -14,6 +14,7 @@ export class ReportItemGrid {
   items = input.required<Report[]>();
   currentUserId = input<number | null>(null);
   isUserProfilePage = input<boolean>(false);
+  isArchiveView = input<boolean>(false);
   isAdmin = input<boolean>(false);
 
   @Output() cardClicked = new EventEmitter<Report>();
@@ -21,6 +22,7 @@ export class ReportItemGrid {
   @Output() cardEditClicked = new EventEmitter<Report>();
   @Output() cardDeleteClicked = new EventEmitter<Report>();
   @Output() cardViewCodeClicked = new EventEmitter<Report>();
+  @Output() unarchiveClicked = new EventEmitter<Report>();
 
   handleCardClick(itemData: Report): void {
     this.cardClicked.emit(itemData);
@@ -40,5 +42,9 @@ export class ReportItemGrid {
 
   handleViewCodeClick(itemData: Report): void {
     this.cardViewCodeClicked.emit(itemData);
+  }
+
+  handleUnarchive(itemData: Report): void {
+    this.unarchiveClicked.emit(itemData);
   }
 }

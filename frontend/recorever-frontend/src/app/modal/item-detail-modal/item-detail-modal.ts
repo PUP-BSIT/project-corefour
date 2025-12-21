@@ -29,12 +29,14 @@ export class ItemDetailModal {
   item = input.required<Report>();
   userProfilePicture = input<string | null>(null);
   currentUserId = input<number | null>(null);
+  isArchiveView = input<boolean>(false);
 
   @Output() close = new EventEmitter<void>();
   @Output() viewTicket = new EventEmitter<void>();
   @Output() editClicked = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
   @Output() viewCodeClicked = new EventEmitter<void>();
+  @Output() unarchiveClicked = new EventEmitter<void>();
 
   currentImageIndex = 0;
 
@@ -114,5 +116,9 @@ export class ItemDetailModal {
   onViewCode(event: Event): void {
     event.stopPropagation();
     this.viewCodeClicked.emit();
+  }
+
+  onUnarchive(): void {
+    this.unarchiveClicked.emit();
   }
 }
