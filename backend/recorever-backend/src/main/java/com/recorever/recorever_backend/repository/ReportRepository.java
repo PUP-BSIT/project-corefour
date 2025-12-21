@@ -63,9 +63,10 @@ public class ReportRepository {
     return jdbcTemplate.query(sql, reportMapper);
   }
 
-  public List<Report> searchReports(Integer userId,
+    public List<Report> searchReports(Integer userId,
       String type,
-      String status) {
+      String status,
+      String query) {
 
     StringBuilder sql = new StringBuilder("""
         SELECT r.*, u.name AS reporter_name
@@ -89,6 +90,15 @@ public class ReportRepository {
     if (status != null && !status.isEmpty()) {
       sql.append(" AND r.status = ?");
       params.add(status);
+    }
+
+if (query != null && !query.trim().isEmpty()) {
+      sql.append(" AND (r.item_name LIKE ? OR r.description LIKE ? OR r.location LIKE ? OR u.name LIKE ?)");
+      String searchPattern = "%" + query.trim() + "%";
+
+      for (int i = 0; i < 4; i++) {
+          params.add(searchPattern);
+      }
     }
 
     sql.append(" ORDER BY r.date_reported DESC");
