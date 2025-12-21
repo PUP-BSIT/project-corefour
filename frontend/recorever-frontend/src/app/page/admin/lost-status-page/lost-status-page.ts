@@ -87,7 +87,7 @@ export class LostStatusPage implements OnInit {
         status: selectedStatus === 'All Statuses' 
           ? undefined 
           : (selectedStatus as ReportFilters['status']),
-        item_name: query || undefined,
+        query: query || undefined,
     };
 
     this.itemService.getReports(filters).pipe(

@@ -30,7 +30,7 @@ export type ReportFilters = {
   status?: 'pending' | 'approved' | 'matched' | 'claimed'
       | 'rejected' | 'closed';
   location?: string;
-  item_name?: string;
+  query?: string; 
   user_id?: number;
 };
 

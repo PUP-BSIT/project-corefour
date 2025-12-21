@@ -227,7 +227,7 @@ export class UserItemListPage {
     this.itemService
       .getReports({
         ...currentFilters,
-        item_name: query || undefined,
+        query: query || undefined,
       })
       .subscribe({
         next: (data: Report[]) => {
