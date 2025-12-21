@@ -11,16 +11,23 @@ import { RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import { ItemService } from '../../../core/services/item-service';
+import { AuthService } from '../../../core/auth/auth-service';
+import { ToastService } from '../../../core/services/toast-service';
+
 import { Report } from '../../../models/item-model';
 
 import { 
   SearchBarComponent 
 } from '../../../share-ui-blocks/search-bar/search-bar';
 import { 
+  ReportItemGrid 
+} from '../../../share-ui-blocks/report-item-grid/report-item-grid';
+import { 
   ClaimFormModal 
 } from '../../../modal/claim-form-modal/claim-form-modal';
 
 type SortOption = 'all' | 'az' | 'date';
+type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'rejected';
 
 @Component({
   selector: 'app-claim-status-page',
@@ -30,7 +37,8 @@ type SortOption = 'all' | 'az' | 'date';
     RouterModule, 
     SearchBarComponent, 
     DatePipe, 
-    ClaimFormModal
+    ClaimFormModal,
+    ReportItemGrid
   ],
   templateUrl: './claim-status-page.html',
   styleUrl: './claim-status-page.scss',
@@ -38,24 +46,41 @@ type SortOption = 'all' | 'az' | 'date';
 })
 export class ClaimStatusPage implements OnInit {
   private itemService = inject(ItemService);
+  private authService = inject(AuthService);
+  private toast = inject(ToastService);
 
   protected reports = signal<Report[]>([]);
   protected searchQuery = signal(''); 
   protected currentSort = signal<SortOption>('all');
+  protected currentStatusFilter = signal<StatusFilter>('All Statuses');
   protected isLoading = signal(true);
   
   protected selectedReport = signal<Report | null>(null);
 
+  protected readonly statusFilters: StatusFilter[] = ['All Statuses', 'pending', 'approved', 'rejected'];
+
+  protected isAdmin = computed(() => {
+    const user = this.authService.currentUserValue;
+    const roleCheck = user?.role === 'admin';
+    return roleCheck;
+  });
+
   protected filteredReports = computed(() => {
     let data = this.reports();
     const query = this.searchQuery().toLowerCase();
+    const status = this.currentStatusFilter();
     const sortType = this.currentSort();
 
+    data = data.filter(r => r.status.toLowerCase() !== 'claimed');
+
+    if (status !== 'All Statuses') {
+      data = data.filter(r => r.status.toLowerCase() === status.toLowerCase());
+    }
+
     if (query) {
-      data = data.filter((report) =>
-        (report.item_name || '').toLowerCase().includes(query) ||
-        (report.surrender_code || '').toLowerCase().includes(query) ||
-        (report.description || '').toLowerCase().includes(query)
+      data = data.filter((r) =>
+        (r.item_name || '').toLowerCase().includes(query) ||
+        (r.surrender_code || '').toLowerCase().includes(query)
       );
     }
 
@@ -89,11 +114,18 @@ export class ClaimStatusPage implements OnInit {
     });
   }
 
+  protected setStatusFilter(status: string): void {
+    this.currentStatusFilter.set(status as StatusFilter);
+  }
+
   protected onSearch(query: string): void {
-    this.searchQuery.set(query);
+    this.searchQuery.set(query.trim());
   }
 
   protected setSort(option: SortOption): void {
+    if (option === 'all') {
+      this.currentStatusFilter.set('All Statuses');
+    }
     this.currentSort.set(option);
   }
 
@@ -108,7 +140,30 @@ export class ClaimStatusPage implements OnInit {
     this.selectedReport.set(null);
   }
 
-  protected onStatusChanged(): void {
+  protected onStatusChanged(newStatus: string): void {
     this.loadReports();
+    this.onCloseModal();
+
+    let message = '';
+    let actionLabel = '';
+    let actionRoute = '';
+
+    switch (newStatus.toLowerCase()) {
+      case 'claimed':
+        message = 'Item successfully marked as Claimed';
+        actionLabel = 'View Archive';
+        actionRoute = '/admin/archive/claimed';
+        break;
+      case 'approved':
+        message = 'Item status updated to Verified';
+        break;
+      case 'rejected':
+        message = 'Item status updated to Denied';
+        break;
+      default:
+        message = 'Status updated successfully';
+    }
+
+    this.toast.showSuccess(message, actionLabel, actionRoute);
   }
 }

@@ -1,19 +1,159 @@
 <div class="admin-item-list-page">
-  <h1 class="page-title">{{ pageTitle() }}</h1>
+  <header class="page-header">
+    <h1 class="page-title">{{ pageTitle() }}</h1>
+    <div class="search-wrapper">
+      <app-search-bar (search)="onSearch($event)"></app-search-bar>
+    </div>
+  </header>
 
-  @if (isLoading()) {
-    <div class="loading-message">Loading reports...</div>
-  } @else if (error()) {
-    <div class="error-message">{{ error() }}</div>
-  } @else if (!reports().length) {
-    <div class="empty-message">No items found for this list.</div>
-  } @else {
-    <app-report-item-grid
-      [items]="reports()"
-      [currentUserId]="currentUserId()"
-      (cardTicketClicked)="onTicketClick($event)"
-      (cardEditClicked)="onEditClick($event)"
-      (cardDeleteClicked)="onDeleteClick($event)">
-    </app-report-item-grid>
-  }
+  <nav class="filters">
+    <button
+      type="button"
+      class="filters__button"
+      [class.filters__button--active]="activeFilter() === 'all'
+          && activeDropdown() === null"
+      (click)="activeFilter.set('all'); activeDropdown.set(null)">
+      All
+    </button>
+
+    <button
+      type="button"
+      class="filters__button"
+      [class.filters__button--active]="activeFilter() === 'az' ||
+          activeFilter() === 'za'"
+      (click)="toggleSort()">
+      {{ activeFilter() === 'za' ? 'Z-A ↑' : 'A-Z ↓' }}
+    </button>
+
+    <div class="filters__dropdown-container">
+      <button
+        type="button"
+        class="filters__button filters__button--dropdown-label"
+        [class.filters__button--active]="activeDropdown() === 'date'
+            || selectedDateFilter() !== 'Any time'"
+        (click)="toggleDropdown('date')">
+        <span>Date {{ itemType() === 'lost' ? 'Lost' : 'Found' }}</span>
+        <span class="filters__dropdown-arrow">↓</span>
+      </button>
+
+      @if (activeDropdown() === 'date') {
+        <div class="dropdown-panel dropdown-panel--date">
+          @for (filter of dateFilters(); track filter) {
+            <button
+              class="dropdown-panel__item"
+              (click)="selectDateFilter(filter)">
+              {{ filter }}
+              @if (selectedDateFilter() === filter) {
+                <span class="dropdown-panel__checkmark">✓</span>
+              }
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="filters__dropdown-container">
+      <button
+        type="button"
+        class="filters__button filters__button--dropdown-label"
+        [class.filters__button--active]="activeDropdown() === 'location'
+            || selectedLocationFilter() !== 'Any Location'"
+        (click)="toggleDropdown('location')">
+        <span>Location {{ itemType() === 'lost' ? 'Lost' : 'Found' }}</span>
+        <span class="filters__dropdown-arrow">↓</span>
+      </button>
+
+      @if (activeDropdown() === 'location') {
+        <div class="dropdown-panel dropdown-panel--location">
+          @for (location of locationFilters(); track location) {
+            <button
+              class="dropdown-panel__item"
+              (click)="selectLocationFilter(location)">
+              {{ location }}
+              @if (selectedLocationFilter() === location) {
+                <span class="dropdown-panel__checkmark">✓</span>
+              }
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (selectedDateFilter() !== 'Any time' || selectedLocationFilter()
+        !== 'Any Location' || searchQuery()) {
+      <button
+        type="button"
+        class="filters__button filters__button--clear"
+        (click)="clearFilters()">
+        Clear Filters
+      </button>
+    }
+  </nav>
+
+  <div class="content-section">
+    @if (isLoading()) {
+      <div class="content-message">Loading reports...</div>
+    } @else if (error()) {
+      <div class="content-message content-message--error">{{ error() }}</div>
+    } @else if (!filteredReports().length) {
+      <div class="content-message">
+        No {{ isArchiveView() ? 'archived' : '' }} items found.
+      </div>
+    } @else {
+      <app-report-item-grid
+        [items]="filteredReports()"
+        [currentUserId]="currentUserId()"
+        [isArchiveView]="isArchiveView()"
+        (cardClicked)="onCardClick($event)"
+        (unarchiveClicked)="onUnarchive($event)"
+        (cardTicketClicked)="onTicketClick($event)"
+        (cardEditClicked)="onEditClick($event)"
+        (cardDeleteClicked)="onDeleteClick($event)"
+        (cardViewCodeClicked)="onViewCodeClick($event)">
+      </app-report-item-grid>
+    }
+  </div>
 </div>
+
+@if (viewCodeItem()) {
+  <app-codes-modal
+      [title]="codeModalTitle()"
+      [code]="codeModalValue()"
+      (close)="viewCodeItem.set(null)">
+  </app-codes-modal>
+}
+
+@if (selectedItem(); as item) {
+  <app-item-detail-modal
+      [item]="item"
+      [currentUserId]="currentUserId()"
+      [userProfilePicture]="getUserProfilePicture()"
+      [isArchiveView]="isArchiveView()"
+      (close)="selectedItem.set(null)"
+      (unarchiveClicked)="onModalUnarchive()"
+      (editClicked)="onModalEdit()"
+      (deleteClicked)="onModalDelete()"
+      (viewCodeClicked)="onModalViewCode()">
+  </app-item-detail-modal>
+}
+
+@if (itemToUnarchive()) {
+  <app-unarchive-confirmation-modal
+    (confirm)="processUnarchive()"
+    (cancel)="cancelUnarchive()">
+  </app-unarchive-confirmation-modal>
+}
+
+@if (showLocationModal()) {
+  <app-custom-location
+    (locationSelected)="onCustomLocationSelected($event)"
+    (close)="showLocationModal.set(false)">
+  </app-custom-location>
+}
+
+@if (showDateRangeModal()) {
+  <app-date-range-modal
+    (confirm)="onDateRangeConfirm($event)"
+    (cancel)="showDateRangeModal.set(false)">
+  </app-date-range-modal>
+}

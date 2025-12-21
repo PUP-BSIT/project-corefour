@@ -95,14 +95,31 @@
   </mat-card-content>
 
   <mat-card-actions align="end" class="card-footer">
-    @if (report().type === 'found' && !isOwner()) {
+    @if (isArchiveView()) {
       <button
-        mat-button class="view-ticket-btn"
-        (click)="onTicketClick();
-        $event.stopPropagation()">
-        REFERENCE CODE
-        <mat-icon>keyboard_arrow_right</mat-icon>
+          mat-button class="unarchive-btn"
+          (click)="onUnarchive($event);
+          $event.stopPropagation()">
+        <mat-icon>unarchive</mat-icon>
+        UNARCHIVE
       </button>
+    } @else if (report().type === 'found' && !isOwner()) {
+      @if (shouldShowCodeAutomatically()) {
+        <div class="admin-reference-display">
+          <span class="label">REF CODE:</span>
+          <span class="code">{{ referenceCodeValue() }}</span>
+        </div>
+      } 
+      
+      @else {
+        <button 
+              mat-button class="view-ticket-btn"
+              (click)="onTicketClick();
+              $event.stopPropagation()">
+          REFERENCE CODE
+          <mat-icon>keyboard_arrow_right</mat-icon>
+        </button>
+      }
     }
   </mat-card-actions>
 </mat-card>

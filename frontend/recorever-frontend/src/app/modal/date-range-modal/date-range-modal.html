@@ -1,0 +1,47 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <h2 class="modal-title">Custom Date Range</h2>
+
+    <form [formGroup]="dateForm" (ngSubmit)="onConfirm()">
+      <div class="input-group">
+        <div class="date-field">
+          <label for="start-date">From:</label>
+          <input
+            id="start-date"
+            type="date"
+            formControlName="startDate"
+            class="modal-input"
+            [class.error]="dateForm.controls.startDate.invalid
+                && dateForm.controls.startDate.touched">
+        </div>
+
+        <div class="date-field">
+          <label for="end-date">To:</label>
+          <input
+            id="end-date"
+            type="date"
+            formControlName="endDate"
+            class="modal-input"
+            [class.error]="dateForm.controls.endDate.invalid
+                && dateForm.controls.endDate.touched">
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button type="submit"
+                class="btn btn-yes"
+                [disabled]="dateForm.invalid">
+          Apply
+        </button>
+
+        <button type="button"
+                class="btn btn-cancel"
+                (click)="onCancel()">
+          Cancel
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>

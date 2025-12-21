@@ -131,6 +131,13 @@ $text-secondary: #8e8e93;
   .post-timestamp { color: $text-secondary; }
 }
 
+.item-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: $text-main;
+  margin: 0 0 12px 0;
+}
+
 .details-group {
   margin: 12px 0;
 
@@ -147,6 +154,49 @@ $text-secondary: #8e8e93;
       color: $text-main;
       font-weight: 600;
       .label { color: $text-secondary; font-weight: 400; margin-right: 4px; }
+    }
+  }
+}
+
+.summary {
+  font-size: 0.85rem;
+  color: $text-secondary;
+  line-height: 1.4;
+  margin: 8px 0 0 0;
+}
+
+.unarchive-btn {
+  color: #ff9500 !important;
+  font-weight: 700 !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  mat-icon {
+    margin-right: 4px;
+  }
+}
+
+.card-footer {
+  padding: 8px 16px;
+
+  .admin-reference-display {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    font-family: 'Monaco', 'Consolas', monospace;
+    
+    .label {
+      font-size: 0.65rem;
+      color: $text-secondary;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .code {
+      font-size: 0.9rem;
+      color: $primary-purple;
+      font-weight: 700;
     }
   }
 }

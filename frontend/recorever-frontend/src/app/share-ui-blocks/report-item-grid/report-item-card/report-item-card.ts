@@ -37,14 +37,22 @@ export class ReportItemCard {
   report = input.required<Report>();
   currentUserId = input<number | null>(null);
   isUserProfilePage = input<boolean>(false);
+  isArchiveView = input<boolean>(false);
+  isAdmin = input<boolean>(false);
 
   @Output() cardClicked = new EventEmitter<void>();
   @Output() ticketClicked = new EventEmitter<void>();
   @Output() editClicked = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
   @Output() viewCodeClicked = new EventEmitter<void>();
+  @Output() unarchiveClicked = new EventEmitter<void>();
 
   currentImageIndex = 0;
+
+  shouldShowCodeAutomatically = computed(() => {
+    const adminStatus = this.isAdmin();
+    return adminStatus;
+  });
 
   photoUrls = computed((): string[] => {
     const urls = this.report().photoUrls;
@@ -60,18 +68,6 @@ export class ReportItemCard {
         'assets/temp-photo-item.png';
   });
 
-  userName = computed((): string => {
-    const r = this.report();
-    if (this.isUserProfilePage()) {
-      return r.type === 'lost' ? 'LOST' : 'FOUND';
-    }
-    return r.reporter_name || `User ${r.user_id}`;
-  });
-
-  isOwner = computed((): boolean => {
-    return this.currentUserId() === this.report().user_id;
-  });
-
   displayStatus = computed((): ItemStatus => {
     const s = this.report().status;
     if (s === 'approved' || s === 'matched') {
@@ -80,11 +76,45 @@ export class ReportItemCard {
     return (s.charAt(0).toUpperCase() + s.slice(1)) as ItemStatus;
   });
 
+  userName = computed((): string => {
+    if (this.isUserProfilePage()) {
+      return this.report().type === 'lost' ? 'LOST' : 'FOUND';
+    }
+    const report = this.report();
+    return report.reporter_name || `User ${report.user_id}`;
+  });
+
+  isOwner = computed((): boolean => {
+    return this.currentUserId() === this.report().user_id;
+  });
+
   getCodeButtonLabel(): string {
-    const item = this.report();
-    return (item.type === 'lost' || item.claim_code)
+    const report = this.report();
+    return (report.type === 'lost' || report.claim_code)
       ? 'View Ticket ID'
       : 'View Reference Code';
+  }
+
+  referenceCodeValue = computed(() => {
+    const r = this.report();
+    return r.surrender_code || r.claim_code || 'N/A';
+  });
+
+  nextImage(event: Event): void {
+    event.stopPropagation();
+    const urls = this.photoUrls();
+    this.currentImageIndex = (this.currentImageIndex + 1) % urls.length;
+  }
+
+  previousImage(event: Event): void {
+    event.stopPropagation();
+    const urls = this.photoUrls();
+    this.currentImageIndex =
+        (this.currentImageIndex - 1 + urls.length) % urls.length;
+  }
+
+  onCardClick(): void {
+    this.cardClicked.emit();
   }
 
   onTicketClick(): void {
@@ -106,20 +136,8 @@ export class ReportItemCard {
     this.viewCodeClicked.emit();
   }
 
-  nextImage(event: Event): void {
+  onUnarchive(event: Event): void {
     event.stopPropagation();
-    const urls = this.photoUrls();
-    this.currentImageIndex = (this.currentImageIndex + 1) % urls.length;
-  }
-
-  previousImage(event: Event): void {
-    event.stopPropagation();
-    const urls = this.photoUrls();
-    this.currentImageIndex = (this.currentImageIndex - 1 + urls.length)
-        % urls.length;
-  }
-
-  onCardClick(): void {
-    this.cardClicked.emit();
+    this.unarchiveClicked.emit();
   }
 }
