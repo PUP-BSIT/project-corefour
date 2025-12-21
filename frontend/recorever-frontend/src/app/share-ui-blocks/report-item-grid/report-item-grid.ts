@@ -15,6 +15,7 @@ export class ReportItemGrid {
   currentUserId = input<number | null>(null);
   isUserProfilePage = input<boolean>(false);
   isArchiveView = input<boolean>(false);
+  isAdmin = input<boolean>(false);
 
   @Output() cardClicked = new EventEmitter<Report>();
   @Output() cardTicketClicked = new EventEmitter<Report>();

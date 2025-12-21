@@ -24,7 +24,7 @@ import { Report } from '../../models/item-model';
 import { ClaimService } from '../../core/services/claim-service';
 import { ItemService } from '../../core/services/item-service';
 import { UserService } from '../../core/services/user-service';
-import { AdminService } from '../../core/services/admin-service'; // <--- 1. Import AdminService
+import { AdminService } from '../../core/services/admin-service';
 
 @Component({
   selector: 'app-claim-form-modal',
@@ -45,7 +45,28 @@ export class ClaimFormModal implements OnInit {
 
   @Input({ required: true }) claimData!: Claim | Report; 
   @Output() close = new EventEmitter<void>();
-  @Output() statusChange = new EventEmitter<void>();
+  @Output() statusChange = new EventEmitter<string>();
+
+  protected readonly STATUS_OPTIONS = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'approved', label: 'Verified' },
+    { value: 'claimed', label: 'Claimed' },
+    { value: 'rejected', label: 'Denied' }
+  ];
+
+  protected onStatusOptionClick(status: string): void {
+    if (status === 'claimed') {
+      alert('Please fill out Claimant Details and click "Submit" to mark this item as Claimed.');
+      this.closeDropdown();
+      return;
+    }
+
+    this.updateStatus(status);
+  }
+
+  protected isStatusDisabled(status: string): boolean {
+    return status === 'claimed';
+  }
 
   protected claimForm: FormGroup;
   
@@ -154,7 +175,7 @@ export class ClaimFormModal implements OnInit {
         finalize(() => {
           this.isSaving.set(false);
           this.closeDropdown();
-          this.statusChange.emit(); 
+          this.statusChange.emit(newStatus); 
         })
       ).subscribe();
     } else {
@@ -189,7 +210,7 @@ export class ClaimFormModal implements OnInit {
         }),
         finalize(() => {
           this.isSaving.set(false);
-          this.statusChange.emit();
+          this.statusChange.emit('claimed');
           this.onClose();
         })
       ).subscribe();
