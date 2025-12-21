@@ -145,9 +145,10 @@ public class ReportController {
     public ResponseEntity<List<ReportResponseDTO>> getReports(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Integer user_id) {
+            @RequestParam(required = false) Integer user_id,
+            @RequestParam(required = false) String query) {
         
-        List<Report> reports = service.searchReports(user_id, type, status);
+        List<Report> reports = service.searchReports(user_id, type, status, query);
 
         List<ReportResponseDTO> responseList = reports.stream()
             .map(this::mapToReportResponseDTO)

@@ -85,10 +85,11 @@ public class ReportService {
   }
 
   public List<Report> searchReports(Integer userId,
-      String type,
-      String status) {
+        String type,
+        String status,
+        String query) {
 
-    return repo.searchReports(userId, type, status);
+      return repo.searchReports(userId, type, status, query);
   }
 
   public List<Report> listByStatus(String status) {
