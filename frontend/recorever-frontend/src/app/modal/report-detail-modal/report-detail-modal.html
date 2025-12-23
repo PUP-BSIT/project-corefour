@@ -50,7 +50,7 @@
           <button type="button" class="status-dropdown-toggle"
                   [disabled]="isSubmitting()"
                   (click)="toggleDropdown($event)">
-            {{ isSubmitting() ? 'Updating...' : 'Set Status' }}
+            {{ isSubmitting() ? 'Updating...' : getDisplayStatus(report.status) }}
             <span class="arrow" [class.open]="isDropdownOpen()">▼</span>
           </button>
 

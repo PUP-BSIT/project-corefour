@@ -2,7 +2,13 @@
   <header class="item-list-page__header">
     <h1 class="item-list-page__title">{{ pageTitle() }}</h1>
     <div class="item-list-page__search-wrapper">
-      <app-search-bar (search)="onSearchSubmit($event)"></app-search-bar>
+      <div class="search-section">
+      <app-search-bar
+        [suggestions]="searchSuggestions()"
+        (queryChange)="onQueryChange($event)"
+        (search)="onSearchSubmit($event)">
+      </app-search-bar>
+    </div>
     </div>
 
     <div class="item-list-page__toggle-wrapper">

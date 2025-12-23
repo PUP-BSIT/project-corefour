@@ -1,6 +1,8 @@
 <span class="status-badge"
     [class.verified]="status === 'Verified'"
     [class.claimed]="status === 'Claimed'"
-    [class.pending]="status === 'Pending'">
+    [class.pending]="status === 'Pending'"
+    [class.matched]="status === 'Matched'"
+    [class.rejected]="status === 'Rejected'">
   {{ status }}
 </span>

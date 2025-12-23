@@ -54,8 +54,8 @@ export class ItemService {
           filters.user_id.toString()
       );
     }
-    if (filters.item_name) {
-      params = params.set('item_name', filters.item_name);
+    if (filters.query) {
+      params = params.set('query', filters.query);
     }
     if (filters.location) {
       params = params.set('location', filters.location);
@@ -78,8 +78,9 @@ export class ItemService {
   }
 
   updateReportStatus(reportId: number, status: string): Observable<Report> {
-  return this.http.put<Report>(
-    `${this.apiUrl}/report/${reportId}/status`,
-    { status }
-  );}
+    return this.http.put<Report>(
+      `${this.apiUrl}/report/${reportId}/status`,
+      { status }
+    );
+  }
 }
