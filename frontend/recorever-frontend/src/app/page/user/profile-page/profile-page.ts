@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { map, switchMap, catchError, shareReplay, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 import {
   ReportItemGrid
@@ -234,7 +235,11 @@ export class ProfilePage implements OnInit {
     }
   }
 
-  getUserProfilePicture(): string | null {
-    return null;
+  getUserProfilePicture(user: User | null): string {
+    if (user && user.profile_picture) {
+      return `${environment.apiUrl}/image/download/${user.profile_picture}`;
+    }
+
+    return 'assets/profile-avatar.png';
   }
 }
