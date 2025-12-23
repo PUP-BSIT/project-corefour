@@ -23,6 +23,7 @@ import {
 import { Subscription } from 'rxjs';
 import type { User } from '../../models/user-model';
 import { UserService } from '../../core/services/user-service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-edit-profile-modal',
@@ -136,9 +137,11 @@ export class EditProfileModal implements OnInit, OnChanges, OnDestroy {
       }
     });
 
-    if (this.user.profile_picture) {
-      this.previewImage = this.user.profile_picture;
-    }
+  if (this.user.profile_picture) {
+    this.previewImage = `${environment.apiUrl}/image/download/${this.user.profile_picture}`;
+  } else {
+    this.previewImage = null;
+  }
     
     this.selectedFile = null;
     this.localError = null;
