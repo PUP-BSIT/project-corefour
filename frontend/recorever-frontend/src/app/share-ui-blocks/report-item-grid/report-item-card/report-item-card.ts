@@ -15,6 +15,7 @@ import type { Report } from '../../../models/item-model';
 import { ItemStatus } from '../../status-badge/status-badge';
 import { StatusBadge } from '../../status-badge/status-badge';
 import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-report-item-card',
@@ -29,6 +30,7 @@ import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
     MatDividerModule,
     StatusBadge,
     TimeAgoPipe,
+    MatTooltipModule,
   ],
   templateUrl: './report-item-card.html',
   styleUrls: ['./report-item-card.scss'],
@@ -86,6 +88,11 @@ export class ReportItemCard {
 
   isOwner = computed((): boolean => {
     return this.currentUserId() === this.report().user_id;
+  });
+
+  isEditable = computed((): boolean => {
+    const status = this.report().status;
+    return status === 'pending';
   });
 
   getCodeButtonLabel(): string {
