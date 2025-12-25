@@ -80,16 +80,35 @@ public class ReportService {
         "surrender_code", surrenderCode != null ? surrenderCode : "N/A");
   }
 
-  public List<Report> listAll() {
-    return repo.getAllReports();
+  public Map<String, Object> listAll(int page, int size) {
+        List<Report> items = repo.getAllReports(page, size);
+        int totalItems = repo.countTotalReports();
+
+        return createPaginationResponse(items, totalItems, page, size);
+    }
+
+  public Map<String, Object> searchReports(int userId,
+                                           String type,
+                                           String status,
+                                           String query,
+                                           int page,
+                                           int size) {
+      List<Report> items = repo.searchReports(userId, type, status, query, page, size);
+      int totalItems = repo.countSearchReports(userId, type, status, query);
+
+      return createPaginationResponse(items, totalItems, page, size);
   }
 
-  public List<Report> searchReports(Integer userId,
-        String type,
-        String status,
-        String query) {
-
-      return repo.searchReports(userId, type, status, query);
+  private Map<String, Object> createPaginationResponse(List<Report> items,
+                                                       int totalItems,
+                                                       int page,
+                                                       int size) {
+      Map<String, Object> response = new HashMap<>();
+      response.put("items", items);
+      response.put("totalItems", totalItems);
+      response.put("currentPage", page);
+      response.put("totalPages", (int) Math.ceil((double) totalItems / size));
+      return response;
   }
 
   public List<Report> listByStatus(String status) {
