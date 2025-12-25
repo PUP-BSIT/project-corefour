@@ -100,6 +100,11 @@ export class ReportItemCard {
     return this.currentUserId() === this.report().user_id;
   });
 
+  isEditable = computed((): boolean => {
+    const status = this.report().status;
+    return status === 'pending';
+  });
+
   getCodeButtonLabel(): string {
     const report = this.report();
     return (report.type === 'lost' || report.claim_code)
