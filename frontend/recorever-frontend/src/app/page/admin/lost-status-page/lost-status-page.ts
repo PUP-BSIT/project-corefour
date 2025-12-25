@@ -4,54 +4,53 @@ import {
   inject,
   signal,
   computed,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  OnDestroy,
+  ChangeDetectionStrategy
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReportItemGrid } from
-  '../../../share-ui-blocks/report-item-grid/report-item-grid';
-import { SearchBarComponent } from
-  '../../../share-ui-blocks/search-bar/search-bar';
-import { Report, ReportFilters } from '../../../models/item-model';
-import { ReportDetailModal } from
-  '../../../modal/report-detail-modal/report-detail-modal';
+import { CommonModule, DatePipe } from '@angular/common';
+import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
+import { SearchBarComponent } from '../../../share-ui-blocks/search-bar/search-bar';
+import { Report, ReportFilters, PaginatedResponse } from '../../../models/item-model';
+import { ReportDetailModal } from '../../../modal/report-detail-modal/report-detail-modal';
 import { ItemService } from '../../../core/services/item-service';
-import { tap, catchError, of } from 'rxjs';
+import { tap, catchError, of, switchMap, takeUntil, Subject, BehaviorSubject } from 'rxjs';
 
 type SortOption = 'all' | 'az' | 'date';
-type LostReportStatusFilter =
-  | 'All Statuses'
-  | 'pending'
-  | 'approved'
-  | 'matched'
-  | 'rejected';
+type LostReportStatusFilter = 'All Statuses' | 'pending' | 'approved' | 'matched' | 'rejected';
 
 @Component({
-  selector: 'app-lost-status-page',
-  standalone: true,
-  imports: [CommonModule,
-            ReportItemGrid,
-            SearchBarComponent,
-            ReportDetailModal],
-  templateUrl: './lost-status-page.html',
-  styleUrls: ['./lost-status-page.scss'],
+  selector: 'app-lost-status-page',
+  standalone: true,
+  imports: [CommonModule, ReportItemGrid, SearchBarComponent, ReportDetailModal],
+  templateUrl: './lost-status-page.html',
+  styleUrls: ['./lost-status-page.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class LostStatusPage implements OnInit {
-  private itemService = inject(ItemService); 
-  
-  protected selectedReport = signal<Report | null>(null);
-  protected reports = signal<Report[]>([]);
-  protected isLoading = signal(true); 
-  protected isError = signal(false);
+export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
+  private itemService = inject(ItemService);
+  private destroy$ = new Subject<void>();
+  private refreshTrigger$ = new BehaviorSubject<void>(undefined);
 
-  private currentSearchQuery = signal<string>(''); 
-  protected currentSort = signal<SortOption>('date'); 
+  @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
+  private observer!: IntersectionObserver;
+  protected currentPage = signal(1);
+  protected totalPages = signal(1);
+  protected pageSize = signal(10);
+
+  protected selectedReport = signal<Report | null>(null);
+  protected reports = signal<Report[]>([]);
+  protected isLoading = signal(true);
+  protected isError = signal(false);
+
+  private currentSearchQuery = signal<string>('');
+  protected currentSort = signal<SortOption>('date');
   protected currentStatusFilter = signal<LostReportStatusFilter>('All Statuses');
-  
+
   protected readonly statusFilters: LostReportStatusFilter[] = [
-    'All Statuses',
-    'pending',
-    'approved',
-    'matched',
-    'rejected',
+    'All Statuses', 'pending', 'approved', 'matched', 'rejected'
   ];
 
   protected sortedReports = computed(() => {
@@ -70,81 +69,87 @@ export class LostStatusPage implements OnInit {
     });
   });
 
-  ngOnInit(): void {
-    this.fetchReports();
-  }
+  ngOnInit(): void {
+    this.refreshTrigger$.pipe(
+      tap(() => this.isLoading.set(true)),
+      switchMap(() => {
+        const filters: ReportFilters = {
+          type: 'lost' as const,
+          status: this.currentStatusFilter() === 'All Statuses' ? undefined : (this.currentStatusFilter() as any),
+          query: this.currentSearchQuery() || undefined,
+          page: this.currentPage(),
+          size: this.pageSize()
+        };
 
-  private fetchReports(): void {
-    this.isLoading.set(true);
-    this.isError.set(false);
-    this.reports.set([]); 
-
-    const query = this.currentSearchQuery();
-    const selectedStatus = this.currentStatusFilter();
-
-    const filters: ReportFilters = {
-        type: 'lost',
-        status: selectedStatus === 'All Statuses' 
-          ? undefined 
-          : (selectedStatus as ReportFilters['status']),
-        query: query || undefined,
-    };
-
-    this.itemService.getReports(filters).pipe(
-      tap((data: Report[]) => {
-        const finalReports = data.sort((reportA, reportB) =>
-          (Date.parse(reportB.date_reported || '') || 0) -
-          (Date.parse(reportA.date_reported || '') || 0)
+        return this.itemService.getReports(filters).pipe(
+          catchError(err => {
+            this.isError.set(true);
+            return of({ items: [], totalPages: 1, totalItems: 0, currentPage: 1 });
+          })
         );
-
-        this.reports.set(finalReports);
-        this.isLoading.set(false);
       }),
-      catchError(err => {
-        this.isError.set(true);
-        this.isLoading.set(false);
-        console.error('Error fetching admin reports:', err);
-        return of([]);
-      })
-    ).subscribe();
-  }
+      takeUntil(this.destroy$)
+    ).subscribe((response: PaginatedResponse<Report>) => {
+      this.reports.update(existing => 
+        this.currentPage() === 1 ? response.items : [...existing, ...response.items]
+      );
+      this.totalPages.set(response.totalPages);
+      this.isLoading.set(false);
+      this.isError.set(false);
+    });
+  }
 
-  protected setStatusFilter(status: string): void {
-    this.currentStatusFilter.set(status as LostReportStatusFilter);
-    this.fetchReports();
-  }
+  ngAfterViewInit(): void {
+    this.observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !this.isLoading() && this.currentPage() < this.totalPages()) {
+        this.currentPage.update(p => p + 1);
+        this.refreshTrigger$.next();
+      }
+    }, { rootMargin: '150px' });
+    this.observer.observe(this.scrollAnchor.nativeElement);
+  }
 
-  onSearchSubmit(query: string): void {
-    const trimmedQuery = query.trim();
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
+  protected setStatusFilter(status: string): void {
+    this.currentStatusFilter.set(status as LostReportStatusFilter);
+    this.resetAndReload();
+  }
+
+  onSearchSubmit(query: string): void {
+    const trimmedQuery = query.trim();
     if (this.currentSearchQuery() === trimmedQuery) return;
-    
     this.currentSearchQuery.set(trimmedQuery);
-    this.currentSort.set('date'); 
+    this.resetAndReload();
+  }
 
-    this.fetchReports(); 
-  }
+  private resetAndReload(): void {
+    this.currentPage.set(1);
+    this.reports.set([]);
+    this.refreshTrigger$.next();
+  }
 
-  protected setSort(option: SortOption): void {
+  protected setSort(option: SortOption): void {
     if (option === 'all') {
-        this.currentStatusFilter.set('All Statuses');
-        this.currentSort.set('all');
-        this.fetchReports();
-        return;
+      this.currentStatusFilter.set('All Statuses');
+      this.resetAndReload();
+      return;
     }
     this.currentSort.set(option);
-  }
+  }
 
-  onViewDetails(report: Report): void {
-    this.selectedReport.set(report);
-  }
- 
-  onCloseDetailView(): void {
-    this.selectedReport.set(null);
-  }
-
-  onStatusUpdated(updatedReport: Report): void {
-    this.fetchReports(); 
-    this.onCloseDetailView(); 
-  }
+  onViewDetails(report: Report): void {
+    this.selectedReport.set(report);
+  }
+  onCloseDetailView(): void {
+    this.selectedReport.set(null);
+  }
+  onStatusUpdated(updatedReport: Report): void {
+    this.resetAndReload();
+    this.onCloseDetailView();
+  }
 }

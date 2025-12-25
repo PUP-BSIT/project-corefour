@@ -133,7 +133,7 @@ export class ClaimFormModal implements OnInit {
       
       this.itemService.getReports({ type: 'found' }).pipe(
         switchMap((reports) => {
-          const foundReport = reports.find(r => r.report_id === claim.report_id);
+          const foundReport = reports.items.find(r => r.report_id === claim.report_id);
           this.report.set(foundReport || null);
           this.patchFormForExistingClaim(claim);
 
