@@ -1,5 +1,12 @@
 import { FormArray, FormControl, FormGroup } from '@angular/forms';
 
+export type PaginatedResponse<T> = {
+  items: T[];
+  totalItems: number;
+  currentPage: number;
+  totalPages: number;
+};
+
 export type Report = {
   report_id: number;
   user_id: number;
@@ -32,6 +39,8 @@ export type ReportFilters = {
   location?: string;
   query?: string; 
   user_id?: number;
+  page?: number; 
+  size?: number;
 };
 
 export enum StandardLocations {
