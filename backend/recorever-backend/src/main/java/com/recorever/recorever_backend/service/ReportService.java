@@ -87,7 +87,7 @@ public class ReportService {
         return createPaginationResponse(items, totalItems, page, size);
     }
 
-  public Map<String, Object> searchReports(int userId,
+  public Map<String, Object> searchReports(Integer userId,
                                            String type,
                                            String status,
                                            String query,
