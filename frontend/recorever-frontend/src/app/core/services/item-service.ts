@@ -83,4 +83,8 @@ export class ItemService {
       { status }
     );
   }
+
+  getTopLocations(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/reports/top-locations`); 
+  }
 }
