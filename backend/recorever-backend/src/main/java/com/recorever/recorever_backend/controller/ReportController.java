@@ -184,6 +184,12 @@ public class ReportController {
         return ResponseEntity.ok(responseList);
     }
 
+    @GetMapping("/reports/top-locations")
+    public ResponseEntity<List<String>> getTopLocations() {
+        List<String> locations = service.getTopLocations();
+        return ResponseEntity.ok(locations);
+    }
+
     @GetMapping("/report/{id}")
     public ResponseEntity<?> getReport(@PathVariable int id) {
         Report report = service.getById(id);

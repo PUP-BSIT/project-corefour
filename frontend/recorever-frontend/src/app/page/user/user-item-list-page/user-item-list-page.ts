@@ -26,7 +26,8 @@ import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ClaimService } from '../../../core/services/claim-service';
 
-import type { PaginatedResponse, Report, ReportFilters } from '../../../models/item-model';
+import type { PaginatedResponse, Report, ReportFilters 
+} from '../../../models/item-model';
 import { StandardLocations, StandardRelativeDateFilters }
     from '../../../models/item-model';
 import { CustomLocation } from '../../../modal/custom-location/custom-location';
@@ -34,6 +35,8 @@ import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 import {
   ItemDetailModal
 } from '../../../modal/item-detail-modal/item-detail-modal';
+import { DeleteReportModal 
+} from "../../../modal/delete-report-modal/delete-report-modal";
 
 type FilterType = 'all' | 'az' | 'date' | 'location';
 type ActiveDropdown = 'date' | 'location' | null;
@@ -49,7 +52,8 @@ type ItemType = 'lost' | 'found';
     CustomLocation,
     CodesModal,
     ItemDetailModal,
-  ],
+    DeleteReportModal
+],
   templateUrl: './user-item-list-page.html',
   styleUrl: './user-item-list-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,6 +94,8 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   showCustomDateModal = signal(false);
   showCustomLocationModal = signal(false);
   showResolved = signal(false);
+  showDeleteModal = signal(false);
+  itemToDelete = signal<Report | null>(null);
 
   viewCodeItem = signal<Report | null>(null);
   selectedItem = signal<Report | null>(null);
@@ -356,8 +362,36 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onDeleteClick(item: Report): void {
-    console.log('Delete clicked for', item.report_id);
-  }
+      this.itemToDelete.set(item);
+      this.showDeleteModal.set(true);
+    }
+
+    cancelDelete(): void {
+      this.showDeleteModal.set(false);
+      this.itemToDelete.set(null);
+    }
+
+    confirmDelete(): void {
+      const item = this.itemToDelete();
+      if (!item) return;
+
+      const idToDelete = item.report_id;
+
+      this.itemService.deleteReport(idToDelete).subscribe({
+        next: () => {
+          this.allReports.update((items: Report[]) =>
+            items.filter((item: Report) => item.report_id !== idToDelete)
+          );
+
+          this.showDeleteModal.set(false);
+          this.itemToDelete.set(null);
+        },
+        error: (err: unknown) => {
+          console.error('Failed to delete report', err);
+          this.showDeleteModal.set(false);
+        }
+      });
+    }
 
   onViewCodeClick(item: Report): void {
     this.viewCodeItem.set(item);

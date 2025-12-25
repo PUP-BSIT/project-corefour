@@ -200,3 +200,20 @@ $text-secondary: #8e8e93;
     }
   }
 }
+
+.delete-option {
+  span {
+    color: #f44336;
+    font-weight: 500;
+  }
+
+  &:hover:not([disabled]) {
+    background-color: rgba(244, 67, 54, 0.04);
+  }
+
+  &[disabled] {
+    span {
+      color: rgba(0, 0, 0, 0.38);
+    }
+  }
+}

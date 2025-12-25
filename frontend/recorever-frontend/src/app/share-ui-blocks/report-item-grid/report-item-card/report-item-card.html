@@ -50,13 +50,23 @@
           </button>
         }
         @if (isOwner()) {
-          <button mat-menu-item (click)="onEdit($event)">
+          <button 
+            mat-menu-item 
+            (click)="onEdit($event)"
+            [disabled]="!isEditable()"
+            [matTooltip]="!isEditable()
+                ? 'Verified reports are locked and cannot be edited' : ''"
+            matTooltipPosition="left">
             <mat-icon>edit_square</mat-icon>
             <span>Edit Report</span>
           </button>
           <mat-divider></mat-divider>
           <button
-            mat-menu-item (click)="onDelete($event)"
+            mat-menu-item 
+            (click)="onDelete($event)"
+            [disabled]="!isRemovable()"
+            [matTooltip]="removeTooltip()"
+            matTooltipPosition="left"
             class="delete-option">
             <mat-icon color="warn">auto_delete</mat-icon>
             <span class="text-danger">Remove</span>

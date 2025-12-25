@@ -170,6 +170,13 @@
     (locationSelected)="onSearchSubmit($event)" />
 }
 
+@if (showDeleteModal()) {
+  <app-delete-report-modal
+      (confirm)="confirmDelete()"
+      (cancel)="cancelDelete()">
+  </app-delete-report-modal>
+}
+
 @if (viewCodeItem()) {
   <app-codes-modal
       [title]="codeModalTitle()"

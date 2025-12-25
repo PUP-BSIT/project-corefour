@@ -15,6 +15,7 @@ import type { Report } from '../../../models/item-model';
 import { ItemStatus } from '../../status-badge/status-badge';
 import { StatusBadge } from '../../status-badge/status-badge';
 import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-report-item-card',
@@ -29,6 +30,7 @@ import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
     MatDividerModule,
     StatusBadge,
     TimeAgoPipe,
+    MatTooltipModule,
   ],
   templateUrl: './report-item-card.html',
   styleUrls: ['./report-item-card.scss'],
@@ -48,6 +50,16 @@ export class ReportItemCard {
   @Output() unarchiveClicked = new EventEmitter<void>();
 
   currentImageIndex = 0;
+
+  isRemovable = computed((): boolean => {
+    return this.report().type === 'lost';
+  });
+
+  removeTooltip = computed((): string => {
+    return !this.isRemovable() 
+      ? 'Found item reports are protected and cannot be removed directly.' 
+      : 'Remove this report';
+  });
 
   shouldShowCodeAutomatically = computed(() => {
     const adminStatus = this.isAdmin();
@@ -86,6 +98,11 @@ export class ReportItemCard {
 
   isOwner = computed((): boolean => {
     return this.currentUserId() === this.report().user_id;
+  });
+
+  isEditable = computed((): boolean => {
+    const status = this.report().status;
+    return status === 'pending';
   });
 
   getCodeButtonLabel(): string {
