@@ -208,4 +208,8 @@ public class ReportService {
 
     return response;
   }
+
+  public List<String> getTopLocations() {
+    return repo.getTopLocations(5);
+  }
 }
