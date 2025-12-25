@@ -7,9 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @RestController
 @RequestMapping("/api")
@@ -17,6 +19,25 @@ public class NotificationController {
 
     @Autowired
     private NotificationService service;
+
+    private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
+
+    @GetMapping("/notifications/stream")
+    public SseEmitter streamNotifications(Authentication authentication) {
+        User authenticatedUser = (User) authentication.getPrincipal();
+        int userId = authenticatedUser.getUser_id();
+
+        String role = authenticatedUser.getRole(); 
+
+        SseEmitter emitter = new SseEmitter(1800000L);
+        service.addEmitter(userId, role, emitter);
+
+        emitter.onCompletion(() -> service.removeEmitter(userId));
+        emitter.onTimeout(() -> service.removeEmitter(userId));
+        emitter.onError((e) -> service.removeEmitter(userId));
+
+        return emitter;
+    }
 
     @GetMapping("/notifications")
     public ResponseEntity<Map<String, Object>> listNotifications(
@@ -65,7 +86,7 @@ public class NotificationController {
         int reportId = (Integer) body.get("report_id");
         String message = (String) body.get("message");
 
-        Map<String, Object> result = service.create(userId, reportId, message);
+        Map<String, Object> result = service.create(userId, reportId, message, true);
         return ResponseEntity.status(201).body(result);
     }
 }
