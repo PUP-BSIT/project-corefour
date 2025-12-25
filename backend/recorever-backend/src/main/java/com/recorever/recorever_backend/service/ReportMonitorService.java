@@ -43,7 +43,7 @@ public class ReportMonitorService {
                 if (report != null) {
                     String message = String.format("Your report '%s' is scheduled for deletion in about 1 day. Status: %s. You may update it to keep it active.", 
                                                     report.getItem_name(), report.getStatus());
-                    notificationService.create(report.getUser_id(), reportId, message);
+                    notificationService.create(report.getUser_id(), reportId, message, true);
                 }
             }
             reportScheduleRepository.markNotify1Sent(notify1ReportIds);
@@ -59,7 +59,7 @@ public class ReportMonitorService {
                 if (report != null) {
                     String message = String.format("FINAL WARNING: Your report '%s' will be deleted in 15 minutes due to inactivity or no resolution. Status: %s.", 
                                                     report.getItem_name(), report.getStatus());
-                    notificationService.create(report.getUser_id(), reportId, message);
+                    notificationService.create(report.getUser_id(), reportId, message, true);
                 }
             }
             
@@ -76,7 +76,7 @@ public class ReportMonitorService {
                 if (report.is_deleted() == false) { 
                     String message = String.format("NOTICE: Your report for '%s' has been deleted due to expiration.",
                                                     report.getItem_name(), report.getReport_id());
-                    notificationService.create(report.getUser_id(), report.getReport_id(), message);
+                    notificationService.create(report.getUser_id(), report.getReport_id(), message, true);
                 }
             }
         }

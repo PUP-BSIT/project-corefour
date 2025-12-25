@@ -92,9 +92,9 @@ public class MatchService {
                                                       lostId, detailMessage);
 
                 notificationService.create(newReport.getUser_id(),
-                        newReport.getReport_id(), notificationMessage);
+                        newReport.getReport_id(), notificationMessage, true);
                 notificationService.create(existingReport.getUser_id(),
-                        existingReport.getReport_id(), notificationMessage);
+                        existingReport.getReport_id(), notificationMessage, true);
             }
         }
     }
