@@ -70,7 +70,7 @@ public class ReportService {
     }
 
     notificationService.create(ADMIN_USER_ID, id,
-        String.format("New PENDING report (ID #%d) submitted: %s.", id, itemName));
+        String.format("New PENDING report (ID #%d) submitted: %s.", id, itemName), false);
 
     return Map.of(
         "report_id", id,
@@ -148,7 +148,7 @@ public class ReportService {
         notificationService.create(report.getUser_id(), id,
             String.format(
                 "Your report for '%s' status changed to '%s'.",
-                report.getItem_name(), status));
+                report.getItem_name(), status), true);
       }
     }
     return updated;
