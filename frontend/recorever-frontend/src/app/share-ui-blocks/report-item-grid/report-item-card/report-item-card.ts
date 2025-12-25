@@ -51,6 +51,16 @@ export class ReportItemCard {
 
   currentImageIndex = 0;
 
+  isRemovable = computed((): boolean => {
+    return this.report().type === 'lost';
+  });
+
+  removeTooltip = computed((): string => {
+    return !this.isRemovable() 
+      ? 'Found item reports are protected and cannot be removed directly.' 
+      : 'Remove this report';
+  });
+
   shouldShowCodeAutomatically = computed(() => {
     const adminStatus = this.isAdmin();
     return adminStatus;
