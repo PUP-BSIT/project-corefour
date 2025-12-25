@@ -5,12 +5,17 @@ import {
   inject,
   computed,
   HostBinding,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  OnDestroy,
+  OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs';
+import { BehaviorSubject, catchError, map, of, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import {
   SearchBarComponent
 } from '../../../share-ui-blocks/search-bar/search-bar';
@@ -21,7 +26,7 @@ import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ClaimService } from '../../../core/services/claim-service';
 
-import type { Report, ReportFilters } from '../../../models/item-model';
+import type { PaginatedResponse, Report, ReportFilters } from '../../../models/item-model';
 import { StandardLocations, StandardRelativeDateFilters }
     from '../../../models/item-model';
 import { CustomLocation } from '../../../modal/custom-location/custom-location';
@@ -49,11 +54,20 @@ type ItemType = 'lost' | 'found';
   styleUrl: './user-item-list-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UserItemListPage {
+export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
   private claimService = inject(ClaimService);
   private route = inject(ActivatedRoute);
+
+  private destroy$ = new Subject<void>();
+  private refreshTrigger$ = new BehaviorSubject<void>(undefined);
+
+  @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
+  private observer!: IntersectionObserver;
+  currentPage = signal(1);
+  totalPages = signal(1);
+  pageSize = signal(10);
 
   currentUser = toSignal(this.authService.currentUser$);
   currentUserId = computed(() => this.currentUser()?.user_id ?? null);
@@ -117,35 +131,13 @@ export class UserItemListPage {
   ];
 
   allReports = signal<Report[]>([]);
-
   isLoading = signal(true);
   error = signal<string | null>(null);
 
   filters = signal<ReportFilters>({
       type: 'found',
-      location: undefined,
       status: 'approved',
   });
-
-  constructor() {
-    this.route.data
-      .pipe(map((data) => data['itemType'] as ItemType))
-      .subscribe((type: ItemType) => {
-        this.itemType.set(type);
-
-        this.filters.set({
-          type: type,
-          status: 'approved',
-          location: undefined,
-        });
-
-        this.selectedDateFilter.set('Any time');
-        this.selectedLocationFilter.set('Any Location');
-        this.showResolved.set(false);
-
-        this.fetchReports();
-      });
-  }
 
   visibleReports = computed(() => {
     const reports = this.allReports();
@@ -206,42 +198,12 @@ export class UserItemListPage {
   toggleStatus(showResolved: boolean): void {
     this.showResolved.set(showResolved);
     const type = this.itemType();
-    let statusFilter: ReportFilters['status'];
+    const statusFilter = type === 'found' 
+      ? (showResolved ? 'claimed' : 'approved') 
+      : (showResolved ? 'matched' : 'approved');
 
-    if (type === 'found') {
-      statusFilter = showResolved ? 'claimed' : 'approved';
-    } else {
-      statusFilter = showResolved ? 'matched' : 'approved';
-    }
-
-    this.filters.update(currentFilters => ({
-        ...currentFilters, status: statusFilter
-    }));
-
-    this.fetchReports();
-  }
-
-  fetchReports(query?: string): void {
-    this.isLoading.set(true);
-    this.error.set(null);
-    const currentFilters = this.filters();
-
-    this.itemService
-      .getReports({
-        ...currentFilters,
-        query: query || undefined,
-      })
-      .subscribe({
-        next: (data: Report[]) => {
-          this.allReports.set(data);
-          this.isLoading.set(false);
-        },
-        error: (err: HttpErrorResponse) => {
-          console.error('Error fetching reports', err);
-          this.error.set('Failed to load items. Please try again.');
-          this.isLoading.set(false);
-        },
-      });
+    this.filters.update(curr => ({ ...curr, status: statusFilter as any }));
+    this.resetPagination();
   }
 
   toggleDropdown(dropdown: ActiveDropdown): void {
@@ -269,11 +231,70 @@ export class UserItemListPage {
     }
 
     this.selectedLocationFilter.set(filter);
-    const locationValue: string | undefined =
-        filter === 'Any Location' ? undefined : filter;
-
+    const locationValue = filter === 'Any Location' ? undefined : filter;
     this.filters.update(current => ({ ...current, location: locationValue }));
-    this.fetchReports();
+    this.resetPagination();
+  }
+
+  ngOnInit(): void {
+    this.route.data
+      .pipe(
+        map((data) => data['itemType'] as ItemType),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((type: ItemType) => {
+        this.itemType.set(type);
+        this.filters.set({ type, status: 'approved' });
+        this.resetPagination(); 
+      });
+
+    this.refreshTrigger$.pipe(
+      tap(() => this.isLoading.set(true)),
+      switchMap(() => {
+        const currentFilters = this.filters();
+        const pageToFetch = this.currentPage(); 
+        const sizeToFetch = this.pageSize();
+
+        console.log(`Fetching page ${pageToFetch} for ${currentFilters.type}`);
+
+        return this.itemService.getReports({
+          ...currentFilters,
+          page: pageToFetch, 
+          size: sizeToFetch
+        }).pipe(
+          catchError(() => of({ items: [], totalPages: 1, totalItems: 0, currentPage: 1 }))
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe((res: PaginatedResponse<Report>) => {
+      this.allReports.update(existing => 
+        this.currentPage() === 1 ? res.items : [...existing, ...res.items]
+      );
+      this.totalPages.set(res.totalPages);
+      this.isLoading.set(false);
+    });
+  }
+
+  ngAfterViewInit(): void {
+    this.observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !this.isLoading() && this.currentPage() < this.totalPages()) {
+        this.currentPage.update(p => p + 1);
+        this.refreshTrigger$.next();
+      }
+    }, { rootMargin: '150px' });
+    this.observer.observe(this.scrollAnchor.nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private resetPagination(): void {
+    this.currentPage.set(1);
+    this.allReports.set([]);
+    this.refreshTrigger$.next();
   }
 
   onQueryChange(query: string): void {
@@ -300,7 +321,8 @@ export class UserItemListPage {
   }
 
   onSearchSubmit(query: string): void {
-    this.fetchReports(query);
+    this.filters.update(curr => ({ ...curr, query: query || undefined }));
+    this.resetPagination();
     this.searchSuggestions.set([]);
   }
 

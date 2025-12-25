@@ -91,17 +91,9 @@
   </nav>
 
   <div class="content-section">
-    @if (isLoading()) {
-      <div class="content-message">Loading reports...</div>
-    } @else if (error()) {
-      <div class="content-message content-message--error">{{ error() }}</div>
-    } @else if (!filteredReports().length) {
-      <div class="content-message">
-        No {{ isArchiveView() ? 'archived' : '' }} items found.
-      </div>
-    } @else {
+    @if (allReports().length > 0) {
       <app-report-item-grid
-        [items]="filteredReports()"
+        [items]="allReports()"
         [currentUserId]="currentUserId()"
         [isArchiveView]="isArchiveView()"
         (cardClicked)="onCardClick($event)"
@@ -112,6 +104,25 @@
         (cardViewCodeClicked)="onViewCodeClick($event)">
       </app-report-item-grid>
     }
+
+    <div #scrollAnchor class="scroll-anchor">
+      @if (isLoading()) {
+        <div class="content-message">
+          <div class="spinner"></div>
+          <span>{{ allReports().length === 0 ? 'Loading reports...' : 'Loading more items...' }}</span>
+        </div>
+      } @else if (error()) {
+        <div class="content-message content-message--error">{{ error() }}</div>
+      } @else if (allReports().length === 0) {
+        <div class="content-message">
+          No {{ isArchiveView() ? 'archived' : '' }} items found.
+        </div>
+      } @else if (currentPage() >= totalPages()) {
+        <div class="content-message end-of-list">
+          No more items to display.
+        </div>
+      }
+    </div>
   </div>
 </div>
 

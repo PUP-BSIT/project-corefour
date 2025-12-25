@@ -88,11 +88,7 @@
   </div>
 
   <div class="profile-page__content">
-    @if (isItemsLoading()) {
-       <div class="profile-page__empty">
-          <p>Loading items...</p>
-       </div>
-    } @else {
+    @if (displayedItems().length > 0) {
       <app-report-item-grid
           [items]="displayedItems()"
           [currentUserId]="(currentUser$ | async)?.user_id ?? null"
@@ -102,13 +98,24 @@
           (cardEditClicked)="onEditItem($event)"
           (cardViewCodeClicked)="onViewCode($event)">
       </app-report-item-grid>
+    }
 
-      @if (displayedItems().length === 0) {
+    <div #scrollAnchor class="scroll-anchor">
+      @if (isItemsLoading()) {
+         <div class="profile-page__empty">
+            <div class="spinner"></div>
+            <p>Loading items...</p>
+         </div>
+      } @else if (displayedItems().length === 0) {
         <div class="profile-page__empty">
           <p>No items found.</p>
         </div>
+      } @else if (currentPage() >= totalPages()) {
+        <div class="profile-page__empty">
+          <p class="empty-hint">You've reached the end of your reports.</p>
+        </div>
       }
-    }
+    </div>
   </div>
 
   @if (showDeleteModal) {

@@ -42,16 +42,27 @@
   </div>
 
   <div class="report-status-page__content">
-    @if (isLoading()) {
-      <div class="status-message">Loading reports...</div>
-    } @else if (isError()) {
-      <div class="status-message error">Error fetching reports. Please try again.</div>
-    } @else {
+    @if (reports().length > 0) {
       <app-report-item-grid
           [items]="sortedReports()"
           (cardClicked)="onViewDetails($event)">
       </app-report-item-grid>
     }
+
+    <div #scrollAnchor class="scroll-anchor">
+      @if (isLoading()) {
+        <div class="status-message">
+           <div class="spinner"></div>
+           <span>Loading more reports...</span>
+        </div>
+      } @else if (isError()) {
+        <div class="status-message error">Error fetching reports. Please try again.</div>
+      } @else if (reports().length === 0) {
+        <div class="status-message">No reports found.</div>
+      } @else if (currentPage() >= totalPages()) {
+        <div class="status-message end-message">No more reports to display.</div>
+      }
+    </div>
   </div>
 
   @if (selectedReport()) {

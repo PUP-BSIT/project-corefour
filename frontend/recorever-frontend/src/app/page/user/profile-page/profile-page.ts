@@ -1,7 +1,17 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { 
+  Component, 
+  OnInit, 
+  inject, 
+  signal, 
+  computed, 
+  ViewChild, 
+  ElementRef, 
+  AfterViewInit, 
+  OnDestroy 
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
-import { map, switchMap, catchError, shareReplay, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, combineLatest, of, Subject } from 'rxjs';
+import { map, switchMap, catchError, shareReplay, tap, takeUntil, startWith } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
@@ -24,7 +34,7 @@ import {
 import { ItemService } from '../../../core/services/item-service';
 import { UserService } from '../../../core/services/user-service';
 
-import { Report, ReportFilters } from '../../../models/item-model';
+import { PaginatedResponse, Report, ReportFilters } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
 
 type TabType = 'all' | 'found' | 'lost';
@@ -43,12 +53,21 @@ type TabType = 'all' | 'found' | 'lost';
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss'
 })
-export class ProfilePage implements OnInit {
+export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
   private itemService = inject(ItemService);
   private userService = inject(UserService);
+  private destroy$ = new Subject<void>();
+
+  @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
+  private observer!: IntersectionObserver;
+  
+  currentPage = signal(1);
+  totalPages = signal(1);
+  pageSize = signal(10);
 
   activeTab$ = new BehaviorSubject<TabType>('all');
   activeStatus$ = new BehaviorSubject<string>('');
+  private refreshTrigger$ = new Subject<void>();
   private refreshUser$ = new BehaviorSubject<void>(undefined);
   currentUser$: Observable<User | null>;
 
@@ -95,55 +114,69 @@ export class ProfilePage implements OnInit {
       this.activeTab$,
       this.activeStatus$
     ]).pipe(
-      tap(() => this.isItemsLoading.set(true)),
-      switchMap(([user, tab, status]) => {
-        if (!user) return of([]);
-
-        return this.fetchReportsByTab(tab, user.user_id, status).pipe(
-          map((items: Report[]) => {
-            return items;
-          })
-        );
-      })
-    ).subscribe({
-      next: (items: Report[]) => {
-        this.displayedItems.set(items);
-        this.isItemsLoading.set(false);
-      },
-      error: (err: unknown) => {
-        console.error('Error loading items', err);
-        this.isItemsLoading.set(false);
-      }
+      switchMap(([user, tab, status]) => 
+        this.refreshTrigger$.pipe(
+          startWith(undefined),
+          tap(() => this.isItemsLoading.set(true)),
+          switchMap(() => {
+            if (!user) return of({ items: [], totalPages: 0, totalItems: 0, currentPage: 1 });
+            
+            const filter: ReportFilters = {
+              user_id: user.user_id,
+              page: this.currentPage(),
+              size: this.pageSize(),
+              ...(tab !== 'all' && { type: tab as any }),
+              ...(status && { status: status as any })
+            };
+            return this.itemService.getReports(filter);
+          }),
+          catchError(() => of({ items: [], totalPages: 0, totalItems: 0, currentPage: 1 }))
+        )
+      ),
+      takeUntil(this.destroy$)
+    ).subscribe(res => {
+      this.displayedItems.update(existing => 
+        this.currentPage() === 1 ? res.items : [...existing, ...res.items]
+      );
+      this.totalPages.set(res.totalPages);
+      this.isItemsLoading.set(false);
     });
   }
 
-  private fetchReportsByTab(
-    tab: TabType,
-    userId: number,
-    status: string
-  ): Observable<Report[]> {
+  ngAfterViewInit(): void {
+    this.observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !this.isItemsLoading() && this.currentPage() < this.totalPages()) {
+        this.currentPage.update(p => p + 1);
+        this.refreshTrigger$.next();
+      }
+    }, { rootMargin: '150px' });
+    this.observer.observe(this.scrollAnchor.nativeElement);
+  }
 
-    const filter: ReportFilters = {
-      user_id: userId,
-      ...(tab !== 'all' && { type: tab }),
-      ...(status && { status: status as any })
-    };
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
-    return this.itemService.getReports(filter).pipe(
-      map((reports: Report[]) => reports)
-    );
+  private resetPagination(): void {
+    this.currentPage.set(1);
+    this.displayedItems.set([]);
   }
 
   setActiveTab(tab: TabType): void {
     this.activeTab$.next(tab);
+    this.resetPagination();
   }
 
   setActiveStatus(status: string): void {
     this.activeStatus$.next(status);
+    this.resetPagination();
   }
 
   clearStatusFilter(): void {
     this.activeStatus$.next('');
+    this.resetPagination();
   }
 
   handleSaveProfile(event: { user: User, file: File | null }): void {

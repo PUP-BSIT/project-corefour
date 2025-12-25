@@ -103,27 +103,34 @@
   </nav>
 
   <div class="item-list-page__content">
-    @if (isLoading()) {
-    <div class="content-message">Loading items...</div>
-    } @else if (error()) {
-    <div class="content-message content-message--error">{{ error() }}</div>
-    } @else if (!allReports().length) {
-    <div class="content-message">
-      No {{ itemType() === 'found' ? (showResolved() ? 'claimed' : 'unclaimed')
-        : (showResolved() ? 'resolved' :
-        'unresolved') }} items found.
-    </div>
-    } @else {
-    <app-report-item-grid
-      [items]="visibleReports()"
-      [currentUserId]="currentUserId()"
-      (cardClicked)="onCardClick($event)"
-      (cardTicketClicked)="onTicketClick($event)"
-      (cardEditClicked)="onEditClick($event)"
-      (cardDeleteClicked)="onDeleteClick($event)"
-      (cardViewCodeClicked)="onViewCodeClick($event)">
-    </app-report-item-grid>
+    @if (allReports().length > 0) {
+      <app-report-item-grid
+        [items]="visibleReports()"
+        [currentUserId]="currentUserId()"
+        (cardClicked)="onCardClick($event)"
+        (cardTicketClicked)="onTicketClick($event)"
+        (cardEditClicked)="onEditClick($event)"
+        (cardDeleteClicked)="onDeleteClick($event)"
+        (cardViewCodeClicked)="onViewCodeClick($event)">
+      </app-report-item-grid>
     }
+
+    <div #scrollAnchor class="scroll-anchor">
+      @if (isLoading()) {
+        <div class="content-message">
+           <div class="spinner"></div>
+           <span>Loading items...</span>
+        </div>
+      } @else if (error()) {
+        <div class="content-message content-message--error">{{ error() }}</div>
+      } @else if (allReports().length === 0) {
+        <div class="content-message">
+          No items found.
+        </div>
+      } @else if (currentPage() >= totalPages()) {
+        <div class="end-of-list">No more items to display.</div>
+      }
+    </div>
   </div>
 </div>
 
@@ -160,7 +167,7 @@
 @if (showCustomLocationModal()) {
 <app-custom-location
     (close)="showCustomLocationModal.set(false)"
-    (locationSelected)="fetchReports($event)" />
+    (locationSelected)="onSearchSubmit($event)" />
 }
 
 @if (viewCodeItem()) {

@@ -44,21 +44,26 @@
   </div>
 
   <div class="claims-list">
-    @if (isLoading()) {
-      <div class="loading-state">
-        Loading reports...
-      </div>
-    } @else if (filteredReports().length === 0) {
-      <div class="empty-state">
-        No reports found.
-      </div>
-    } @else {
+    @if (reports().length > 0) {
       <app-report-item-grid
             [items]="filteredReports()"
             [isAdmin]="isAdmin()"
             (cardClicked)="onViewDetails($event.report_id)">
       </app-report-item-grid>
     }
+
+    <div #scrollAnchor class="scroll-anchor">
+      @if (isLoading()) {
+        <div class="status-message">
+          <div class="spinner"></div>
+          <span>Loading more reports...</span>
+        </div>
+      } @else if (reports().length === 0) {
+        <div class="status-message empty-state">No reports found.</div>
+      } @else if (currentPage() >= totalPages()) {
+        <div class="status-message end-state">No more reports to display.</div>
+      }
+    </div>
   </div>
 
   @if (selectedReport()) {
