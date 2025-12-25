@@ -1,0 +1,50 @@
+<div [formGroup]="filterForm" class="filter-bar-container">
+  
+  @if (isDefaultState()) {
+    <button mat-flat-button color="primary" type="button" 
+        (click)="resetFilters()" class="all-btn">
+      All
+    </button>
+  } @else {
+    <button mat-stroked-button type="button" 
+        (click)="resetFilters()" class="all-btn">
+      All
+    </button>
+  }
+
+  <mat-form-field appearance="outline" class="filter-field fixed-size">
+    <mat-label>Sort By</mat-label>
+    <mat-select formControlName="sort">
+      <mat-option value="newest">New to Oldest</mat-option>
+      <mat-option value="oldest">Oldest to Newest</mat-option>
+    </mat-select>
+    <mat-icon matPrefix>sort</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field fixed-size">
+    <mat-label>Date Lost</mat-label>
+    <input matInput [matDatepicker]="picker" formControlName="date" readonly>
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field fixed-size">
+    <mat-label>Location Lost</mat-label>
+    <mat-icon matPrefix>place</mat-icon>
+    
+    <input type="text"
+           placeholder="Select or Type..."
+           matInput
+           formControlName="location"
+           [matAutocomplete]="auto">
+    
+    <mat-autocomplete #auto="matAutocomplete">
+      @for (loc of filteredLocations$ | async; track loc) {
+        <mat-option [value]="loc">
+          {{ loc }}
+        </mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+</div>
