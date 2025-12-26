@@ -27,6 +27,10 @@ export class ItemService {
     formData.append('location', report.location);
     formData.append('description', report.description);
 
+    if (report.date_lost_found) {
+    formData.append('date_lost_found', report.date_lost_found);
+    }
+    
     if (files && files.length > 0) {
       files.forEach((file: File) => {
         formData.append('files', file, file.name);
