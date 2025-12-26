@@ -5,7 +5,8 @@ import { environment } from '../../../environments/environment';
 import {
   Report,
   ReportFilters,
-  FinalReportSubmission
+  FinalReportSubmission,
+  PaginatedResponse
 } from '../../models/item-model';
 
 @Injectable({
@@ -38,30 +39,42 @@ export class ItemService {
     );
   }
 
-  getReports(filters: ReportFilters): Observable<Report[]> {
+  getReports(filters: ReportFilters): Observable<PaginatedResponse<Report>> {
     let params = new HttpParams();
     const endpoint = `${this.apiUrl}/reports`;
+
+    if (filters.page) {
+      params = params.set('page', filters.page.toString());
+    }
+
+    if (filters.size) {
+      params = params.set('size', filters.size.toString());
+    }
 
     if (filters.type) {
       params = params.set('type', filters.type);
     }
+
     if (filters.status) {
       params = params.set('status', filters.status);
     }
+
     if (filters.user_id) {
       params = params.set(
           'user_id',
           filters.user_id.toString()
       );
     }
+
     if (filters.query) {
       params = params.set('query', filters.query);
     }
+
     if (filters.location) {
       params = params.set('location', filters.location);
     }
 
-    return this.http.get<Report[]>(endpoint, { params });
+    return this.http.get<PaginatedResponse<Report>>(endpoint, { params });
   }
 
   deleteReport(reportId: number): Observable<void> {
@@ -82,5 +95,9 @@ export class ItemService {
       `${this.apiUrl}/report/${reportId}/status`,
       { status }
     );
+  }
+
+  getTopLocations(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/reports/top-locations`); 
   }
 }

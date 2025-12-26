@@ -73,7 +73,7 @@ export class UserService {
     formData.append('email', user.email);
 
     if (file) {
-      // TODO(Durante, Stephanie): Handle profile picture file upload
+      formData.append('profile_picture_file', file);
     }
 
     return this.http.put<User>(

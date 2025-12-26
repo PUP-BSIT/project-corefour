@@ -1,8 +1,8 @@
 package com.recorever.recorever_backend.controller;
 
 // Service & Repository Imports
-import com.recorever.recorever_backend.config.JwtUtil;
 import com.recorever.recorever_backend.model.User;
+import com.recorever.recorever_backend.service.ImageService;
 import com.recorever.recorever_backend.service.UserService;
 import com.recorever.recorever_backend.repository.UserRepository;
 
@@ -17,6 +17,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -28,14 +29,17 @@ import java.util.Map;
 @RequestMapping("/api")
 public class UserController {
 
+    private final ImageService imageService;
+
     @Autowired
     private UserService service;
 
     @Autowired
     private UserRepository repo;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    UserController(ImageService imageService) {
+        this.imageService = imageService;
+    }
 
     /* This prevents exposing internal database or security fields.*/
     private UserResponseDTO mapToUserResponseDTO(User user) {
@@ -160,10 +164,19 @@ public class UserController {
                                         @RequestParam(required = false) String name,
                                         @RequestParam(required = false) String phone_number,
                                         @RequestParam(required = false) String email,
-                                        @RequestParam(required = false) String profile_picture) {
+                                        @RequestParam(required = false) MultipartFile profile_picture_file) {
         
         User user = (User) authentication.getPrincipal();
-        Map<String, Object> result = service.updateUserProfile(user, name, phone_number, email, profile_picture);
+        String profilePictureFilename = user.getProfile_picture();
+
+        if (profile_picture_file != null && !profile_picture_file.isEmpty()) {
+            if (user.getProfile_picture() != null) {
+                imageService.deleteFile(user.getProfile_picture());
+            }
+            profilePictureFilename = imageService.storeFile(profile_picture_file);
+        }
+        
+        Map<String, Object> result = service.updateUserProfile(user, name, phone_number, email, profilePictureFilename);
 
         if (result.containsKey("error")) {
             return ResponseEntity.badRequest().body(result);

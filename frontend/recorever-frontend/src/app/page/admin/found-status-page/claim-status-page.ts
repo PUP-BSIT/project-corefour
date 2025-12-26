@@ -4,17 +4,21 @@ import {
   inject,
   signal,
   computed,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { catchError, finalize, switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ToastService } from '../../../core/services/toast-service';
 
-import { Report } from '../../../models/item-model';
+import { Report, ReportFilters } from '../../../models/item-model';
 
 import { 
   SearchBarComponent 
@@ -25,6 +29,9 @@ import {
 import { 
   ClaimFormModal 
 } from '../../../modal/claim-form-modal/claim-form-modal';
+import { Subject } from 'rxjs/internal/Subject';
+import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { of } from 'rxjs';
 
 type SortOption = 'all' | 'az' | 'date';
 type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'rejected';
@@ -44,10 +51,19 @@ type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'rejected';
   styleUrl: './claim-status-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ClaimStatusPage implements OnInit {
+export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
+
+  private destroy$ = new Subject<void>();
+  private refreshTrigger$ = new BehaviorSubject<void>(undefined);
+
+  @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
+  private observer!: IntersectionObserver;
+  protected currentPage = signal(1);
+  protected totalPages = signal(1);
+  protected pageSize = signal(10);
 
   protected reports = signal<Report[]>([]);
   protected searchQuery = signal(''); 
@@ -97,29 +113,61 @@ export class ClaimStatusPage implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadReports();
+    this.refreshTrigger$.pipe(
+      tap(() => this.isLoading.set(true)),
+      switchMap(() => {
+        const filters: ReportFilters = {
+          type: 'found' as const, 
+          status: this.currentStatusFilter() === 'All Statuses' ? undefined : this.currentStatusFilter() as any,
+          query: this.searchQuery(),
+          page: this.currentPage(),
+          size: this.pageSize()
+        };
+
+        return this.itemService.getReports(filters).pipe(
+          catchError(() => of({ items: [], totalPages: 1, totalItems: 0 }))
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe(response => {
+      this.reports.update(existing => 
+        this.currentPage() === 1 ? response.items : [...existing, ...response.items]
+      );
+      this.totalPages.set(response.totalPages);
+      this.isLoading.set(false);
+    });
   }
 
-  protected loadReports(): void {
-    this.isLoading.set(true);
-    this.itemService.getReports({ type: 'found' }).pipe(
-      finalize(() => this.isLoading.set(false))
-    ).subscribe({
-      next: (data) => {
-        this.reports.set(data);
-      },
-      error: (err) => {
-        console.error('Failed to load reports', err);
+  ngAfterViewInit(): void {
+    this.observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !this.isLoading() && this.currentPage() < this.totalPages()) {
+        this.currentPage.update(p => p + 1);
+        this.refreshTrigger$.next();
       }
-    });
+    }, { rootMargin: '100px' });
+    this.observer.observe(this.scrollAnchor.nativeElement);
   }
 
   protected setStatusFilter(status: string): void {
     this.currentStatusFilter.set(status as StatusFilter);
+    this.resetPagination();
   }
 
   protected onSearch(query: string): void {
     this.searchQuery.set(query.trim());
+    this.resetPagination();
+  }
+
+  private resetPagination(): void {
+    this.currentPage.set(1);
+    this.reports.set([]);
+    this.refreshTrigger$.next();
+  }
+
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   protected setSort(option: SortOption): void {
@@ -141,7 +189,7 @@ export class ClaimStatusPage implements OnInit {
   }
 
   protected onStatusChanged(newStatus: string): void {
-    this.loadReports();
+    this.resetPagination();
     this.onCloseModal();
 
     let message = '';

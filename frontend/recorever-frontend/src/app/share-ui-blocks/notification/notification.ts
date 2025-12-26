@@ -22,6 +22,7 @@ export class Notification implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private streamSub!: Subscription;
 
   notifications: UserNotification[] = [];
   currentPage = 1;
@@ -35,20 +36,27 @@ export class Notification implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadPage(1);
-    this.pollingInterval = setInterval(() => {
-      if (!this.isDropdownOpen) {
-        this.loadPage(1, true);
-      }
-    }, 30000);
+    this.initSseStream();
+  }
+
+  initSseStream(): void {
+    this.streamSub = this.notificationService
+      .getNotificationStream()
+      .subscribe({
+        next: (newNotif) => {
+          this.notifications = [newNotif, ...this.notifications];
+
+          this.hasUnreadNotifications = true;
+
+          this.cdr.markForCheck();
+        },
+        error: (err) => console.error('SSE connection failed', err)
+      });
   }
 
   ngOnDestroy(): void {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-    }
-    if (this.notificationSub) {
-      this.notificationSub.unsubscribe();
-    }
+    if (this.streamSub) this.streamSub.unsubscribe();
+    if (this.notificationSub) this.notificationSub.unsubscribe();
   }
 
   loadPage(page: number, silentLoad = false): void {
@@ -107,13 +115,9 @@ export class Notification implements OnInit, OnDestroy {
 
   onNotificationClick(notification: UserNotification): void {
     if (notification.status === 'unread') {
-      this.notificationService.markAsRead(notification.notif_id).subscribe({
-        next: () => {
-          this.loadPage(1); 
-        },
-        error: (err) => {
-          console.error('Failed to mark notification as read', err);
-        }
+      this.notificationService.markAsRead(notification.notif_id).subscribe(() => {
+        notification.status = 'read';
+        this.hasUnreadNotifications = this.notifications.some(n => n.status === 'unread');
       });
     }
     // TODO(Florido, Maydelyn): Add navigation logic when the viewing

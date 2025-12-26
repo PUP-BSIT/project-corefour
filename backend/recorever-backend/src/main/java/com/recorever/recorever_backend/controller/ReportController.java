@@ -117,7 +117,7 @@ public class ReportController {
         Report finalReport = service.getById(newReportId);
         
         if (finalReport == null) {
-             return ResponseEntity.status(500).body(null); 
+            return ResponseEntity.status(500).body(null); 
         }
 
         return ResponseEntity.status(201).body(mapToReportResponseDTO(finalReport));
@@ -142,19 +142,26 @@ public class ReportController {
     }
 
     @GetMapping("/reports")
-    public ResponseEntity<List<ReportResponseDTO>> getReports(
+    public ResponseEntity<Map<String, Object>> getReports(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Integer user_id,
-            @RequestParam(required = false) String query) {
-        
-        List<Report> reports = service.searchReports(user_id, type, status, query);
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        List<ReportResponseDTO> responseList = reports.stream()
-            .map(this::mapToReportResponseDTO)
-            .collect(Collectors.toList());
+        Map<String, Object> serviceResponse = service.searchReports(user_id, type, status, query, page, size);
+
+        @SuppressWarnings("unchecked")
+        List<Report> reports = (List<Report>) serviceResponse.get("items");
+
+        List<ReportResponseDTO> dtos = reports.stream()
+                .map(this::mapToReportResponseDTO)
+                .collect(Collectors.toList());
+
+        serviceResponse.put("items", dtos);
             
-        return ResponseEntity.ok(responseList);
+        return ResponseEntity.ok(serviceResponse);
     }
 
     @GetMapping("reports/type/{type}")
@@ -177,6 +184,12 @@ public class ReportController {
         return ResponseEntity.ok(responseList);
     }
 
+    @GetMapping("/reports/top-locations")
+    public ResponseEntity<List<String>> getTopLocations() {
+        List<String> locations = service.getTopLocations();
+        return ResponseEntity.ok(locations);
+    }
+
     @GetMapping("/report/{id}")
     public ResponseEntity<?> getReport(@PathVariable int id) {
         Report report = service.getById(id);
@@ -194,7 +207,7 @@ public class ReportController {
         
         Report report = service.getById(id);
         if (report == null) {
-             return ResponseEntity.status(404).body("Report not found");
+            return ResponseEntity.status(404).body("Report not found");
         }
         
         User authenticatedUser = (User) authentication.getPrincipal();
@@ -227,7 +240,7 @@ public class ReportController {
         
         Report report = service.getById(id);
         if (report == null) {
-             return ResponseEntity.status(404).body("Report not found");
+            return ResponseEntity.status(404).body("Report not found");
         }
         
         User authenticatedUser = (User) authentication.getPrincipal();
@@ -242,9 +255,9 @@ public class ReportController {
 
     @PutMapping("/report/{id}/codes")
     public ResponseEntity<?> updateCodes(Authentication authentication,
-                                             @PathVariable int id,
-                                             @RequestParam String surrender_code,
-                                             @RequestParam String claim_code) {
+                                         @PathVariable int id,
+                                         @RequestParam String surrender_code,
+                                         @RequestParam String claim_code) {
         return ResponseEntity.status(403).body("This endpoint is deprecated. Use the /api/admin endpoints for code management.");
     }
 }

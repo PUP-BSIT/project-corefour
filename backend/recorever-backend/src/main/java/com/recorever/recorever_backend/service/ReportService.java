@@ -70,7 +70,7 @@ public class ReportService {
     }
 
     notificationService.create(ADMIN_USER_ID, id,
-        String.format("New PENDING report (ID #%d) submitted: %s.", id, itemName));
+        String.format("New PENDING report (ID #%d) submitted: %s.", id, itemName), false);
 
     return Map.of(
         "report_id", id,
@@ -80,16 +80,35 @@ public class ReportService {
         "surrender_code", surrenderCode != null ? surrenderCode : "N/A");
   }
 
-  public List<Report> listAll() {
-    return repo.getAllReports();
+  public Map<String, Object> listAll(int page, int size) {
+        List<Report> items = repo.getAllReports(page, size);
+        int totalItems = repo.countTotalReports();
+
+        return createPaginationResponse(items, totalItems, page, size);
+    }
+
+  public Map<String, Object> searchReports(Integer userId,
+                                           String type,
+                                           String status,
+                                           String query,
+                                           int page,
+                                           int size) {
+      List<Report> items = repo.searchReports(userId, type, status, query, page, size);
+      int totalItems = repo.countSearchReports(userId, type, status, query);
+
+      return createPaginationResponse(items, totalItems, page, size);
   }
 
-  public List<Report> searchReports(Integer userId,
-        String type,
-        String status,
-        String query) {
-
-      return repo.searchReports(userId, type, status, query);
+  private Map<String, Object> createPaginationResponse(List<Report> items,
+                                                       int totalItems,
+                                                       int page,
+                                                       int size) {
+      Map<String, Object> response = new HashMap<>();
+      response.put("items", items);
+      response.put("totalItems", totalItems);
+      response.put("currentPage", page);
+      response.put("totalPages", (int) Math.ceil((double) totalItems / size));
+      return response;
   }
 
   public List<Report> listByStatus(String status) {
@@ -129,7 +148,7 @@ public class ReportService {
         notificationService.create(report.getUser_id(), id,
             String.format(
                 "Your report for '%s' status changed to '%s'.",
-                report.getItem_name(), status));
+                report.getItem_name(), status), true);
       }
     }
     return updated;
@@ -207,5 +226,9 @@ public class ReportService {
     response.put("reportsOverTime", chartData);
 
     return response;
+  }
+
+  public List<String> getTopLocations() {
+    return repo.getTopLocations(5);
   }
 }

@@ -136,3 +136,12 @@ $link-color: #3b82f6;
   width: 100%;
   margin-top: 1rem;
 }
+
+.status-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.1rem;
+  color: $text-muted;
+}

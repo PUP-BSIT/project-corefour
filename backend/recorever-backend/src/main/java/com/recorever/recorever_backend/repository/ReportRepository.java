@@ -52,58 +52,108 @@ public class ReportRepository {
     return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
   }
 
-  public List<Report> getAllReports() {
-    String sql = """
-        SELECT r.*, u.name AS reporter_name
-        FROM reports r
-        LEFT JOIN users u ON r.user_id = u.user_id
-        WHERE r.is_deleted = 0
-        ORDER BY r.date_reported DESC
-        """;
-    return jdbcTemplate.query(sql, reportMapper);
+  public List<Report> getAllReports(int page, int size) {
+      int offset = (page - 1) * size;
+      String sql = """
+          SELECT r.*, u.name AS reporter_name
+          FROM reports r
+          LEFT JOIN users u ON r.user_id = u.user_id
+          WHERE r.is_deleted = 0
+          ORDER BY r.date_reported DESC
+          LIMIT ? OFFSET ?
+          """;
+      return jdbcTemplate.query(sql, reportMapper, size, offset);
   }
 
-    public List<Report> searchReports(Integer userId,
-      String type,
-      String status,
-      String query) {
+  public List<Report> searchReports(Integer userId,
+                                    String type,
+                                    String status,
+                                    String query,
+                                    int page,
+                                    int size) {
+      int offset = (page - 1) * size;
+      
+      StringBuilder sql = new StringBuilder("""
+          SELECT r.*, u.name AS reporter_name
+          FROM reports r
+          LEFT JOIN users u ON r.user_id = u.user_id
+          WHERE r.is_deleted = 0
+          """);
 
-    StringBuilder sql = new StringBuilder("""
-        SELECT r.*, u.name AS reporter_name
-        FROM reports r
-        LEFT JOIN users u ON r.user_id = u.user_id
-        WHERE r.is_deleted = 0
-        """);
+      List<Object> params = new ArrayList<>();
 
-    List<Object> params = new ArrayList<>();
-
-    if (userId != null) {
-      sql.append(" AND r.user_id = ?");
-      params.add(userId);
-    }
-
-    if (type != null && !type.isEmpty()) {
-      sql.append(" AND r.type = ?");
-      params.add(type);
-    }
-
-    if (status != null && !status.isEmpty()) {
-      sql.append(" AND r.status = ?");
-      params.add(status);
-    }
-
-if (query != null && !query.trim().isEmpty()) {
-      sql.append(" AND (r.item_name LIKE ? OR r.description LIKE ? OR r.location LIKE ? OR u.name LIKE ?)");
-      String searchPattern = "%" + query.trim() + "%";
-
-      for (int i = 0; i < 4; i++) {
-          params.add(searchPattern);
+      if (userId != null) {
+        sql.append(" AND r.user_id = ?");
+        params.add(userId);
       }
-    }
 
-    sql.append(" ORDER BY r.date_reported DESC");
+      if (type != null && !type.isEmpty()) {
+        sql.append(" AND r.type = ?");
+        params.add(type);
+      }
+
+      if (status != null && !status.isEmpty()) {
+        sql.append(" AND r.status = ?");
+        params.add(status);
+      }
+
+      if (query != null && !query.trim().isEmpty()) {
+          sql.append(" AND (r.item_name LIKE ? OR r.description LIKE ? OR r.location LIKE ? OR u.name LIKE ?)");
+          String searchPattern = "%" + query.trim() + "%";
+
+          for (int i = 0; i < 4; i++) {
+              params.add(searchPattern);
+          }
+      }
+
+      sql.append(" ORDER BY r.date_reported DESC LIMIT ? OFFSET ?");
+      params.add(size);
+      params.add(offset);
 
     return jdbcTemplate.query(sql.toString(), reportMapper, params.toArray());
+  }
+
+  public List<Report> getAllReports() {
+      String sql = "SELECT r.*, u.name AS reporter_name FROM reports r " +
+                  "LEFT JOIN users u ON r.user_id = u.user_id " +
+                  "WHERE r.is_deleted = 0 ORDER BY r.date_reported DESC";
+      return jdbcTemplate.query(sql, reportMapper);
+  }
+
+  public int countSearchReports(Integer userId,
+                                String type,
+                                String status,
+                                String query) {
+      StringBuilder sql = new StringBuilder("""
+          SELECT COUNT(*)
+          FROM reports r
+          LEFT JOIN users u ON r.user_id = u.user_id
+          WHERE r.is_deleted = 0
+      """);
+      List<Object> params = new ArrayList<>();
+
+      if (userId != null) {
+          sql.append(" AND r.user_id = ?");
+          params.add(userId);
+      }
+
+      if (type != null && !type.isEmpty()) {
+          sql.append(" AND r.type = ?");
+          params.add(type);
+      }
+
+      if (status != null && !status.isEmpty()) {
+          sql.append(" AND r.status = ?");
+          params.add(status);
+      }
+
+      if (query != null && !query.trim().isEmpty()) {
+          sql.append(" AND (r.item_name LIKE ? OR r.description LIKE ? OR r.location LIKE ? OR u.name LIKE ?)");
+          String searchPattern = "%" + query.trim() + "%";
+          for (int i = 0; i < 4; i++) params.add(searchPattern);
+      }
+
+      return jdbcTemplate.queryForObject(sql.toString(), Integer.class, params.toArray());
   }
 
   public List<Report> getReportsByStatus(String status) {
@@ -258,4 +308,16 @@ if (query != null && !query.trim().isEmpty()) {
         """;
     return jdbcTemplate.queryForList(sql, days);
   }
+
+  public List<String> getTopLocations(int limit) {
+      String sql = """
+          SELECT location 
+          FROM reports 
+          WHERE is_deleted = 0 AND location IS NOT NULL AND location != ''
+          GROUP BY location 
+          ORDER BY COUNT(*) DESC 
+          LIMIT ?
+          """;
+      return jdbcTemplate.queryForList(sql, String.class, limit);
+    }
 }

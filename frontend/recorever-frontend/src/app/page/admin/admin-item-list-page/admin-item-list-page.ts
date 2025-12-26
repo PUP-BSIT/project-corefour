@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Data } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, catchError, of, tap } from 'rxjs';
+import { switchMap, catchError, of, tap, BehaviorSubject, takeUntil, Subject, combineLatest, finalize } from 'rxjs';
 
 import {
   ReportItemGrid
@@ -68,6 +68,13 @@ export class AdminItemListPage implements OnInit {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
   private adminService = inject(AdminService);
+
+  private destroy$ = new Subject<void>();
+
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(10);
+  totalPages = signal<number>(1);
+  totalItems = signal<number>(0);
 
   currentUser = toSignal(this.authService.currentUser$);
   currentUserId = computed<number | null>(
@@ -194,33 +201,45 @@ export class AdminItemListPage implements OnInit {
     return item.surrender_code || 'N/A';
   });
 
+  private refreshTrigger$ = new BehaviorSubject<void>(undefined);
+
   ngOnInit(): void {
-    this.route.data.pipe(
-      tap((data: Data) => {
-        this.isLoading.set(true);
-        const status = data['status'];
+    combineLatest([
+      this.route.data,
+      this.refreshTrigger$
+    ]).pipe(
+      tap(([data]) => {
         const type = data['type'] || data['itemType'];
         this.itemType.set(type);
-        this.isArchiveView.set(status === 'matched' || status === 'claimed');
-      }),
-      switchMap((data: Data) => {
-        const filters: ReportFilters = {
-          type: data['type'] || data['itemType'],
-          status: data['status'] || 'approved'
-        };
+        this.isArchiveView.set(data['status'] === 'matched' || data['status'] === 'claimed');
         this.updatePageTitle(data);
+        this.isLoading.set(true);
+      }),
+      switchMap(([data]) => {
+        const filters: ReportFilters = {
+          type: this.itemType(),
+          status: data['status'] || 'approved',
+          query: this.searchQuery(),
+          page: this.currentPage(),
+          size: this.pageSize()
+        };
+
         return this.itemService.getReports(filters).pipe(
-          catchError((err: HttpErrorResponse) => {
-            console.error('Error fetching reports', err);
-            this.error.set('Failed to load items. Please try again.');
-            return of([] as Report[]);
-          })
+          catchError(() => of({ items: [], totalItems: 0, totalPages: 1 })),
+          finalize(() => this.isLoading.set(false))
         );
       }),
-      tap(() => this.isLoading.set(false))
-    ).subscribe(reports => {
-      this.allReports.set(reports);
+      takeUntil(this.destroy$)
+    ).subscribe(response => {
+      this.allReports.set(response.items);
+      this.totalItems.set(response.totalItems);
+      this.totalPages.set(response.totalPages);
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private getCutoffTime(filter: string): number {
@@ -246,6 +265,26 @@ export class AdminItemListPage implements OnInit {
 
   onSearch(query: string): void {
     this.searchQuery.set(query);
+    this.currentPage.set(1);
+    this.triggerReload();
+  }
+
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+      this.triggerReload();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+      this.triggerReload();
+    }
+  }
+
+  private triggerReload(): void {
+    this.refreshTrigger$.next();
   }
 
   toggleDropdown(dropdown: ActiveDropdown): void {
@@ -300,8 +339,11 @@ export class AdminItemListPage implements OnInit {
     this.selectedDateFilter.set('Any time');
     this.selectedLocationFilter.set('Any Location');
     this.searchQuery.set('');
-    this.activeDropdown.set(null);
     this.customDateRange.set(null);
+    this.activeDropdown.set(null);
+    this.currentPage.set(1);
+
+    this.triggerReload();
   }
 
   private updatePageTitle(data: Data): void {

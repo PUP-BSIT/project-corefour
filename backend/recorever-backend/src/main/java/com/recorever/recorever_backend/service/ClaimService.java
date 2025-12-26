@@ -70,7 +70,7 @@ public class ClaimService {
 
         String itemName = targetReport.getItem_name();
         notificationService.create(ADMIN_USER_ID, reportId, 
-                String.format("New Claim #%d submitted for item: %s. Code: %s", id, itemName, claimCode));
+                String.format("New Claim #%d submitted for item: %s. Code: %s", id, itemName, claimCode), false);
 
         return Map.of(
             "claim_id", id,
