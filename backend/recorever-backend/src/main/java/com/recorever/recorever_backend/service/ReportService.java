@@ -46,8 +46,10 @@ public class ReportService {
       String type,
       String itemName,
       String location,
-      String description) {
-    int id = repo.createReport(userId, type, itemName, location, description);
+      String description,
+      String dateLostFound) {
+      int id = repo.createReport
+        (userId, type, itemName, location, description, dateLostFound);
 
     String surrenderCode = null;
     if ("found".equalsIgnoreCase(type)) {
@@ -75,6 +77,7 @@ public class ReportService {
     return Map.of(
         "report_id", id,
         "status", "pending",
+        "date_lost_found", dateLostFound != null ? dateLostFound : "N/A",
         "type", type,
         "item_name", itemName,
         "surrender_code", surrenderCode != null ? surrenderCode : "N/A");
