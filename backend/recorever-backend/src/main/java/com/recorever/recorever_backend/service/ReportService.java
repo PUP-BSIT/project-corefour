@@ -96,6 +96,22 @@ public class ReportService {
       List<Report> items = repo.searchReports(userId, type, status, query, page, size);
       int totalItems = repo.countSearchReports(userId, type, status, query);
 
+      if (!items.isEmpty()) {
+        List<Integer> reportIds = items.stream()
+                .map(Report::getReport_id)
+                .collect(Collectors.toList());
+        List<Image> allImages = imageRepo
+          .findByReportIdInAndIsDeletedFalse(reportIds);
+
+        Map<Integer, List<Image>> imagesByReportId = allImages.stream()
+                .collect(Collectors.groupingBy(Image::getReportId));
+
+        items.forEach(report -> 
+            report
+            .setImages(imagesByReportId
+            .getOrDefault(report.getReport_id(), new ArrayList<>()))
+      );
+    }
       return createPaginationResponse(items, totalItems, page, size);
   }
 
