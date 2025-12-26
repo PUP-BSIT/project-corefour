@@ -17,75 +17,14 @@ $md: 768px;
   overflow-x: hidden;
 }
 
-.hero-section {
+.team-wrapper {
   background-color: $secondary;
-}
-
-.content-wrapper {
-  @include container;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  gap: 40px;
-
-  @media (min-width: $md) {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-}
-
-.text-block {
-  flex: 1;
-  text-align: center;
-
-  @media (min-width: $md) {
-    text-align: left;
-  }
-
-  .hero-title {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: $text-main;
-    margin-bottom: 24px;
-    line-height: 1.1;
-
-    .highlight {
-      color: $primary;
-    }
-
-    @media (min-width: $md) {
-      font-size: 3.5rem;
-    }
-  }
-
-  .hero-description {
-    font-size: 1.125rem;
-    color: $text-light;
-    line-height: 1.6;
-    max-width: 500px;
-    margin: 0 auto;
-    
-    @media (min-width: $md) {
-      margin: 0;
-    }
-  }
-}
-
-.image-block {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-
-  .hero-image {
-    width: 100%;
-    max-width: 450px;
-    height: auto;
-  }
+  padding: 30px 0 1px;
 }
 
 .values-section {
   background-color: $secondary;
-  padding: 80px 0;
+  padding: 50px 0;
 }
 
 .values-grid {
@@ -103,7 +42,7 @@ $md: 768px;
   background: $white;
   padding: 40px 32px;
   border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   text-align: left;
   transition: transform 0.2s;
 
@@ -123,9 +62,4 @@ $md: 768px;
     color: $text-light;
     line-height: 1.6;
   }
-}
-
-.team-wrapper {
-  background-color: $secondary;
-  padding: 80px 0 100px;
 }
