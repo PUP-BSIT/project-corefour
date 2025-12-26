@@ -1,1 +1,41 @@
-<p>about-us-page works!</p>
+<main class="about-container">
+  <section class="hero-section">
+    <div class="content-wrapper">
+      <div class="text-block">
+        <h1 class="hero-title">
+          About <span class="highlight">ReCorever</span>
+        </h1>
+        <p class="hero-description">
+          Bridging the gap between lost items and their owners.
+          ReCorever is the official Lost and Found system for the
+          Polytechnic University of the Philippines.
+        </p>
+      </div>
+      <div class="image-block">
+        <img
+          src="assets/temp_logo.png"
+          alt="Illustration of Team"
+          class="hero-image"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="values-section">
+    <div class="values-grid">
+      <div class="value-card">
+        <h2>{{ missionTitle() }}</h2>
+        <p>{{ missionText() }}</p>
+      </div>
+
+      <div class="value-card">
+        <h2>{{ visionTitle() }}</h2>
+        <p>{{ visionText() }}</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="team-wrapper">
+    <app-team-member-card />
+  </div>
+</main>

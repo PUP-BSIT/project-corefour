@@ -1,0 +1,131 @@
+$primary: #800000;
+$secondary: #f7f7f7;
+$text-main: #2d2d2d;
+$text-light: #555555;
+$white: #ffffff;
+$md: 768px;
+
+@mixin container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.about-container {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.hero-section {
+  background-color: $secondary;
+}
+
+.content-wrapper {
+  @include container;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 40px;
+
+  @media (min-width: $md) {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.text-block {
+  flex: 1;
+  text-align: center;
+
+  @media (min-width: $md) {
+    text-align: left;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: $text-main;
+    margin-bottom: 24px;
+    line-height: 1.1;
+
+    .highlight {
+      color: $primary;
+    }
+
+    @media (min-width: $md) {
+      font-size: 3.5rem;
+    }
+  }
+
+  .hero-description {
+    font-size: 1.125rem;
+    color: $text-light;
+    line-height: 1.6;
+    max-width: 500px;
+    margin: 0 auto;
+    
+    @media (min-width: $md) {
+      margin: 0;
+    }
+  }
+}
+
+.image-block {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+
+  .hero-image {
+    width: 100%;
+    max-width: 450px;
+    height: auto;
+  }
+}
+
+.values-section {
+  background-color: $secondary;
+  padding: 80px 0;
+}
+
+.values-grid {
+  @include container;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+
+  @media (min-width: $md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.value-card {
+  background: $white;
+  padding: 40px 32px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  text-align: left;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $text-main;
+    margin-bottom: 16px;
+  }
+
+  p {
+    font-size: 1rem;
+    color: $text-light;
+    line-height: 1.6;
+  }
+}
+
+.team-wrapper {
+  background-color: $secondary;
+  padding: 80px 0 100px;
+}
