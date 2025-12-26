@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/auth/auth-service';
 import { ConfirmationModal } from '../../../modal/confirmation-modal/confirmation-modal';
 import { LogoutResponse } from '../../../models/auth-model';
 import { AppRoutePaths } from '../../../app.routes';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-side-bar',
@@ -35,6 +36,17 @@ export class AdminSideBar implements OnDestroy {
   
   private logoutTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
+
+  protected getProfileImageUrl(path: string | null | undefined): string {
+    if (!path) {
+      return 'assets/profile-avatar.png';
+    }
+    if (path.startsWith('http')) {
+      return path;
+    }
+
+    return `${environment.apiUrl}/image/download/${path}`;
+  }
 
   protected profileDropdownItems: ProfileNavItem[] = [
     { label: 'Settings', iconPath: 'assets/setting.png',
