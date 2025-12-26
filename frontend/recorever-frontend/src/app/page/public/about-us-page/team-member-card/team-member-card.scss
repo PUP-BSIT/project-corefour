@@ -1,4 +1,5 @@
 $primary-color: #800000;
+$green-accent: #006400;
 $text-dark: #333333;
 $text-light: #555555;
 $white: #ffffff;
@@ -13,19 +14,27 @@ $white: #ffffff;
   max-width: 600px;
   margin: 0 auto 60px;
 
-  h2 {
-    font-size: 2.25rem;
-    font-weight: 700;
-    color: $text-dark;
+  .hero-title {
+    font-size: 2.5rem;
+    font-weight: 800;
     margin-bottom: 16px;
-  }
+    line-height: 1.1;
 
-  .divider {
-    width: 60px;
-    height: 4px;
-    background-color: $primary-color;
-    margin: 0 auto 16px;
-    border-radius: 2px;
+    .highlight {
+      background: linear-gradient(
+        90deg, 
+        $primary-color 0%, 
+        $green-accent 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-block;
+    }
+
+    @media (min-width: 768px) {
+      font-size: 3.5rem;
+    }
   }
 
   p {
