@@ -16,6 +16,7 @@ import { ItemStatus } from '../../status-badge/status-badge';
 import { StatusBadge } from '../../status-badge/status-badge';
 import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-report-item-card',
@@ -67,8 +68,15 @@ export class ReportItemCard {
   });
 
   photoUrls = computed((): string[] => {
-    const urls = this.report().photoUrls;
-    return urls && urls.length > 0 ? urls : ['assets/temp-photo-item.png'];
+    const report = this.report();
+    if (report.images && report.images.length > 0) {
+      return report.images.map(img => img.imageUrl);
+    }
+
+    if (report.photoUrls && report.photoUrls.length > 0) {
+      return report.photoUrls;
+    }
+    return [];
   });
 
   hasMultipleImages = computed((): boolean => {
@@ -76,8 +84,19 @@ export class ReportItemCard {
   });
 
   currentImageUrl = computed((): string => {
-    return this.photoUrls()[this.currentImageIndex] ||
-        'assets/temp-photo-item.png';
+    const urls = this.photoUrls();
+
+    if (urls.length === 0) {
+      return 'assets/temp-photo-item.png';
+    }
+
+    const url = urls[this.currentImageIndex];
+
+    if (url && url.startsWith('http')) {
+      return url;
+    }
+  
+    return `${environment.apiUrl}/image/download/${url}`;
   });
 
   displayStatus = computed((): ItemStatus => {
