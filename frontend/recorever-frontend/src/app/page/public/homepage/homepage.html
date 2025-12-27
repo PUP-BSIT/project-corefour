@@ -1,22 +1,35 @@
 <div class="homepage-content">
 
   <div class="main-message">
-    <h1>Lost and found, simplified</h1>
-    <p class="tagline">Connecting people to their
-      missing belongings with ease.</p>
+    <h1>Lost and found,<br>simplified.</h1>
+    <p class="tagline">
+      Connecting people to their missing belongings with ease.
+      Secure, reliable, and always accessible.
+    </p>
   </div>
 
-  <div class="action-buttons-container">
-    <app-report-button theme="lost" label="Lost"
+  <div class="action-card">
+    <div class="card-header">
+      <h2>I want to report...</h2>
+    </div>
+
+    <div class="buttons-wrapper">
+      <app-report-button
+        theme="lost"
+        label="I Lost an Item"
         (buttonClicked)="navigateToLost()" />
 
-    <app-report-button theme="found" label="Found"
+      <app-report-button
+        theme="found"
+        label="I Found an Item"
         (buttonClicked)="navigateToFound()" />
+    </div>
 
     <div class="image-box-placeholder">
       <img src="assets/homepage.jpg"
-          alt="Placeholder graphic for Lost and Found"
-          class="placeholder-image">
+           alt="Illustration of community helping each other"
+           class="placeholder-image">
     </div>
   </div>
+
 </div>
