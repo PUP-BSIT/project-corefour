@@ -18,6 +18,7 @@ export const AppRoutePaths = {
   LOST_ITEMS: '/app/lost-items',
   FOUND_ITEMS: '/app/found-items',
   PROFILE: '/app/profile',
+  USER_PROFILE: (id: number | string) => `/app/profile/${id}`,
   ABOUT_US: '/app/about-us',
   REPORT_STATUS_MANAGEMENT: '/admin/report-status',
 };
@@ -81,6 +82,10 @@ export const routes: Routes = [
             .then(m => m.ReportFoundPage)
       },
       { path: 'profile',
+        loadComponent: () => import('./page/user/profile-page/profile-page')
+          .then(m => m.ProfilePage)
+      },
+      { path: 'profile/:id',
         loadComponent: () => import('./page/user/profile-page/profile-page')
           .then(m => m.ProfilePage)
       },
