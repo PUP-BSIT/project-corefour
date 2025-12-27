@@ -10,11 +10,12 @@
       </button>
     }
 
-    <div class="interactive-logo-area"
-         (click)="onLogoClick()"
-         role="button"
-         tabindex="0">
-
+    <div
+      class="branding"
+      (click)="onLogoClick()"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="onLogoClick()">
       <img src="../../../assets/temp_logo.png" class="app-logo" alt="Logo">
       <div class="text-stack">
         <div class="app-name">

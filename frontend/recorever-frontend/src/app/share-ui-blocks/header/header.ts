@@ -1,6 +1,6 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule, ViewportScroller } from '@angular/common';
+import { RouterModule, Router, RouteReuseStrategy } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -11,13 +11,18 @@ import { MatButtonModule } from '@angular/material/button';
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
+
 export class Header {
-  @Input() public showButtons: boolean = false;
-  @Input() public showMenuButton: boolean = false;
+  @Input() showButtons: boolean = false;
+  @Input() showMenuButton: boolean = false;
 
-  @Output() public menuToggled = new EventEmitter<void>();
+  @Output() menuToggled = new EventEmitter<void>();
 
-  private router = inject(Router);
+  constructor(
+    private router: Router,
+    private routeReuseStrategy: RouteReuseStrategy,
+    private scroller: ViewportScroller
+  ) {}
 
   public toggleMenu(): void {
     this.menuToggled.emit();
@@ -26,11 +31,16 @@ export class Header {
   public onLogoClick(): void {
     const currentUrl: string = this.router.url;
 
-    if (currentUrl.includes('/login') || currentUrl.includes('/register')) {
+    if (currentUrl.includes('login') || currentUrl.includes('register')) {
       this.router.navigate(['/']);
     } else {
-      window.scrollTo(0, 0);
-      window.location.reload();
+      this.scroller.scrollToPosition([0, 0]);
+
+      this.routeReuseStrategy.shouldReuseRoute = () => false;
+
+      this.router.navigate([currentUrl], {
+        onSameUrlNavigation: 'reload'
+      });
     }
   }
 }
