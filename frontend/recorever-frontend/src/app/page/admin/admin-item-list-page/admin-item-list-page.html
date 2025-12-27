@@ -6,94 +6,17 @@
     </div>
   </header>
 
-  <nav class="filters">
-    <button
-      type="button"
-      class="filters__button"
-      [class.filters__button--active]="activeFilter() === 'all'
-          && activeDropdown() === null"
-      (click)="activeFilter.set('all'); activeDropdown.set(null)">
-      All
-    </button>
-
-    <button
-      type="button"
-      class="filters__button"
-      [class.filters__button--active]="activeFilter() === 'az' ||
-          activeFilter() === 'za'"
-      (click)="toggleSort()">
-      {{ activeFilter() === 'za' ? 'Z-A ↑' : 'A-Z ↓' }}
-    </button>
-
-    <div class="filters__dropdown-container">
-      <button
-        type="button"
-        class="filters__button filters__button--dropdown-label"
-        [class.filters__button--active]="activeDropdown() === 'date'
-            || selectedDateFilter() !== 'Any time'"
-        (click)="toggleDropdown('date')">
-        <span>Date {{ itemType() === 'lost' ? 'Lost' : 'Found' }}</span>
-        <span class="filters__dropdown-arrow">↓</span>
-      </button>
-
-      @if (activeDropdown() === 'date') {
-        <div class="dropdown-panel dropdown-panel--date">
-          @for (filter of dateFilters(); track filter) {
-            <button
-              class="dropdown-panel__item"
-              (click)="selectDateFilter(filter)">
-              {{ filter }}
-              @if (selectedDateFilter() === filter) {
-                <span class="dropdown-panel__checkmark">✓</span>
-              }
-            </button>
-          }
-        </div>
-      }
-    </div>
-
-    <div class="filters__dropdown-container">
-      <button
-        type="button"
-        class="filters__button filters__button--dropdown-label"
-        [class.filters__button--active]="activeDropdown() === 'location'
-            || selectedLocationFilter() !== 'Any Location'"
-        (click)="toggleDropdown('location')">
-        <span>Location {{ itemType() === 'lost' ? 'Lost' : 'Found' }}</span>
-        <span class="filters__dropdown-arrow">↓</span>
-      </button>
-
-      @if (activeDropdown() === 'location') {
-        <div class="dropdown-panel dropdown-panel--location">
-          @for (location of locationFilters(); track location) {
-            <button
-              class="dropdown-panel__item"
-              (click)="selectLocationFilter(location)">
-              {{ location }}
-              @if (selectedLocationFilter() === location) {
-                <span class="dropdown-panel__checkmark">✓</span>
-              }
-            </button>
-          }
-        </div>
-      }
-    </div>
-
-    @if (selectedDateFilter() !== 'Any time' || selectedLocationFilter()
-        !== 'Any Location' || searchQuery()) {
-      <button
-        type="button"
-        class="filters__button filters__button--clear"
-        (click)="clearFilters()">
-        Clear Filters
-      </button>
-    }
-  </nav>
+  <app-filter
+    [locations]="locationFilters"
+    [itemType]="itemType()"
+    [genericLabels]="true"
+    (filterChange)="onFilterChange($event)">
+  </app-filter>
 
   <div class="content-section">
-    @if (allReports().length > 0) {
+    @if (filteredReports().length > 0) {
       <app-report-item-grid
-        [items]="allReports()"
+        [items]="filteredReports()"
         [currentUserId]="currentUserId()"
         [isArchiveView]="isArchiveView()"
         (cardClicked)="onCardClick($event)"
@@ -109,11 +32,12 @@
       @if (isLoading()) {
         <div class="content-message">
           <div class="spinner"></div>
-          <span>{{ allReports().length === 0 ? 'Loading reports...' : 'Loading more items...' }}</span>
+          <span>{{ allReports().length === 0 ?
+              'Loading reports...' : 'Loading more items...' }}</span>
         </div>
       } @else if (error()) {
         <div class="content-message content-message--error">{{ error() }}</div>
-      } @else if (allReports().length === 0) {
+      } @else if (filteredReports().length === 0) {
         <div class="content-message">
           No {{ isArchiveView() ? 'archived' : '' }} items found.
         </div>
@@ -153,18 +77,4 @@
     (confirm)="processUnarchive()"
     (cancel)="cancelUnarchive()">
   </app-unarchive-confirmation-modal>
-}
-
-@if (showLocationModal()) {
-  <app-custom-location
-    (locationSelected)="onCustomLocationSelected($event)"
-    (close)="showLocationModal.set(false)">
-  </app-custom-location>
-}
-
-@if (showDateRangeModal()) {
-  <app-date-range-modal
-    (confirm)="onDateRangeConfirm($event)"
-    (cancel)="showDateRangeModal.set(false)">
-  </app-date-range-modal>
 }

@@ -54,22 +54,29 @@ export type FilterState = {
   encapsulation: ViewEncapsulation.None
 })
 export class Filter implements OnInit {
-  @Input() locations: string[] = [];
-  @Input() itemType: 'lost' | 'found' = 'lost';
+  @Input() public locations: string[] = [];
+  @Input() public itemType: 'lost' | 'found' = 'lost';
+  @Input() public genericLabels: boolean = false;
 
-  @Output() filterChange = new EventEmitter<FilterState>();
+  @Output() public filterChange = new EventEmitter<FilterState>();
 
   protected filterForm: FormGroup;
   protected isDefaultState = signal<boolean>(true);
   protected filteredLocations$: Observable<string[]> = of([]);
 
-  protected dateLabel = computed((): string =>
-    this.itemType === 'found' ? 'Date Found' : 'Date Lost'
-  );
+  protected dateLabel = computed((): string => {
+    if (this.genericLabels) {
+      return 'Date';
+    }
+    return this.itemType === 'found' ? 'Date Found' : 'Date Lost';
+  });
 
-  protected locationLabel = computed((): string =>
-    this.itemType === 'found' ? 'Location Found' : 'Location Lost'
-  );
+  protected locationLabel = computed((): string => {
+    if (this.genericLabels) {
+      return 'Location';
+    }
+    return this.itemType === 'found' ? 'Location Found' : 'Location Lost';
+  });
 
   constructor(private fb: FormBuilder) {
     this.filterForm = this.fb.group({
@@ -79,7 +86,7 @@ export class Filter implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     const locControl = this.filterForm.get('location');
 
     if (locControl) {
