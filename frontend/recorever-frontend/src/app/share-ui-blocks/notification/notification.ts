@@ -1,14 +1,16 @@
-import { Component,
-          inject,
-          OnDestroy,
-          OnInit,
-          ChangeDetectorRef
+import {
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  ChangeDetectorRef,
+  ElementRef,
+  HostListener
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 import { NotificationService } from '../../core/services/notification-service';
 import type { UserNotification } from '../../models/notification-model';
-import { AppRoutePaths } from '../../app.routes';
 import { Subscription, tap, catchError, of } from 'rxjs';
 
 @Component({
@@ -20,19 +22,26 @@ import { Subscription, tap, catchError, of } from 'rxjs';
 })
 export class Notification implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
-  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private eRef = inject(ElementRef);
+  
   private streamSub!: Subscription;
+  private notificationSub!: Subscription;
 
   notifications: UserNotification[] = [];
   currentPage = 1;
   totalPages = 1;
   isLoading = false;
   isDropdownOpen = false;
-
   hasUnreadNotifications = false;
-  private pollingInterval: any;
-  private notificationSub!: Subscription;
+
+  @HostListener('document:click', ['$event'])
+  clickout(event: Event) {
+    if (!this.eRef.nativeElement.contains(event.target)) {
+      this.isDropdownOpen = false;
+      this.cdr.markForCheck();
+    }
+  }
 
   ngOnInit(): void {
     this.loadPage(1);
@@ -61,8 +70,6 @@ export class Notification implements OnInit, OnDestroy {
 
   loadPage(page: number, silentLoad = false): void {
     if (this.isLoading && !silentLoad) return;
-
-    if (this.isLoading) return;
 
     if (!silentLoad) {
       this.isLoading = true;
