@@ -304,7 +304,8 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
 
   getUserProfilePicture(user: User | null): string {
     if (user && user.profile_picture) {
-      return `${environment.apiUrl}/image/download/${user.profile_picture}`;
+      const baseUrl = environment.apiUrl.replace('http://', 'https://');
+      return `${baseUrl}/image/download/${user.profile_picture}`;
     }
 
     return 'assets/profile-avatar.png';
