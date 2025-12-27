@@ -19,11 +19,13 @@
           </div>
         </div>
         <div class="action-buttons">
-          <button type="button"
-              class="edit-btn"
-              (click)="showEditModal = true">
-            Edit Profile
-          </button>
+          @if (isOwnProfile$ | async) {
+            <button type="button"
+                    class="edit-btn"
+                    (click)="showEditModal = true">
+              Edit Profile
+            </button>
+          }
         </div>
       </div>
 
@@ -78,7 +80,11 @@
             [value]="activeStatus$ | async"
             (change)="setActiveStatus(statusSelect.value)">
           <option value="" disabled selected hidden>Status</option>
-          <option value="pending">Pending</option>
+          
+          @if (isOwnProfile$ | async) {
+            <option value="pending">Pending</option>
+          }
+          
           <option value="approved">Verified</option>
           <option value="claimed">Claimed</option>
         </select>
@@ -91,8 +97,8 @@
     @if (displayedItems().length > 0) {
       <app-report-item-grid
           [items]="displayedItems()"
-          [currentUserId]="(currentUser$ | async)?.user_id ?? null"
-          [isUserProfilePage]="true"
+          [currentUserId]="(loggedInUser$ | async)?.user_id ?? null"
+          [isUserProfilePage]="(isOwnProfile$ | async) ?? false"
           (cardClicked)="onCardClick($event)"
           (cardDeleteClicked)="onDeleteItem($event)"
           (cardEditClicked)="onEditItem($event)"
@@ -134,11 +140,11 @@
   }
 
   @if (selectedItem(); as item) {
-    @if (currentUser$ | async; as user) {
+    @if (loggedInUser$ | async; as loggedInUser) {
       <app-item-detail-modal
           [item]="item"
-          [currentUserId]="user.user_id"
-          [userProfilePicture]="getUserProfilePicture(user)"
+          [currentUserId]="loggedInUser.user_id"
+          [userProfilePicture]="item.reporter_profile_picture ?? null" 
           (close)="selectedItem.set(null)"
           (editClicked)="onModalEdit()"
           (deleteClicked)="onModalDelete()"
