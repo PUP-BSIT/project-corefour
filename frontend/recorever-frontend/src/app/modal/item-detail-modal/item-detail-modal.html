@@ -3,7 +3,7 @@
 
     <div class="modal-content">
       <div class="modal-header">
-        <div class="user-info">
+        <div class="user-info clickable-profile" (click)="navigateToProfile()">
           <div class="avatar-circle">
             <img
                 [src]="getUserProfilePicture()"
