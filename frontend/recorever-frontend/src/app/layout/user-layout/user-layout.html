@@ -1,7 +1,15 @@
 <div class="main-viewport-container">
-  <app-header />
+  <app-header
+    [showMenuButton]="true"
+    (menuToggled)="toggleSidebar()" />
+
   <div class="user-layout-container">
-    <aside class="sidebar-area">
+
+    @if (isSidebarOpen) {
+      <div class="sidebar-backdrop" (click)="closeSidebar()"></div>
+    }
+
+    <aside class="sidebar-area" [class.mobile-open]="isSidebarOpen">
       <app-user-side-bar />
     </aside>
 
