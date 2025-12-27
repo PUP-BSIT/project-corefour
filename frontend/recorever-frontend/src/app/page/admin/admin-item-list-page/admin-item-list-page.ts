@@ -55,7 +55,7 @@ type ItemType = 'lost' | 'found';
     CodesModal,
     UnarchiveConfirmationModal
   ],
-  providers: [DatePipe], // Needed for date comparison
+  providers: [DatePipe],
   templateUrl: './admin-item-list-page.html',
   styleUrl: './admin-item-list-page.scss',
 })
@@ -69,19 +69,16 @@ export class AdminItemListPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
 
-  // Pagination
   public currentPage = signal<number>(1);
   public pageSize = signal<number>(10);
   public totalPages = signal<number>(1);
   public totalItems = signal<number>(0);
 
-  // Auth
   public currentUser = toSignal(this.authService.currentUser$);
   public currentUserId = computed<number | null>(
       () => this.currentUser()?.user_id ?? null
   );
 
-  // Page Config
   public itemType = signal<ItemType>('lost');
   public isArchiveView = signal<boolean>(false);
   public pageTitle = signal<string>('Admin Item List');
@@ -93,18 +90,15 @@ export class AdminItemListPage implements OnInit, OnDestroy {
     return this.itemType() === 'found';
   }
 
-  // Data State
   public allReports = signal<Report[]>([]);
   public isLoading = signal<boolean>(true);
   public error = signal<string | null>(null);
 
-  // Filter State (Controlled by App-Filter)
   public searchQuery = signal<string>('');
   public currentSort = signal<'newest' | 'oldest'>('newest');
   public currentDateFilter = signal<Date | null>(null);
   public currentLocationFilter = signal<string>('');
 
-  // Modal State
   public selectedItem = signal<Report | null>(null);
   public editingItem = signal<Report | null>(null);
   public viewCodeItem = signal<Report | null>(null);
@@ -137,7 +131,8 @@ export class AdminItemListPage implements OnInit, OnDestroy {
     if (dateFilter) {
       const filterDateStr = this.datePipe.transform(dateFilter, 'yyyy-MM-dd');
       reports = reports.filter(report => {
-        const reportDateStr = this.datePipe.transform(report.date_reported, 'yyyy-MM-dd');
+        const reportDateStr =
+            this.datePipe.transform(report.date_reported, 'yyyy-MM-dd');
         return reportDateStr === filterDateStr;
       });
     }
@@ -145,12 +140,7 @@ export class AdminItemListPage implements OnInit, OnDestroy {
     reports.sort((a, b) => {
       const dateA = new Date(a.date_reported).getTime();
       const dateB = new Date(b.date_reported).getTime();
-
-      if (this.currentSort() === 'newest') {
-        return dateB - dateA;
-      } else {
-        return dateA - dateB;
-      }
+      return this.currentSort() === 'newest' ? dateB - dateA : dateA - dateB;
     });
 
     return reports;
@@ -167,7 +157,8 @@ export class AdminItemListPage implements OnInit, OnDestroy {
     const item = this.viewCodeItem();
     if (!item) return '';
     if (item.claim_code) return item.claim_code;
-    if (item.type === 'lost') return item.report_id ? `Report #${item.report_id}` : 'Pending';
+    if (item.type === 'lost') return item.report_id ?
+        `Report #${item.report_id}` : 'Pending';
     return item.surrender_code || 'N/A';
   });
 

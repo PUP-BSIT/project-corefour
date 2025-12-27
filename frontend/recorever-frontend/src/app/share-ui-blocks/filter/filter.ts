@@ -1,7 +1,7 @@
 import {
   Component,
   EventEmitter,
-  Input,
+  input,
   OnInit,
   Output,
   ViewEncapsulation,
@@ -54,9 +54,9 @@ export type FilterState = {
   encapsulation: ViewEncapsulation.None
 })
 export class Filter implements OnInit {
-  @Input() public locations: string[] = [];
-  @Input() public itemType: 'lost' | 'found' = 'lost';
-  @Input() public genericLabels: boolean = false;
+  public locations = input<string[]>([]);
+  public itemType = input<'lost' | 'found'>('lost');
+  public genericLabels = input<boolean>(false);
 
   @Output() public filterChange = new EventEmitter<FilterState>();
 
@@ -65,17 +65,17 @@ export class Filter implements OnInit {
   protected filteredLocations$: Observable<string[]> = of([]);
 
   protected dateLabel = computed((): string => {
-    if (this.genericLabels) {
+    if (this.genericLabels()) {
       return 'Date';
     }
-    return this.itemType === 'found' ? 'Date Found' : 'Date Lost';
+    return this.itemType() === 'found' ? 'Date Found' : 'Date Lost';
   });
 
   protected locationLabel = computed((): string => {
-    if (this.genericLabels) {
+    if (this.genericLabels()) {
       return 'Location';
     }
-    return this.itemType === 'found' ? 'Location Found' : 'Location Lost';
+    return this.itemType() === 'found' ? 'Location Found' : 'Location Lost';
   });
 
   constructor(private fb: FormBuilder) {
@@ -119,7 +119,7 @@ export class Filter implements OnInit {
 
   private filterLocations(value: string): string[] {
     const filterValue = value.toLowerCase();
-    return this.locations.filter(option =>
+    return this.locations().filter(option =>
       option.toLowerCase().includes(filterValue)
     );
   }

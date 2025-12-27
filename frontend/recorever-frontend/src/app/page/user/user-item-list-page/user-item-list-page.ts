@@ -15,7 +15,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, catchError, map, of, Subject, switchMap,
-  takeUntil, tap } from 'rxjs';
+  takeUntil, tap, finalize } from 'rxjs';
 import {
   SearchBarComponent
 } from '../../../share-ui-blocks/search-bar/search-bar';
@@ -35,6 +35,7 @@ import type {
 } from '../../../models/item-model';
 import { StandardLocations } from '../../../models/item-model';
 
+// Modals
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 import {
   ItemDetailModal
@@ -80,7 +81,8 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public pageSize = signal<number>(10);
 
   public currentUser = toSignal(this.authService.currentUser$);
-  public currentUserId = computed((): number | null => this.currentUser()?.user_id ?? null);
+  public currentUserId = computed((): number |
+      null => this.currentUser()?.user_id ?? null);
 
   public itemType = signal<ItemType>('lost');
   public pageTitle = computed((): string =>
@@ -95,14 +97,17 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public showResolved = signal<boolean>(false);
+  public searchSuggestions = signal<string[]>([]);
+
   public showDeleteModal = signal<boolean>(false);
   public itemToDelete = signal<Report | null>(null);
   public viewCodeItem = signal<Report | null>(null);
   public selectedItem = signal<Report | null>(null);
-  public searchSuggestions = signal<string[]>([]);
+
 
   public currentSort = signal<'newest' | 'oldest'>('newest');
   public currentDateFilter = signal<Date | null>(null);
+  public currentLocationFilter = signal<string>('');
 
   public readonly locationFilters: string[] = [
     ...Object.values(StandardLocations) as string[],
@@ -120,6 +125,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public visibleReports = computed((): Report[] => {
     let reports = [...this.allReports()];
     const dateFilter = this.currentDateFilter();
+    const locationFilter = this.currentLocationFilter();
     const sort = this.currentSort();
 
     if (dateFilter) {
@@ -129,6 +135,12 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
                 this.datePipe.transform(report.date_reported, 'yyyy-MM-dd');
             return reportDateStr === filterDateStr;
         });
+    }
+
+    if (locationFilter) {
+      reports = reports.filter(r =>
+        r.location.toLowerCase().includes(locationFilter.toLowerCase())
+      );
     }
 
     reports.sort((a, b) => {
@@ -180,8 +192,9 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
           page: pageToFetch,
           size: sizeToFetch
         }).pipe(
-          catchError(() => of({ items: []
-              , totalPages: 1, totalItems: 0, currentPage: 1 }))
+          catchError(() => of({ items: [],
+              totalPages: 1, totalItems: 0, currentPage: 1 })),
+              finalize(() => this.isLoading.set(false))
         );
       }),
       takeUntil(this.destroy$)
@@ -190,19 +203,20 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
         this.currentPage() === 1 ? res.items : [...existing, ...res.items]
       );
       this.totalPages.set(res.totalPages);
-      this.isLoading.set(false);
     });
   }
 
   public ngAfterViewInit(): void {
-    this.observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !this.isLoading() &&
-          this.currentPage() < this.totalPages()) {
-            this.currentPage.update(p => p + 1);
-            this.refreshTrigger$.next();
-      }
-    }, { rootMargin: '150px' });
-    this.observer.observe(this.scrollAnchor.nativeElement);
+    if (this.scrollAnchor) {
+      this.observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting && !this.isLoading() &&
+            this.currentPage() < this.totalPages()) {
+              this.currentPage.update(p => p + 1);
+              this.refreshTrigger$.next();
+        }
+      }, { rootMargin: '150px' });
+      this.observer.observe(this.scrollAnchor.nativeElement);
+    }
   }
 
   public ngOnDestroy(): void {
@@ -220,11 +234,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public onFilterChange(state: FilterState): void {
     this.currentSort.set(state.sort);
     this.currentDateFilter.set(state.date);
-
-    this.filters.update(curr => ({
-      ...curr,
-      location: state.location || undefined
-    }));
+    this.currentLocationFilter.set(state.location);
 
     this.resetPagination();
   }
