@@ -19,27 +19,39 @@
       color: #333;
     }
 
-    .app-logo {
-      height: 35px;
-      margin-right: 10px;
-    }
-
-    .text-stack {
+    .branding {
       display: flex;
-      flex-direction: column;
-      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      outline: none;
+      transition: opacity 0.2s ease;
 
-      .app-name {
-        font-weight: 700;
-        font-size: 1.1rem;
-        line-height: 1.1;
-        color: #333;
+      &:hover {
+        opacity: 0.8;
       }
 
-      .tagline {
-        font-size: 0.65rem;
-        color: #666;
-        letter-spacing: 0.5px;
+      .app-logo {
+        height: 40px;
+        margin-right: 10px;
+      }
+
+      .text-stack {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        .app-name {
+          font-weight: 700;
+          font-size: 1.1rem;
+          line-height: 1.1;
+          color: #333;
+        }
+
+        .tagline {
+          font-size: 0.65rem;
+          color: #666;
+          letter-spacing: 0.5px;
+        }
       }
     }
   }
@@ -93,8 +105,10 @@
     flex-wrap: wrap;
 
     .logo-container {
-      .tagline {
-        display: none;
+      .branding {
+        .tagline {
+          display: none;
+        }
       }
     }
   }
