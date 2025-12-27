@@ -1,4 +1,4 @@
-import { Component, input, Output, EventEmitter, computed } from '@angular/core';
+import { Component, input, Output, EventEmitter, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +9,7 @@ import { ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
 import { StatusBadge } from '../../share-ui-blocks/status-badge/status-badge';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 import { environment } from '../../../environments/environment';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-item-detail-modal',
@@ -27,6 +28,8 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./item-detail-modal.scss'],
 })
 export class ItemDetailModal {
+  private router = inject(Router);
+
   item = input.required<Report>();
   userProfilePicture = input<string | null>(null);
   currentUserId = input<number | null>(null);
@@ -99,6 +102,14 @@ export class ItemDetailModal {
     return (item.type === 'lost' || item.claim_code)
       ? 'View Ticket ID'
       : 'View Reference Code';
+  }
+
+  navigateToProfile(): void {
+    const userId = this.item().user_id;
+    if (userId) {
+      this.onClose();
+      this.router.navigate(['/app/profile', userId]); 
+    }
   }
 
   nextImage(event: Event): void {
