@@ -22,6 +22,7 @@ import { Subscription, tap, catchError, of } from 'rxjs';
 })
 export class Notification implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private eRef = inject(ElementRef);
   
@@ -109,10 +110,16 @@ export class Notification implements OnInit, OnDestroy {
   }
 
   toggleDropdown(): void {
-    this.isDropdownOpen = !this.isDropdownOpen;
-    if (this.isDropdownOpen) {
-      this.currentPage = 1;
-      this.loadPage(1);
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
+      const role = this.router.url.includes('/admin') ? 'admin' : 'user';
+      this.router.navigate([`/${role}/notifications`]);
+    } else {
+      this.isDropdownOpen = !this.isDropdownOpen;
+      if (this.isDropdownOpen) {
+        this.loadPage(1);
+      }
     }
   }
 
@@ -122,13 +129,27 @@ export class Notification implements OnInit, OnDestroy {
 
   onNotificationClick(notification: UserNotification): void {
     if (notification.status === 'unread') {
-      this.notificationService.markAsRead(notification.notif_id).subscribe(() => {
+      this.notificationService.markAsRead(notification.notif_id)
+      .subscribe(() => {
         notification.status = 'read';
-        this.hasUnreadNotifications = this.notifications.some(n => n.status === 'unread');
+        this.hasUnreadNotifications = this.notifications
+        .some(n => n.status === 'unread');
       });
     }
     // TODO(Florido, Maydelyn): Add navigation logic when the viewing
     //                          notification feature is implemented.
     this.isDropdownOpen = false;
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: UIEvent) {
+    const width = (event.target as Window).innerWidth;
+
+    if (width < 768 && this.isDropdownOpen) {
+      this.isDropdownOpen = false;
+      const role = this.router.url.includes('/admin') ? 'admin' : 'user';
+      this.router.navigate([`/${role}/notifications`]);
+      this.cdr.markForCheck();
+    }
   }
 }
