@@ -42,10 +42,11 @@ export class AdminSideBar implements OnDestroy {
       return 'assets/profile-avatar.png';
     }
     if (path.startsWith('http')) {
-      return path;
+      return path.replace('http://', 'https://');
     }
 
-    return `${environment.apiUrl}/image/download/${path}`;
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${path}`;
   }
 
   protected profileDropdownItems: ProfileNavItem[] = [

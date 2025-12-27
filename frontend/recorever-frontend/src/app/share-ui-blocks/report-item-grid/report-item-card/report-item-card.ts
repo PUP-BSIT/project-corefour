@@ -93,10 +93,11 @@ export class ReportItemCard {
     const url = urls[this.currentImageIndex];
 
     if (url && url.startsWith('http')) {
-      return url;
+      return url.replace('http://', 'https://');
     }
 
-    return `${environment.apiUrl}/image/download/${url}`;
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${url}`;
   });
 
   displayStatus = computed((): ItemStatus => {
