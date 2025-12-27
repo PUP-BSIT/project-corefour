@@ -1,7 +1,7 @@
 :host {
   display: block;
   padding: 2rem;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', sans-serif;
   --active-filter-color: #4caf50;
 }
 
@@ -29,133 +29,16 @@
 
 .page-title {
   font-size: 2.5rem;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #1a1a1a;
   margin: 0;
   flex-shrink: 0;
 }
 
-  .search-wrapper {
+.search-wrapper {
   flex-grow: 1;
   max-width: 550px;
   margin: 0 10.5rem 0 0.5rem;
-}
-
-
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 0.5rem;
-  position: relative;
-  margin-bottom: 2rem;
-}
-
-.filters__button {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #555;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: #000;
-    background-color: rgba(0, 0, 0, 0.03);
-  }
-
-  &--active {
-    color: var(--active-filter-color) !important;
-    font-weight: 600;
-    border-bottom-color: var(--active-filter-color);
-
-    .filters__dropdown-arrow {
-      transform: translateY(1px) rotate(180deg);
-    }
-  }
-
-  &--dropdown-label {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-
-    .filters__dropdown-arrow {
-      display: inline-block;
-      font-size: 0.9em;
-      transform: translateY(1px);
-      transition: transform 0.2s ease-in-out;
-    }
-  }
-
-  &--clear {
-    color: #d32f2f;
-    font-weight: 600;
-    margin-left: auto;
-
-    &:hover {
-      color: #b71c1c;
-      background-color: rgba(211, 47, 47, 0.05);
-      border-bottom-color: #d32f2f;
-    }
-  }
-}
-
-.filters__dropdown-arrow {
-  font-size: 0.9em;
-  transform: translateY(1px);
-}
-
-.filters__dropdown-container {
-  position: relative;
-}
-
-.dropdown-panel {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 100;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-top: 0;
-  min-width: 220px;
-  padding: 0.5rem 0;
-
-  &--date {
-    min-width: 220px;
-  }
-
-  &--location {
-    min-width: 220px;
-    padding: 0.25rem;
-  }
-}
-
-.dropdown-panel__item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 0.75rem 1.25rem;
-  background: none;
-  border: none;
-  text-align: left;
-  font-size: 1rem;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-}
-
-.dropdown-panel__checkmark {
-  color: #007bff;
-  font-weight: bold;
 }
 
 .content-section {
@@ -166,25 +49,52 @@
 .content-message {
   padding: 4rem 2rem;
   text-align: center;
-  color: #888;
+  color: #666;
   font-size: 1.1rem;
   border: 2px dashed #e0e0e0;
-  border-radius: 8px;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+    border-top-color: var(--active-filter-color);
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
 
   &--error {
     color: #d32f2f;
-    border-color: #d32f2f;
+    border-color: #ffcdd2;
+    background-color: #ffebee;
   }
 }
 
+.end-of-list {
+  border: none;
+  background: none;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #999;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 768px) {
-  .admin-item-list-page {
+  :host {
     padding: 1rem;
   }
 
   .page-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 1rem;
 
     .search-wrapper {
       max-width: none;
@@ -192,23 +102,8 @@
     }
   }
 
-  .filters {
-    flex-direction: column;
-    align-items: stretch;
-
-    &__button {
-      width: 100%;
-      text-align: left;
-    }
-
-    &__dropdown-container {
-      width: 100%;
-    }
-  }
-
-  .dropdown-panel {
-    left: 0;
-    right: 0;
-    width: 100%;
+  .page-title {
+    font-size: 2rem;
+    text-align: center;
   }
 }

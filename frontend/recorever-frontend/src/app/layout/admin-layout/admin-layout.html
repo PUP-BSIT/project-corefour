@@ -1,7 +1,18 @@
 <div class="main-viewport-container">
-  <app-header />
-  <div class="admin-layout-container" >
-    <aside class="sidebar-area" aria-label="Primary navigation">
+  <app-header
+    [showMenuButton]="true"
+    (menuToggled)="toggleSidebar()" />
+
+  <div class="admin-layout-container">
+
+    @if (isSidebarOpen) {
+      <div class="sidebar-backdrop" (click)="closeSidebar()"></div>
+    }
+
+    <aside
+      class="sidebar-area"
+      [class.mobile-open]="isSidebarOpen"
+      aria-label="Primary navigation">
       <app-admin-side-bar />
     </aside>
 
