@@ -31,6 +31,7 @@
 
   <app-filter
     [locations]="locationFilters"
+    [itemType]="itemType()"
     (filterChange)="onFilterChange($event)">
   </app-filter>
 
@@ -46,50 +47,3 @@
         (cardViewCodeClicked)="onViewCodeClick($event)">
       </app-report-item-grid>
     }
-
-    <div #scrollAnchor class="scroll-anchor">
-      @if (isLoading()) {
-        <div class="content-message">
-           <div class="spinner"></div>
-           <span>Loading items...</span>
-        </div>
-      } @else if (error()) {
-        <div class="content-message content-message--error">{{ error() }}</div>
-      } @else if (allReports().length === 0) {
-        <div class="content-message">
-          No items found.
-        </div>
-      } @else if (currentPage() >= totalPages()) {
-        <div class="end-of-list">No more items to display.</div>
-      }
-    </div>
-  </div>
-</div>
-
-@if (showDeleteModal()) {
-  <app-delete-report-modal
-      (confirm)="confirmDelete()"
-      (cancel)="cancelDelete()">
-  </app-delete-report-modal>
-}
-
-@if (viewCodeItem()) {
-  <app-codes-modal
-      [title]="codeModalTitle()"
-      [code]="codeModalValue()"
-      (close)="viewCodeItem.set(null)">
-  </app-codes-modal>
-}
-
-@if (selectedItem(); as item) {
-  <app-item-detail-modal
-      [item]="item"
-      [currentUserId]="currentUserId()"
-      [userProfilePicture]="getUserProfilePicture()"
-      (close)="selectedItem.set(null)"
-      (viewTicket)="onModalViewTicket()"
-      (editClicked)="onModalEdit()"
-      (deleteClicked)="onModalDelete()"
-      (viewCodeClicked)="onModalViewCode()">
-  </app-item-detail-modal>
-}
