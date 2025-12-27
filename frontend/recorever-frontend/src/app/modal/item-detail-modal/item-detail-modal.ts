@@ -1,4 +1,4 @@
-import { Component, input, Output, EventEmitter, computed } from '@angular/core';
+import { Component, input, Output, EventEmitter, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,6 +8,8 @@ import type { Report } from '../../models/item-model';
 import { ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
 import { StatusBadge } from '../../share-ui-blocks/status-badge/status-badge';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
+import { environment } from '../../../environments/environment';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-item-detail-modal',
@@ -26,6 +28,8 @@ import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
   styleUrls: ['./item-detail-modal.scss'],
 })
 export class ItemDetailModal {
+  private router = inject(Router);
+
   item = input.required<Report>();
   userProfilePicture = input<string | null>(null);
   currentUserId = input<number | null>(null);
@@ -41,8 +45,15 @@ export class ItemDetailModal {
   currentImageIndex = 0;
 
   photoUrls = computed((): string[] => {
-    const urls = this.item().photoUrls;
-    return urls && urls.length > 0 ? urls : ['assets/temp-photo-item.png'];
+    const report = this.item();
+    if (report.images && report.images.length > 0) {
+      return report.images.map(img => img.imageUrl);
+    }
+
+    if (report.photoUrls && report.photoUrls.length > 0) {
+      return report.photoUrls;
+    }
+    return [];
   });
 
   hasMultipleImages = computed((): boolean => {
@@ -50,8 +61,19 @@ export class ItemDetailModal {
   });
 
   currentImageUrl = computed((): string => {
-    return this.photoUrls()[this.currentImageIndex] ||
-        'assets/temp-photo-item.png';
+    const urls = this.photoUrls();
+    
+    if (urls.length === 0) {
+      return 'assets/temp-photo-item.png';
+    }
+
+    const url = urls[this.currentImageIndex];
+
+    if (url && url.startsWith('http')) {
+      return url;
+    }
+  
+    return `${environment.apiUrl}/image/download/${url}`; 
   });
 
   displayStatus = computed((): ItemStatus => {
@@ -80,6 +102,14 @@ export class ItemDetailModal {
     return (item.type === 'lost' || item.claim_code)
       ? 'View Ticket ID'
       : 'View Reference Code';
+  }
+
+  navigateToProfile(): void {
+    const userId = this.item().user_id;
+    if (userId) {
+      this.onClose();
+      this.router.navigate(['/app/profile', userId]); 
+    }
   }
 
   nextImage(event: Event): void {

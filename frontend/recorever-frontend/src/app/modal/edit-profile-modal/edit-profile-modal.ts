@@ -174,11 +174,7 @@ export class EditProfileModal implements OnInit, OnChanges, OnDestroy {
       const file = input.files[0];
       this.selectedFile = file;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.previewImage = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
+      this.previewImage = URL.createObjectURL(file);
       
       this.editForm.markAsDirty();
     }

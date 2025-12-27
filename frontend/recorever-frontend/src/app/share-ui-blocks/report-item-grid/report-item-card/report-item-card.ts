@@ -16,6 +16,7 @@ import { ItemStatus } from '../../status-badge/status-badge';
 import { StatusBadge } from '../../status-badge/status-badge';
 import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-report-item-card',
@@ -56,19 +57,26 @@ export class ReportItemCard {
   });
 
   removeTooltip = computed((): string => {
-    return !this.isRemovable() 
-      ? 'Found item reports are protected and cannot be removed directly.' 
+    return !this.isRemovable()
+      ? 'Found item reports are protected and cannot be removed directly.'
       : 'Remove this report';
   });
 
-  shouldShowCodeAutomatically = computed(() => {
+  shouldShowCodeAutomatically = computed((): boolean => {
     const adminStatus = this.isAdmin();
     return adminStatus;
   });
 
   photoUrls = computed((): string[] => {
-    const urls = this.report().photoUrls;
-    return urls && urls.length > 0 ? urls : ['assets/temp-photo-item.png'];
+    const report = this.report();
+    if (report.images && report.images.length > 0) {
+      return report.images.map(img => img.imageUrl);
+    }
+
+    if (report.photoUrls && report.photoUrls.length > 0) {
+      return report.photoUrls;
+    }
+    return [];
   });
 
   hasMultipleImages = computed((): boolean => {
@@ -76,8 +84,19 @@ export class ReportItemCard {
   });
 
   currentImageUrl = computed((): string => {
-    return this.photoUrls()[this.currentImageIndex] ||
-        'assets/temp-photo-item.png';
+    const urls = this.photoUrls();
+
+    if (urls.length === 0) {
+      return 'assets/temp-photo-item.png';
+    }
+
+    const url = urls[this.currentImageIndex];
+
+    if (url && url.startsWith('http')) {
+      return url;
+    }
+
+    return `${environment.apiUrl}/image/download/${url}`;
   });
 
   displayStatus = computed((): ItemStatus => {
@@ -105,55 +124,60 @@ export class ReportItemCard {
     return status === 'pending';
   });
 
-  getCodeButtonLabel(): string {
+  public getCodeButtonLabel(): string {
     const report = this.report();
     return (report.type === 'lost' || report.claim_code)
       ? 'View Ticket ID'
       : 'View Reference Code';
   }
 
-  referenceCodeValue = computed(() => {
+  referenceCodeValue = computed((): string => {
     const r = this.report();
     return r.surrender_code || r.claim_code || 'N/A';
   });
 
-  nextImage(event: Event): void {
+  public nextImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
     this.currentImageIndex = (this.currentImageIndex + 1) % urls.length;
   }
 
-  previousImage(event: Event): void {
+  public previousImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
     this.currentImageIndex =
         (this.currentImageIndex - 1 + urls.length) % urls.length;
   }
 
-  onCardClick(): void {
+  public onCardClick(): void {
     this.cardClicked.emit();
   }
 
-  onTicketClick(): void {
-    this.ticketClicked.emit();
+  public onTicketClick(): void {
+    const report = this.report();
+    if (report.claim_code || report.surrender_code) {
+      this.viewCodeClicked.emit();
+    } else {
+      this.ticketClicked.emit();
+    }
   }
 
-  onEdit(event: Event): void {
+  public onEdit(event: Event): void {
     event.stopPropagation();
     this.editClicked.emit();
   }
 
-  onDelete(event: Event): void {
+  public onDelete(event: Event): void {
     event.stopPropagation();
     this.deleteClicked.emit();
   }
 
-  onViewCode(event: Event): void {
+  public onViewCode(event: Event): void {
     event.stopPropagation();
     this.viewCodeClicked.emit();
   }
 
-  onUnarchive(event: Event): void {
+  public onUnarchive(event: Event): void {
     event.stopPropagation();
     this.unarchiveClicked.emit();
   }

@@ -12,4 +12,13 @@ import { Header } from '../../share-ui-blocks/header/header';
   styleUrl: './user-layout.scss',
 })
 export class UserLayout {
+  protected isSidebarOpen: boolean = false;
+
+  public toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  public closeSidebar(): void {
+    this.isSidebarOpen = false;
+  }
 }

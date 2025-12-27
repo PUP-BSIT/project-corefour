@@ -8,6 +8,7 @@ import { Notification } from '../../../share-ui-blocks/notification/notification
 import { AuthService } from '../../../core/auth/auth-service';
 import { ConfirmationModal } from '../../../modal/confirmation-modal/confirmation-modal';
 import { LogoutResponse } from '../../../models/auth-model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-user-side-bar',
@@ -34,6 +35,17 @@ export class UserSideBar implements OnDestroy{
 
   private logoutTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
+
+    protected getProfileImageUrl(path: string | null | undefined): string {
+      if (!path) {
+        return 'assets/profile-avatar.png';
+      }
+      if (path.startsWith('http')) {
+        return path;
+      }
+
+      return `${environment.apiUrl}/image/download/${path}`;
+    }
 
   protected profileDropdownItems: ProfileNavItem[] = [
     { label: 'Profile', iconPath: 'assets/profile-avatar.png',

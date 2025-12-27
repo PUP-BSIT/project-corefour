@@ -28,6 +28,7 @@ public class ReportRepository {
       r.setType(rs.getString("type"));
       r.setItem_name(rs.getString("item_name"));
       r.setLocation(rs.getString("location"));
+      r.setDate_lost_found(rs.getString("date_lost_found"));
       r.setDate_reported(rs.getString("date_reported"));
       r.setDate_resolved(rs.getString("date_resolved"));
       r.setDescription(rs.getString("description"));
@@ -44,11 +45,11 @@ public class ReportRepository {
     }
   };
 
-  public int createReport(int userId, String type, String itemName, String location, String description) {
-    String sql = "INSERT INTO reports (user_id, type, item_name, location, description, status, date_reported, is_deleted) "
+  public int createReport(int userId, String type, String itemName, String location, String description, String dateLostFound) {
+    String sql = "INSERT INTO reports (user_id, type, item_name, location, description, date_lost_found, status, date_reported, is_deleted) "
         +
-        "VALUES (?, ?, ?, ?, ?, 'pending', NOW(), 0)";
-    jdbcTemplate.update(sql, userId, type, itemName, location, description);
+        "VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW(), 0)";
+    jdbcTemplate.update(sql, userId, type, itemName, location, description, dateLostFound);
     return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
   }
 

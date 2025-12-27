@@ -50,8 +50,8 @@
           </button>
         }
         @if (isOwner()) {
-          <button 
-            mat-menu-item 
+          <button
+            mat-menu-item
             (click)="onEdit($event)"
             [disabled]="!isEditable()"
             [matTooltip]="!isEditable()
@@ -62,7 +62,7 @@
           </button>
           <mat-divider></mat-divider>
           <button
-            mat-menu-item 
+            mat-menu-item
             (click)="onDelete($event)"
             [disabled]="!isRemovable()"
             [matTooltip]="removeTooltip()"
@@ -119,14 +119,14 @@
           <span class="label">REF CODE:</span>
           <span class="code">{{ referenceCodeValue() }}</span>
         </div>
-      } 
-      
+      }
+
       @else {
-        <button 
+        <button
               mat-button class="view-ticket-btn"
               (click)="onTicketClick();
               $event.stopPropagation()">
-          REFERENCE CODE
+          CLAIM ITEM
           <mat-icon>keyboard_arrow_right</mat-icon>
         </button>
       }

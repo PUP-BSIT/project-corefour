@@ -5,22 +5,18 @@
   overflow: hidden;
 }
 
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  width: 100%;
-}
-
 .user-layout-container {
   display: flex;
   background-color: rgb(248, 245, 248);
   flex-grow: 1;
   height: calc(100vh - 50px);
+  position: relative;
 
   .sidebar-area {
     flex-shrink: 0;
     overflow: visible;
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
   }
 
   .content-area {
@@ -28,4 +24,38 @@
     overflow-y: auto;
     overflow-x: hidden;
   }
+}
+
+@media (max-width: 900px) {
+  .user-layout-container {
+    .sidebar-area {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      transform: translateX(-100%);
+      box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+      background-color: white;
+
+      &.mobile-open {
+        transform: translateX(0);
+      }
+    }
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fadeIn 0.3s ease;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

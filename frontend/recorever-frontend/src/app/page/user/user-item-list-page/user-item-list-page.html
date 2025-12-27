@@ -29,78 +29,11 @@
     </div>
   </header>
 
-  <nav class="filters">
-    <button
-      type="button"
-      class="filters__button"
-      [class.filters__button--active]="activeFilter() === 'all'"
-      (click)="activeFilter.set('all'); activeDropdown.set(null)">
-      All
-    </button>
-    <button
-      type="button"
-      class="filters__button"
-      [class.filters__button--active]="activeFilter() === 'az'"
-      (click)="activeFilter.set('az'); activeDropdown.set(null)">
-      A-Z →
-    </button>
-
-    <div class="filters__dropdown-container">
-      <button
-        type="button"
-        class="filters__button filters__button--dropdown-label"
-        [class.filters__button--active]="activeDropdown() === 'date'"
-        (click)="toggleDropdown('date')">
-        <span>Date {{ itemType() === 'lost' ? 'Lost' : 'Found' }}</span>
-        <span class="filters__dropdown-arrow">↓</span>
-      </button>
-
-      @if (activeDropdown() === 'date') {
-      <div class="dropdown-panel dropdown-panel--date">
-        @for (filter of dateFilters(); track filter) {
-        <button
-          class="dropdown-panel__item"
-          (click)="selectDateFilter(filter)">
-          {{ filter }}
-          @if (selectedDateFilter() === filter) {
-          <span class="dropdown-panel__checkmark">✓</span>
-          }
-        </button>
-        }
-        <button
-          class="dropdown-panel__item"
-          (click)="selectDateFilter('Custom range...')">
-          Custom range...
-        </button>
-      </div>
-      }
-    </div>
-    <div class="filters__dropdown-container">
-      <button
-        type="button"
-        class="filters__button filters__button--dropdown-label"
-        [class.filters__button--active]="activeDropdown() === 'location'"
-        (click)="toggleDropdown('location')">
-        <span>Location {{ itemType() === 'lost' ? 'Lost' : 'Found' }}</span>
-        <span class="filters__dropdown-arrow">↓</span>
-      </button>
-
-      @if (activeDropdown() === 'location') {
-      <div class="dropdown-panel dropdown-panel--location">
-        @for (location of locationFilters; track location) {
-        <button
-          class="dropdown-panel__item"
-          (click)="selectLocationFilter(location)">
-          {{ location }}
-          @if (selectedLocationFilter() === location) {
-          <span class="dropdown-panel__checkmark">✓</span>
-          }
-        </button>
-        }
-      </div>
-      }
-    </div>
-  </nav>
+  <app-filter
+    [locations]="locationFilters"
+    [itemType]="itemType()"
+    (filterChange)="onFilterChange($event)">
+  </app-filter>
 
   <div class="item-list-page__content">
     @if (allReports().length > 0) {
@@ -133,42 +66,6 @@
     </div>
   </div>
 </div>
-
-@if (showCustomDateModal()) {
-<div class="modal-overlay" (click)="showCustomDateModal.set(false)">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <button
-      class="modal-content__close"
-      (click)="showCustomDateModal.set(false)">
-      ×
-    </button>
-    <h3 class="modal-content__title">Custom date range</h3>
-
-    <div class="date-range">
-      <div class="date-range__field">
-        <label for="date-from">From</label>
-        <input id="date-from" type="text" />
-      </div>
-      <div class="date-range__field">
-        <label for="date-to">To</label>
-        <input id="date-to" type="text" />
-      </div>
-      <button class="date-range__go-btn">Go</button>
-    </div>
-
-    <div class="calendar-placeholder">
-      <p>November 2025</p>
-      <p>(Calendar UI)</p>
-    </div>
-  </div>
-</div>
-}
-
-@if (showCustomLocationModal()) {
-<app-custom-location
-    (close)="showCustomLocationModal.set(false)"
-    (locationSelected)="onSearchSubmit($event)" />
-}
 
 @if (showDeleteModal()) {
   <app-delete-report-modal

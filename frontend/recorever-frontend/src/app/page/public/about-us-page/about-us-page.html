@@ -1,1 +1,19 @@
-<p>about-us-page works!</p>
+<main class="about-container">
+  <div class="team-wrapper">
+    <app-team-member-card />
+  </div>
+
+  <section class="values-section">
+    <div class="values-grid">
+      <div class="value-card">
+        <h2>{{ missionTitle() }}</h2>
+        <p>{{ missionText() }}</p>
+      </div>
+
+      <div class="value-card">
+        <h2>{{ visionTitle() }}</h2>
+        <p>{{ visionText() }}</p>
+      </div>
+    </div>
+  </section>
+</main>

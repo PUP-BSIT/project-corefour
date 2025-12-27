@@ -1,12 +1,29 @@
 <header class="app-header">
   <div class="logo-container">
-    <img src="../../../assets/temp_logo.png" class="app-logo">
-    <div class="text-stack">
-      <div class="app-name">
-        ReCorever
-      </div>
-      <div class="tagline">
-        Secure. Reliable. Connected.
+    @if (showMenuButton) {
+      <button
+        mat-icon-button
+        class="menu-btn"
+        (click)="toggleMenu()"
+        aria-label="Toggle navigation">
+        <mat-icon>menu</mat-icon>
+      </button>
+    }
+
+    <div
+      class="branding"
+      (click)="onLogoClick()"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="onLogoClick()">
+      <img src="../../../assets/temp_logo.png" class="app-logo" alt="Logo">
+      <div class="text-stack">
+        <div class="app-name">
+          ReCorever
+        </div>
+        <div class="tagline">
+          Secure. Reliable. Connected.
+        </div>
       </div>
     </div>
   </div>

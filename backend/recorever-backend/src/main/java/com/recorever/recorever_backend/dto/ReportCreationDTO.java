@@ -19,6 +19,9 @@ public class ReportCreationDTO {
     
     @NotBlank(message = "Location is required")
     private String location;
+
+    @NotBlank(message = "Date is required")
+    private String date_lost_found;
     
     @NotBlank(message = "Description is required")
     @Size(min = 10, max = 500, message = "Description must be between 10 and 500 characters")

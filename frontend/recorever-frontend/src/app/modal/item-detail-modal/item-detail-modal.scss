@@ -112,6 +112,19 @@ $text-secondary: #8e8e93;
   }
 }
 
+.clickable-profile {
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+
+  &:hover {
+    opacity: 0.5;
+    
+    .username {
+      text-decoration: underline;
+    }
+  }
+}
+
 .image-section {
   margin-bottom: 16px;
   border-radius: 12px;

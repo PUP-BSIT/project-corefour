@@ -11,7 +11,15 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, BehaviorSubject, combineLatest, of, Subject } from 'rxjs';
-import { map, switchMap, catchError, shareReplay, tap, takeUntil, startWith } from 'rxjs/operators';
+import { 
+  map,
+  switchMap, 
+  catchError, 
+  shareReplay,
+  tap, 
+  takeUntil, 
+  startWith
+} from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
@@ -36,6 +44,7 @@ import { UserService } from '../../../core/services/user-service';
 
 import { PaginatedResponse, Report, ReportFilters } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
+import { ActivatedRoute } from '@angular/router';
 
 type TabType = 'all' | 'found' | 'lost';
 
@@ -57,6 +66,9 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
   private itemService = inject(ItemService);
   private userService = inject(UserService);
   private destroy$ = new Subject<void>();
+  private route = inject(ActivatedRoute);
+
+  loggedInUser$ = this.userService.currentUser$;
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
@@ -70,6 +82,7 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
   private refreshTrigger$ = new Subject<void>();
   private refreshUser$ = new BehaviorSubject<void>(undefined);
   currentUser$: Observable<User | null>;
+  isOwnProfile$: Observable<boolean>;
 
   displayedItems = signal<Report[]>([]);
   isItemsLoading = signal(false);
@@ -101,9 +114,29 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
   });
 
   constructor() {
-    this.currentUser$ = this.refreshUser$.pipe(
-      switchMap(() => this.userService.getProfile()),
+    this.currentUser$ = combineLatest([
+      this.route.paramMap,
+      this.refreshUser$.pipe(startWith(undefined))
+    ]).pipe(
+      switchMap(([params]) => {
+        const userId = params.get('id');
+        if (userId) {
+          return this.userService.getUserById(+userId); 
+        }
+        return this.userService.getProfile();
+      }),
       catchError(() => of(null)),
+      shareReplay(1)
+    );
+
+    this.isOwnProfile$ = combineLatest([
+      this.currentUser$, 
+      this.userService.currentUser$.pipe(startWith(null))
+    ]).pipe(
+      map(([profileUser, loggedInUser]: [User | null, User | null]): boolean => {
+        if (!profileUser || !loggedInUser) return false;
+        return profileUser.user_id === loggedInUser.user_id;
+      }),
       shareReplay(1)
     );
   }
@@ -112,9 +145,10 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
     combineLatest([
       this.currentUser$,
       this.activeTab$,
-      this.activeStatus$
+      this.activeStatus$,
+      this.isOwnProfile$
     ]).pipe(
-      switchMap(([user, tab, status]) => 
+      switchMap(([user, tab, status, isOwn]) => 
         this.refreshTrigger$.pipe(
           startWith(undefined),
           tap(() => this.isItemsLoading.set(true)),
@@ -125,8 +159,8 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
               user_id: user.user_id,
               page: this.currentPage(),
               size: this.pageSize(),
+              status: (!isOwn && !status) ? 'approved' : (status as any),
               ...(tab !== 'all' && { type: tab as any }),
-              ...(status && { status: status as any })
             };
             return this.itemService.getReports(filter);
           }),

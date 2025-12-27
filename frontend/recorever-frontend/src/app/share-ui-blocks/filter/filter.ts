@@ -1,11 +1,12 @@
 import {
   Component,
   EventEmitter,
-  Input,
+  input,
   OnInit,
   Output,
   ViewEncapsulation,
-  signal
+  signal,
+  computed
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -19,11 +20,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
-import { 
-  debounceTime, 
-  distinctUntilChanged, 
-  map, 
-  startWith 
+import {
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  startWith
 } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
@@ -53,12 +54,29 @@ export type FilterState = {
   encapsulation: ViewEncapsulation.None
 })
 export class Filter implements OnInit {
-  @Input() locations: string[] = [];
-  @Output() filterChange = new EventEmitter<FilterState>();
+  public locations = input<string[]>([]);
+  public itemType = input<'lost' | 'found'>('lost');
+  public genericLabels = input<boolean>(false);
+
+  @Output() public filterChange = new EventEmitter<FilterState>();
 
   protected filterForm: FormGroup;
-  protected isDefaultState = signal(true);
+  protected isDefaultState = signal<boolean>(true);
   protected filteredLocations$: Observable<string[]> = of([]);
+
+  protected dateLabel = computed((): string => {
+    if (this.genericLabels()) {
+      return 'Date';
+    }
+    return this.itemType() === 'found' ? 'Date Found' : 'Date Lost';
+  });
+
+  protected locationLabel = computed((): string => {
+    if (this.genericLabels()) {
+      return 'Location';
+    }
+    return this.itemType() === 'found' ? 'Location Found' : 'Location Lost';
+  });
 
   constructor(private fb: FormBuilder) {
     this.filterForm = this.fb.group({
@@ -68,9 +86,9 @@ export class Filter implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     const locControl = this.filterForm.get('location');
-    
+
     if (locControl) {
       this.filteredLocations$ = locControl.valueChanges.pipe(
         startWith(''),
@@ -101,7 +119,7 @@ export class Filter implements OnInit {
 
   private filterLocations(value: string): string[] {
     const filterValue = value.toLowerCase();
-    return this.locations.filter(option => 
+    return this.locations().filter(option =>
       option.toLowerCase().includes(filterValue)
     );
   }
@@ -112,7 +130,7 @@ export class Filter implements OnInit {
       formValue.sort === 'newest' &&
       formValue.date === null &&
       isLocationEmpty;
-    
+
     this.isDefaultState.set(isDefault || false);
   }
 

@@ -5,12 +5,12 @@ $sidebar-width: 250px;
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 app-header {
-  height: $header-height;
-  display: block; 
+  height: auto;
+  display: block;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -21,16 +21,20 @@ app-header {
   display: flex;
   background-color: rgb(248, 245, 248);
   flex-grow: 1;
-  height: calc(100vh - $header-height); 
+  height: calc(100vh - 50px);
   width: 100%;
   min-height: 0;
+  position: relative;
 }
 
 .sidebar-area {
   width: $sidebar-width;
-  flex-shrink: 0; 
+  flex-shrink: 0;
   height: 100%;
   overflow: visible;
+  transition: transform 0.3s ease-in-out;
+  z-index: 1000;
+  background-color: #fff;
 }
 
 .content-area {
@@ -38,4 +42,37 @@ app-header {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+@media (max-width: 900px) {
+  .admin-layout-container {
+    .sidebar-area {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      transform: translateX(-100%);
+      box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+
+      &.mobile-open {
+        transform: translateX(0);
+      }
+    }
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fadeIn 0.3s ease;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

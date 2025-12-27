@@ -20,7 +20,9 @@
 }
 
 @media (max-width: 640px) {
-  .item-grid-container {
-    grid-template-columns: 1fr;
+  .report-item-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 12px;
   }
 }
