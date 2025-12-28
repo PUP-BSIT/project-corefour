@@ -14,6 +14,7 @@ public class ReportResponseDTO {
     private String type; 
     private String item_name;
     private String location;
+    private String date_lost_found;
     private String date_reported;
     private String date_resolved;
     private String description;

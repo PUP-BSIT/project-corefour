@@ -27,13 +27,16 @@ public class Image {
     @Column(nullable = false, unique = true)
     private String filePath; 
 
+    @Column(name = "report_id")
     private Integer reportId; 
     
+    @Column(name = "claim_id")
     private Integer claimId; 
 
+    @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt = LocalDateTime.now();
     
-    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE") 
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", name = "is_deleted")
     private boolean isDeleted; 
 
     // Utility constructor for Report uploads

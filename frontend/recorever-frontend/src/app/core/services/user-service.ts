@@ -14,9 +14,10 @@ import { AbstractControl,
 })
 export class UserService {
   private API_BASE_URL = environment.apiUrl;
-
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+
+  currentUser$ = this.authService.currentUser$;
 
   getProfile(): Observable<User> {
     return this.http.get<User>(`${this.API_BASE_URL}/get-user-data`)

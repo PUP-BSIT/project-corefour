@@ -1,23 +1,27 @@
 :host {
   display: block;
-  height: 100vh;
-  overflow: hidden;
-  box-sizing: border-box;
 }
 
 .layout-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 100vh;
   box-sizing: border-box;
 }
 
 .page-content {
   flex-grow: 1;
-  overflow-y: auto;
+  width: 100%;
 }
 
-app-header,
+app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+}
+
 app-footer {
   flex-shrink: 0;
+  margin-top: auto;
 }

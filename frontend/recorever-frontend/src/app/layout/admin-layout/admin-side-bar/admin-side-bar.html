@@ -4,7 +4,7 @@
     <div class="user-profile-header">
       <div class="profile-click-area" (click)="toggleProfileDropdown()"
         [class.dropdown-open]="isProfileDropdownOpen">
-        <img [src]="user.profile_picture || 'assets/profile-avatar.png'"
+        <img [src]="getProfileImageUrl(user.profile_picture)"
              alt="Profile Avatar"
              class="profile-avatar-img">
              
@@ -21,7 +21,7 @@
       @if (isProfileDropdownOpen) {
       <div class="profile-dropdown-menu">
         <div class="dropdown-user-info">
-          <img [src]="user.profile_picture || 'assets/profile-avatar.png'"
+          <img [src]="getProfileImageUrl(user.profile_picture)"
                alt="Profile Avatar"
                class="dropdown-avatar-img">
           <div class="dropdown-name">{{ user.name }}</div>

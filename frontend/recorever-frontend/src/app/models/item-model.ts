@@ -30,6 +30,8 @@ export type Report = {
   reporter_name?: string;
   remarks?: string;
   photoUrls?: string[];
+  images?: { imageUrl: string; fileName: string }[];
+  reporter_profile_picture?: string | null;
 };
 
 export type ReportFilters = {

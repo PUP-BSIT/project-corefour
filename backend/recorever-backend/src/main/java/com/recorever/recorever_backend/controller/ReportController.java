@@ -63,6 +63,7 @@ public class ReportController {
         dto.setType(report.getType());
         dto.setItem_name(report.getItem_name()); 
         dto.setLocation(report.getLocation());
+        dto.setDate_lost_found(report.getDate_lost_found());
         dto.setDate_reported(report.getDate_reported());
         dto.setDate_resolved(report.getDate_resolved());
         dto.setDescription(report.getDescription());
@@ -92,7 +93,8 @@ public class ReportController {
             reportDto.getType(), 
             reportDto.getItem_name(), 
             reportDto.getLocation(), 
-            reportDto.getDescription()
+            reportDto.getDescription(),
+            reportDto.getDate_lost_found()
         );
 
         Integer newReportId = (Integer) creationResult.get("report_id");
@@ -135,7 +137,8 @@ public class ReportController {
             userId, 
             reportDto.getType(), 
             reportDto.getItem_name(), 
-            reportDto.getLocation(), 
+            reportDto.getLocation(),
+            reportDto.getDate_lost_found(),
             reportDto.getDescription()
         );
         return ResponseEntity.status(201).body(result);
