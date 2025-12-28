@@ -4,6 +4,7 @@ package com.recorever.recorever_backend.controller;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.service.ImageService;
 import com.recorever.recorever_backend.service.UserService;
+import com.recorever.recorever_backend.service.UserService.ChangePasswordRequest;
 import com.recorever.recorever_backend.repository.UserRepository;
 
 // DTO Imports
@@ -200,6 +201,27 @@ public class UserController {
         
         return ResponseEntity.ok(Map.of("success", true, "message", 
                                             "User account deactivated "));
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+        Authentication authentication,
+        @RequestBody ChangePasswordRequest request
+    ) {
+        User user = (User) authentication.getPrincipal();
+        try {
+            service.changePassword(user, request.getOldPassword(), request.getNewPassword());
+            return ResponseEntity.ok(Map.of("success", true, "message", "Password changed successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<?> deleteAccount(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        service.deleteAccount(user.getUser_id());
+        return ResponseEntity.ok(Map.of("success", true, "message", "Account deleted successfully"));
     }
 
     @PostMapping("/refresh-token")
