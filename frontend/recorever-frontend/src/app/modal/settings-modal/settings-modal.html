@@ -1,0 +1,112 @@
+<div class="settings-container">
+  <div class="modal-header">
+    @if (currentView() !== 'MENU') {
+      <button mat-icon-button (click)="toggleView('MENU')" class="nav-btn">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    } @else {
+      <div class="nav-btn spacer"></div>
+    }
+
+    <h2>
+      @if (currentView() === 'MENU') { Settings }
+      @if (currentView() === 'CHANGE_PASSWORD') { Change Password }
+      @if (currentView() === 'DELETE_ACCOUNT') { Delete Account }
+    </h2>
+
+    <button mat-icon-button (click)="close()" class="nav-btn close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  @if (currentView() === 'MENU') {
+    <div class="menu-list">
+      <div class="menu-item" (click)="toggleView('CHANGE_PASSWORD')">
+        <div class="item-content">
+          <mat-icon class="item-icon">lock</mat-icon>
+          <span>Change Password</span>
+        </div>
+        <mat-icon class="chevron">chevron_right</mat-icon>
+      </div>
+
+      <div class="menu-item delete-item"
+          (click)="toggleView('DELETE_ACCOUNT')">
+        <div class="item-content text-danger">
+          <mat-icon class="item-icon">delete</mat-icon>
+          <span>Delete Account</span>
+        </div>
+        <mat-icon class="text-danger">chevron_right</mat-icon>
+      </div>
+    </div>
+  }
+
+  @if (currentView() === 'CHANGE_PASSWORD') {
+    <form [formGroup]="passwordForm"
+        (ngSubmit)="onSubmitPassword()"
+        class="password-form">
+      
+      <mat-form-field appearance="outline">
+        <mat-label>Old Password</mat-label>
+        <input matInput
+            [type]="hideOldPassword() ? 'password' : 'text'"
+            formControlName="oldPassword">
+        <button mat-icon-button matSuffix
+            (click)="togglePasswordVisibility('old')"
+            type="button">
+          <mat-icon>
+            {{ hideOldPassword() ? 'visibility_off' : 'visibility' }}
+          </mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>New Password</mat-label>
+        <input matInput
+            [type]="hideNewPassword() ? 'password' : 'text'"
+            formControlName="newPassword">
+        <button mat-icon-button matSuffix
+            (click)="togglePasswordVisibility('new')"
+            type="button">
+          <mat-icon>
+            {{ hideNewPassword() ? 'visibility_off' : 'visibility' }}
+          </mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Confirm Password</mat-label>
+        <input matInput
+            [type]="hideConfirmPassword() ? 'password' : 'text'"
+            formControlName="confirmPassword">
+        <button mat-icon-button matSuffix
+            (click)="togglePasswordVisibility('confirm')"
+            type="button">
+          <mat-icon>
+            {{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}
+          </mat-icon>
+        </button>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-flat-button
+            color="primary"
+            type="submit"
+            [disabled]="passwordForm.invalid">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (currentView() === 'DELETE_ACCOUNT') {
+    <app-confirmation-modal
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action 
+            cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        (confirm)="onDeleteAccountConfirm()"
+        (cancel)="toggleView('MENU')">
+    </app-confirmation-modal>
+  }
+</div>
