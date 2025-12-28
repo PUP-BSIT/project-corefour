@@ -20,3 +20,12 @@ export type ProfileNavItem = {
   action: 'navigate' | 'emit' | 'addAccount' | 'logout' | 'openSettings';
   route?: string;
 };
+
+export type ChangePasswordRequest = {
+  oldPassword: string;
+  newPassword: string;
+};
+
+export type UniqueCheckResponse = {
+  isUnique: boolean;
+};
