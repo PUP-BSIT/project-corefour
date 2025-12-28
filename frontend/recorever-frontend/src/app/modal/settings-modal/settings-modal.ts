@@ -20,7 +20,8 @@ import { AuthService } from '../../core/auth/auth-service';
 import { ToastService } from '../../core/services/toast-service';
 import type { ChangePasswordRequest } from '../../models/user-model';
 
-type SettingsView = 'MENU' | 'CHANGE_PASSWORD' | 'DELETE_ACCOUNT' | 'PASSWORD_CHANGE_SUCCESS';
+type SettingsView = 'MENU' | 'CHANGE_PASSWORD' | 'DELETE_ACCOUNT' | 
+                    'PASSWORD_CHANGE_SUCCESS';
 type PasswordStrength = 'none' | 'weak' | 'medium' | 'strong';
 
 function strongPasswordValidator(): ValidatorFn {
