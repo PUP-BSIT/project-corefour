@@ -1,7 +1,10 @@
 <div class="settings-container">
   <div class="modal-header">
-    @if (currentView() !== 'MENU') {
-      <button mat-icon-button (click)="toggleView('MENU')" class="nav-btn">
+    @if (currentView() !== 'MENU' && 
+         currentView() !== 'PASSWORD_CHANGE_SUCCESS') {
+      <button mat-icon-button 
+              (click)="toggleView('MENU')" 
+              class="nav-btn">
         <mat-icon>arrow_back</mat-icon>
       </button>
     } @else {
@@ -12,9 +15,12 @@
       @if (currentView() === 'MENU') { Settings }
       @if (currentView() === 'CHANGE_PASSWORD') { Change Password }
       @if (currentView() === 'DELETE_ACCOUNT') { Delete Account }
+      @if (currentView() === 'PASSWORD_CHANGE_SUCCESS') { Success }
     </h2>
 
-    <button mat-icon-button (click)="close()" class="nav-btn close-btn">
+    <button mat-icon-button 
+            (click)="close()" 
+            class="nav-btn close-btn">
       <mat-icon>close</mat-icon>
     </button>
   </div>
@@ -29,8 +35,8 @@
         <mat-icon class="chevron">chevron_right</mat-icon>
       </div>
 
-      <div class="menu-item delete-item"
-          (click)="toggleView('DELETE_ACCOUNT')">
+      <div class="menu-item delete-item" 
+              (click)="toggleView('DELETE_ACCOUNT')">
         <div class="item-content text-danger">
           <mat-icon class="item-icon">delete</mat-icon>
           <span>Delete Account</span>
@@ -41,72 +47,158 @@
   }
 
   @if (currentView() === 'CHANGE_PASSWORD') {
-    <form [formGroup]="passwordForm"
-        (ngSubmit)="onSubmitPassword()"
-        class="password-form">
+    <form [formGroup]="passwordForm" 
+            (ngSubmit)="onSubmitPassword()" 
+            class="password-form">
       
-      <mat-form-field appearance="outline">
-        <mat-label>Old Password</mat-label>
-        <input matInput
-            [type]="hideOldPassword() ? 'password' : 'text'"
-            formControlName="oldPassword">
-        <button mat-icon-button matSuffix
-            (click)="togglePasswordVisibility('old')"
-            type="button">
-          <mat-icon>
-            {{ hideOldPassword() ? 'visibility_off' : 'visibility' }}
-          </mat-icon>
-        </button>
-      </mat-form-field>
+      @if (errorMessage()) {
+        <div class="global-error-alert">
+          {{ errorMessage() }}
+        </div>
+      }
 
-      <mat-form-field appearance="outline">
-        <mat-label>New Password</mat-label>
-        <input matInput
-            [type]="hideNewPassword() ? 'password' : 'text'"
-            formControlName="newPassword">
-        <button mat-icon-button matSuffix
-            (click)="togglePasswordVisibility('new')"
-            type="button">
-          <mat-icon>
-            {{ hideNewPassword() ? 'visibility_off' : 'visibility' }}
-          </mat-icon>
-        </button>
-      </mat-form-field>
+      <div class="form-group">
+        <mat-form-field appearance="outline">
+          <mat-label>Old Password</mat-label>
+          <input matInput 
+                  [type]="hideOldPassword() ? 'password' : 'text'" 
+                  formControlName="oldPassword"
+                  autocomplete="current-password">
+          <button mat-icon-button matSuffix 
+                  (click)="togglePasswordVisibility('old')" 
+                  type="button">
+            <mat-icon>
+              {{ hideOldPassword() ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
+          </button>
+          
+          @if (passwordForm.get('oldPassword')?.hasError('required') && 
+               passwordForm.get('oldPassword')?.touched) {
+            <mat-error>Old password is required</mat-error>
+          }
+        </mat-form-field>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Confirm Password</mat-label>
-        <input matInput
-            [type]="hideConfirmPassword() ? 'password' : 'text'"
-            formControlName="confirmPassword">
-        <button mat-icon-button matSuffix
-            (click)="togglePasswordVisibility('confirm')"
-            type="button">
-          <mat-icon>
-            {{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}
-          </mat-icon>
-        </button>
-      </mat-form-field>
+      <div class="form-group">
+        <mat-form-field appearance="outline">
+          <mat-label>New Password</mat-label>
+          <input matInput 
+                  [type]="hideNewPassword() ? 'password' : 'text'" 
+                  formControlName="newPassword"
+                  (focus)="onPasswordFocus()"
+                  (blur)="onPasswordBlur()"
+                  autocomplete="new-password">
+          <button mat-icon-button matSuffix 
+                  (click)="togglePasswordVisibility('new')" 
+                  type="button">
+            <mat-icon>
+              {{ hideNewPassword() ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
+          </button>
+          
+          @if (passwordForm.get('newPassword')?.hasError('required') && 
+               passwordForm.get('newPassword')?.touched) {
+            <mat-error>New password is required</mat-error>
+          }
+          @if (passwordForm.get('newPassword')?.hasError('minlength') && 
+               passwordForm.get('newPassword')?.touched) {
+            <mat-error>Must be at least 8 characters</mat-error>
+          }
+        </mat-form-field>
+
+        @if (passwordStrength() !== 'none' && 
+             passwordForm.get('newPassword')?.value &&
+             isPasswordFocused()) {
+          <div class="strength-meter">
+            <span class="strength-text">Strength:</span>
+            <div class="strength-bar-container">
+              <div class="strength-bar" 
+                      [ngClass]="passwordStrength()">
+              </div>
+            </div>
+            <span class="strength-label" 
+                    [ngClass]="passwordStrength()">
+              {{ passwordStrength() }}
+            </span>
+          </div>
+        }
+
+        @if (isPasswordFocused() && 
+             passwordForm.get('newPassword')?.value &&
+             passwordForm.get('newPassword')?.errors?.['passwordStrength']) {
+           <div class="custom-error-text">
+             @if (passwordForm.get('newPassword')?.errors?.
+                  ['passwordStrength']?.hasNumber) {
+               <span>• Must contain at least one number.</span>
+             }
+             @if (passwordForm.get('newPassword')?.errors?.
+                  ['passwordStrength']?.hasSpecialChar) {
+               <span>• Must contain at least one special character.</span>
+             }
+           </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <mat-form-field appearance="outline">
+          <mat-label>Confirm Password</mat-label>
+          <input matInput 
+                  [type]="hideConfirmPassword() ? 'password' : 'text'" 
+                  formControlName="confirmPassword"
+                  autocomplete="new-password">
+          <button mat-icon-button matSuffix 
+                  (click)="togglePasswordVisibility('confirm')" 
+                  type="button">
+            <mat-icon>
+              {{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
+          </button>
+          
+          @if (passwordForm.get('confirmPassword')?.hasError('required') && 
+               passwordForm.get('confirmPassword')?.touched) {
+            <mat-error>Confirmation is required</mat-error>
+          }
+          @if (passwordForm.get('confirmPassword')?.
+                 hasError('passwordMismatch') && 
+               passwordForm.get('confirmPassword')?.touched) {
+            <mat-error>Passwords do not match</mat-error>
+          }
+        </mat-form-field>
+      </div>
 
       <div class="form-actions">
-        <button mat-flat-button
-            color="primary"
-            type="submit"
-            [disabled]="passwordForm.invalid">
-          Save Changes
+        <button mat-flat-button 
+                color="primary" 
+                type="submit" 
+                [disabled]="passwordForm.invalid || isSubmitting()">
+          {{ isSubmitting() ? 'Saving...' : 'Save Changes' }}
         </button>
       </div>
     </form>
   }
 
+  @if (currentView() === 'PASSWORD_CHANGE_SUCCESS') {
+    <div class="success-view">
+      <img src="assets/check-icon.png" alt="Success">
+      <h3>Password Changed!</h3>
+      <p>Your password has been updated successfully.</p>
+      <div class="form-actions center">
+        <button mat-flat-button color="primary" (click)="close()">
+          Done
+        </button>
+      </div>
+    </div>
+  }
+
   @if (currentView() === 'DELETE_ACCOUNT') {
     <app-confirmation-modal
-        title="Delete Account"
-        message="Are you sure you want to delete your account? This action 
-            cannot be undone."
-        confirmLabel="Delete"
-        variant="danger"
-        (confirm)="onDeleteAccountConfirm()"
-        (cancel)="toggleView('MENU')">
+            title="Delete Account"
+            message="Are you sure you want to delete your account? This action 
+                     cannot be undone."
+            confirmLabel="Delete"
+            variant="danger"
+            (confirm)="onDeleteAccountConfirm()"
+            (cancel)="toggleView('MENU')">
     </app-confirmation-modal>
   }
 </div>
