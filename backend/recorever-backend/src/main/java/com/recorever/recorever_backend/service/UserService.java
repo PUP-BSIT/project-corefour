@@ -19,6 +19,15 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+    public static class ChangePasswordRequest {
+        private String oldPassword;
+        private String newPassword;
+
+        public String getOldPassword() { return oldPassword; }
+        public void setOldPassword(String oldPassword) { this.oldPassword = oldPassword; }
+        public String getNewPassword() { return newPassword; }
+        public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
+    }
 
     public int register(String name, String phoneNumber, String email, String password) {
         int result = repo.registerUser(name, phoneNumber, email, password);
@@ -103,5 +112,24 @@ public class UserService {
         }
 
         return Map.of("success", true);
+    }
+
+    public void changePassword(User user, String oldPassword, String newPassword) {
+        if (!BCrypt.checkpw(oldPassword, user.getPassword_hash())) {
+            throw new IllegalArgumentException("Incorrect old password");
+        }
+
+        String passwordPattern = "^(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$";
+        
+        if (!newPassword.matches(passwordPattern)) {
+            throw new IllegalArgumentException("Password must contain at least one number and one special character.");
+        }
+        
+        String newHashed = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+        repo.updatePassword(user.getUser_id(), newHashed);
+    }
+
+    public void deleteAccount(int userId) {
+        repo.deleteUser(userId);
     }
 }
