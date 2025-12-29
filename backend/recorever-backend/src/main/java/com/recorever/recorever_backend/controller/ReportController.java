@@ -70,6 +70,7 @@ public class ReportController {
         dto.setStatus(report.getStatus());
         dto.setSurrender_code(report.getSurrender_code());
         dto.setReporter_name(report.getReporter_name());
+        dto.setExpiry_date(report.getExpiry_date());
 
         if (report.getImages() != null) {
             dto.setImages(report.getImages().stream()

@@ -37,6 +37,12 @@ public class ReportRepository {
       r.set_deleted(rs.getBoolean("is_deleted"));
 
       try {
+        r.setExpiry_date(rs.getString("expiry_date")); 
+      } catch (SQLException e) {
+        r.setExpiry_date(null);
+      }
+
+      try {
         r.setReporter_name(rs.getString("reporter_name"));
       } catch (SQLException e) {
         r.setReporter_name(null);
@@ -75,9 +81,10 @@ public class ReportRepository {
       int offset = (page - 1) * size;
       
       StringBuilder sql = new StringBuilder("""
-          SELECT r.*, u.name AS reporter_name
+          SELECT r.*, u.name AS reporter_name, rs.notify2_time AS expiry_date
           FROM reports r
           LEFT JOIN users u ON r.user_id = u.user_id
+          LEFT JOIN report_schedules rs ON r.report_id = rs.report_id
           WHERE r.is_deleted = 0
           """);
 
@@ -159,9 +166,10 @@ public class ReportRepository {
 
   public List<Report> getReportsByStatus(String status) {
     String sql = """
-        SELECT r.*, u.name AS reporter_name
+        SELECT r.*, u.name AS reporter_name, rs.notify2_time AS expiry_date
         FROM reports r
         LEFT JOIN users u ON r.user_id = u.user_id
+        LEFT JOIN report_schedules rs ON r.report_id = rs.report_id
         WHERE r.status = ? AND r.is_deleted = 0
         ORDER BY r.date_reported DESC
         """;
@@ -181,9 +189,10 @@ public class ReportRepository {
 
   public List<Report> getReportsByTypeAndStatus(String type, String status) {
     String sql = """
-        SELECT r.*, u.name AS reporter_name
+        SELECT r.*, u.name AS reporter_name, rs.notify2_time AS expiry_date
         FROM reports r
         LEFT JOIN users u ON r.user_id = u.user_id
+        LEFT JOIN report_schedules rs ON r.report_id = rs.report_id
         WHERE r.type = ? AND r.status = ? AND r.is_deleted = 0
         ORDER BY r.date_reported DESC
         """;
@@ -204,9 +213,10 @@ public class ReportRepository {
   public Report getReportById(int id) {
     try {
       String sql = """
-          SELECT r.*, u.name AS reporter_name
+          SELECT r.*, u.name AS reporter_name, rs.notify2_time AS expiry_date
           FROM reports r
           LEFT JOIN users u ON r.user_id = u.user_id
+          LEFT JOIN report_schedules rs ON r.report_id = rs.report_id
           WHERE r.report_id = ? AND r.is_deleted = 0
           """;
       return jdbcTemplate.queryForObject(sql, reportMapper, id);
