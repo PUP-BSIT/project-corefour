@@ -1,0 +1,45 @@
+name: Auto Deploy Develop and Main Branches
+
+on:
+ push:
+ branches:
+ - develop
+ - main
+
+jobs:
+ deploy:
+ runs-on: ubuntu-latest
+
+ steps:
+ - name: Checkout code
+ uses: actions/checkout@v4
+
+ - name: Set up SSH key
+ uses: webfactory/ssh-agent@v0.8.0
+ with:
+ ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+ - name: Deploy to VPS
+ run: |
+ ssh -o StrictHostKeyChecking=no root@72.61.120.30 << 'EOF'
+ set -e
+
+ # Update code
+ cd /root/project-corefour
+ git pull origin $(echo $GITHUB_REF | awk -F/ '{print $3}')
+
+ # Build Angular frontend
+ cd frontend/recorever-frontend
+ npm install
+ npm run build
+
+ # Build Spring Boot backend
+ cd ../../backend/recorever-backend
+ ./mvnw clean package
+
+ # Stop old backend (if running)
+ pkill -f 'java -jar' || true
+
+ # Run new backend
+ nohup java -jar target/*.jar > /root/recorever-backend.log 2>&1 &
+ EOF
