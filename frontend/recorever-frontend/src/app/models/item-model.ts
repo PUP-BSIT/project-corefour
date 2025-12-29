@@ -27,6 +27,7 @@ export type Report = {
       | 'rejected';
   surrender_code: string | null;
   claim_code: string | null;
+  expiry_date?: string;
   reporter_name?: string;
   remarks?: string;
   photoUrls?: string[];
