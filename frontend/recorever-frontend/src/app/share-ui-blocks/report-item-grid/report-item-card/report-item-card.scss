@@ -179,6 +179,25 @@ $text-secondary: #8e8e93;
   overflow: hidden;
 }
 
+.expiry-highlight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #d32f2f;
+  font-weight: 500;
+  margin-top: 4px;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  .value {
+    color: #d32f2f;
+  }
+}
+
 .unarchive-btn {
   color: #ff9500 !important;
   font-weight: 700 !important;
@@ -313,7 +332,15 @@ $text-secondary: #8e8e93;
     margin: 4px 0 0 0;
     .detail-item {
       font-size: 0.75rem;
-      &:not(:first-child) { display: none; }
+
+      &:not(:first-child):not(.expiry-highlight) { 
+        display: none; 
+      }
+      
+      &.expiry-highlight {
+        margin-top: 2px;
+        mat-icon { font-size: 14px; width: 14px; height: 14px; }
+      }
     }
   }
 }

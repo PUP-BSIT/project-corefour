@@ -99,6 +99,15 @@
             (report().date_lost_found ||
             report().date_reported) | date: 'mediumDate' }}</span>
       </div>
+
+      @if (report().expiry_date && (isOwner() || isAdmin())) {
+        <div class="detail-item expiry-highlight">
+          <mat-icon color="warn">timer</mat-icon>
+          <span class="label">Expires:</span>
+          <span class="value">
+            {{ report().expiry_date | date: 'mediumDate' }}</span>
+        </div>
+      }
     </div>
 
     <p class="summary">{{ report().description }}</p>
