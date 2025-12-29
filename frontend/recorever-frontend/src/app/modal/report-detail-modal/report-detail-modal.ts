@@ -125,6 +125,18 @@ export class ReportDetailModal implements OnInit {
       .subscribe();
   }
 
+  protected getCodeButtonLabel(): string {
+    return (this.report.type === 'lost' || this.report.claim_code)
+      ? 'View Ticket ID'
+      : 'View Reference Code';
+  }
+
+  protected onTicketClick(): void {
+    if (this.report.claim_code || this.report.surrender_code) {
+      this.statusUpdated.emit(this.report);
+    }
+  }
+
   protected onClose(): void {
     this.close.emit();
   }

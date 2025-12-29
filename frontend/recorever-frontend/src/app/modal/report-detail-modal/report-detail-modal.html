@@ -67,6 +67,16 @@
             </div>
           }
         </div>
+
+        @if (report.type === 'found') {
+          <button 
+            type="button" 
+            class="view-ticket-btn"
+            (click)="onTicketClick(); $event.stopPropagation()">
+            {{ getCodeButtonLabel() }}
+            <span class="material-icons">keyboard_arrow_right</span>
+          </button>
+        }
       </div>
 
       @if (submissionError()) {
