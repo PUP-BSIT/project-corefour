@@ -246,6 +246,10 @@ $text-secondary: #8e8e93;
       color: $text-main;
       line-height: 1.4;
       font-size: 13px;
+      max-height: calc(1.4em * 2); 
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
   }
 }
