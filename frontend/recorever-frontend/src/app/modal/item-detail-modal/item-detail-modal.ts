@@ -34,6 +34,7 @@ export class ItemDetailModal {
   userProfilePicture = input<string | null>(null);
   currentUserId = input<number | null>(null);
   isArchiveView = input<boolean>(false);
+  isAdmin = input<boolean>(false);
 
   @Output() close = new EventEmitter<void>();
   @Output() viewTicket = new EventEmitter<void>();
