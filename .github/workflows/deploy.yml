@@ -21,25 +21,37 @@ jobs:
 
  - name: Deploy to VPS
  run: |
- ssh -o StrictHostKeyChecking=no root@72.61.120.30 << 'EOF'
+ BRANCH=$(echo $GITHUB_REF | awk -F/ '{print $3}')
+ ssh -o StrictHostKeyChecking=no root@72.61.120.30 << EOF
  set -e
 
  # Update code
  cd /root/project-corefour
- git pull origin $(echo $GITHUB_REF | awk -F/ '{print $3}')
+ git pull origin $BRANCH
 
  # Build Angular frontend
  cd frontend/recorever-frontend
  npm install
  npm run build
 
+ # Copy index.html to correct location
+ if [ "$BRANCH" = "main" ]; then
+ cp dist/index.html /var/www/html/index.html
+ else
+ cp dist/index.html /var/www/dev/index.html
+ fi
+
  # Build Spring Boot backend
  cd ../../backend/recorever-backend
  ./mvnw clean package
+
+ cp target/recorever-backend-0.0.1-SNAPSHOT.jar \
+ /var/backend-app/recorever-backend-0.0.1-SNAPSHOT.jar
 
  # Stop old backend (if running)
  pkill -f 'java -jar' || true
 
  # Run new backend
- nohup java -jar target/*.jar > /root/recorever-backend.log 2>&1 &
+ nohup java -jar /var/backend-app/recorever-backend-0.0.1-SNAPSHOT.jar \
+ > /root/recorever-backend.log 2>&1 &
  EOF
