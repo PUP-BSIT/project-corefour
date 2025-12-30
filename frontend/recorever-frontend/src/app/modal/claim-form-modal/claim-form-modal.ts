@@ -16,9 +16,10 @@ import {
   FormGroup,
   Validators
 } from '@angular/forms';
-import { of } from 'rxjs';
 import { switchMap, finalize, tap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
+// Material Imports
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -120,6 +121,14 @@ export class ClaimFormModal implements OnInit {
     return 'Pending';
   });
 
+  // Replicated logic from report-item-card.ts
+  protected referenceCodeValue = computed((): string => {
+    const r = this.report();
+    if (!r) return 'N/A';
+    // Logic: surrender_code -> claim_code -> 'N/A'
+    return r.surrender_code || r.claim_code || 'N/A';
+  });
+
   constructor() {
     this.claimForm = this.fb.group({
       claimantName: ['', {
@@ -165,8 +174,7 @@ export class ClaimFormModal implements OnInit {
 
       this.itemService.getReports({ type: 'found' }).pipe(
         switchMap((reports) => {
-          const foundReport =
-              reports.items.find(r => r.report_id === claim.report_id);
+          const foundReport = reports.items.find(r => r.report_id === claim.report_id);
           this.report.set(foundReport || null);
           this.patchFormForExistingClaim(claim);
 
@@ -185,8 +193,7 @@ export class ClaimFormModal implements OnInit {
   }
 
   private patchFormForExistingClaim(claim: Claim): void {
-    const formattedDate =
-        this.datePipe.transform(claim.created_at, 'mediumDate') || '';
+    const formattedDate = this.datePipe.transform(claim.created_at, 'mediumDate') || '';
     this.claimForm.patchValue({
         claimantName: claim.claimant_name || '',
         claimDate: formattedDate,
@@ -198,8 +205,7 @@ export class ClaimFormModal implements OnInit {
 
   protected onStatusOptionClick(status: string): void {
     if (status === ClaimStatus.CLAIMED) {
-      alert('Please fill out Claimant Details and click' +
-        '"Submit" to mark this item as Claimed.');
+      alert('Please fill out Claimant Details and click "Submit" to mark this item as Claimed.');
       this.closeDropdown();
       return;
     }
@@ -266,8 +272,7 @@ export class ClaimFormModal implements OnInit {
 
       this.claimService.createManualClaim(payload).pipe(
         tap(() => {
-          this.report.update(r => r ?
-              { ...r, status: ClaimStatus.CLAIMED } : null);
+          this.report.update(r => r ? { ...r, status: ClaimStatus.CLAIMED } : null);
         }),
         finalize(() => {
           this.isSaving.set(false);

@@ -1,8 +1,7 @@
-<div class="modal-overlay" (click)="onClose()">
-  <div
-    class="modal-container"
-    (click)="$event.stopPropagation();
-     closeDropdown()">
+<div class="modal-overlay"
+    (click)="onClose()">
+  <div class="modal-container"
+      (click)="$event.stopPropagation(); closeDropdown()">
 
     <button class="close-btn" (click)="onClose()">
       <mat-icon>close</mat-icon>
@@ -19,42 +18,63 @@
         <div class="left-panel">
 
           <div class="panel-scroll-content">
-            <div class="header-mini">
+
+            <div class="modal-header">
               <div class="user-info">
                 <div class="avatar-circle">
-                  {{ reportOwnerName().charAt(0).toUpperCase() }}
+                  @if (report()?.reporter_profile_picture) {
+                    <img [src]="report()?.reporter_profile_picture"
+                        alt="Avatar" class="avatar-img">
+                  } @else {
+                    {{ reportOwnerName().charAt(0).toUpperCase() }}
+                  }
                 </div>
                 <div class="user-details">
                   <span class="username">{{ reportOwnerName() }}</span>
-                  <span
-                    class="timestamp">{{ displayDate | date:'mediumDate' }}
-                  </span>
+                  <span class="timestamp">{{
+                      displayDate | date:'mediumDate' }}</span>
                 </div>
               </div>
               <app-status-badge [status]="displayStatus()"></app-status-badge>
             </div>
 
-            <div class="image-carousel-container">
-              <img
-                [src]="images()[activeImageIndex()]"
-                alt="Item Image" class="main-image">
+            <div class="image-section">
+              <div class="carousel-container">
+                <img [src]="images()[activeImageIndex()]" alt="Item Image"
+                    class="modal-image">
 
-              @if (images().length > 1) {
-                <button
-                  mat-icon-button class="nav-btn prev"
-                  (click)="prevImage($event)">
-                  <mat-icon>chevron_left</mat-icon>
-                </button>
-                <button
-                  mat-icon-button class="nav-btn next"
-                  (click)="nextImage($event)">
-                  <mat-icon>chevron_right</mat-icon>
-                </button>
-              }
+                @if (images().length > 1) {
+                  <button
+                      mat-icon-button class="carousel-btn carousel-btn--prev"
+                      (click)="prevImage($event)">
+                    <mat-icon>chevron_left</mat-icon>
+                  </button>
+                  <button
+                      mat-icon-button class="carousel-btn carousel-btn--next"
+                      (click)="nextImage($event)">
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
+
+                  <div class="carousel-indicators">
+                    @for (img of images(); track $index) {
+                      <span
+                          class="indicator"
+                          [class.indicator--active]="activeImageIndex() ===
+                          $index"></span>
+                    }
+                  </div>
+                }
+              </div>
             </div>
 
-            <div class="item-details">
-              <h2 class="title">{{ report()?.item_name }}</h2>
+            <div class="details-section">
+              <h2 class="item-title">{{ report()?.item_name }}</h2>
+
+              <div class="detail-row">
+                <mat-icon>qr_code_2</mat-icon>
+                <span class="detail-label">Ref Code:</span>
+                <span class="detail-value">{{ referenceCodeValue() }}</span>
+              </div>
 
               <div class="detail-row">
                 <mat-icon>location_on</mat-icon>
@@ -62,8 +82,15 @@
                 <span class="detail-value">{{ report()?.location }}</span>
               </div>
 
-              <div class="description-box">
-                <span class="label">Description</span>
+              <div class="detail-row">
+                <mat-icon>calendar_today</mat-icon>
+                <span class="detail-label">Date Reported:</span>
+                <span class="detail-value">{{
+                    report()?.date_reported | date:'mediumDate' }}</span>
+              </div>
+
+              <div class="description-section">
+                <h3>Description</h3>
                 <p>{{ report()?.description }}</p>
               </div>
             </div>
@@ -80,9 +107,8 @@
               </button>
 
               @if (isDropdownOpen()) {
-                <div
-                  class="dropdown-content"
-                  (click)="$event.stopPropagation()">
+                <div class="dropdown-content"
+                    (click)="$event.stopPropagation()">
                   @for (option of STATUS_OPTIONS; track option.value) {
                     <div
                         [class.disabled-option]="isStatusDisabled(option.value)"
@@ -106,9 +132,8 @@
             <div class="row">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Claimant Name</mat-label>
-                <input
-                  matInput formControlName="claimantName"
-                  placeholder="Enter full name">
+                <input matInput formControlName="claimantName"
+                    placeholder="Enter full name">
                 @if (claimForm.get('claimantName')?.hasError('required')) {
                   <mat-error>Name is required</mat-error>
                 }
