@@ -134,7 +134,8 @@
             <mat-icon>unarchive</mat-icon>
             UNARCHIVE
           </button>
-        } @else if (item().type === 'found' && !isOwner()) {
+        } 
+        @else if (item().type === 'found' && !isOwner() && !isAdmin()) {
           <button mat-raised-button
                   color="primary"
                   class="action-btn"
@@ -142,6 +143,31 @@
             CLAIM ITEM
           </button>
         }
+
+        @if (isAdmin()) {
+          <button mat-raised-button 
+                  class="action-btn" 
+                  [class]="'status-btn--' + item().status"
+                  [matMenuTriggerFor]="statusMenu">
+            {{ (item().status === 'approved' ? 'Verified' : item().status) | titlecase }}
+            <span class="dropdown-arrow" [class.open]="isStatusMenuOpen()">▼</span>
+          </button>
+          
+          <mat-menu #statusMenu="matMenu" 
+                    (opened)="isStatusMenuOpen.set(true)" 
+                    (closed)="isStatusMenuOpen.set(false)">
+            @for (status of availableStatuses; track status) {
+              <button mat-menu-item 
+                      (click)="$event.stopPropagation(); onUpdateStatus(status)"
+                      [class.active-status-item]="item().status === status">
+                <span class="status-text">
+                  {{ (status === 'approved' ? 'Verified' : status) | titlecase }}
+                </span>
+              </button>
+            }
+          </mat-menu>
+        }
+
         <button mat-stroked-button
                 class="action-btn"
                 (click)="onClose()">
