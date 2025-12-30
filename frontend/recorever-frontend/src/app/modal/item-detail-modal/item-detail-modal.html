@@ -83,6 +83,15 @@
       <div class="details-section">
         <h2 class="item-title">{{ item().item_name }}</h2>
 
+        @if (item().expiry_date && (isOwner() || isAdmin())) {
+          <div class="detail-row expiry-warning">
+            <mat-icon color="warn">event_busy</mat-icon>
+            <span class="detail-label">Report Expiry:</span>
+            <span class="detail-value text-danger">
+              {{ item().expiry_date | date: 'mediumDate' }}</span>
+          </div>
+        }
+
         <div class="detail-row">
           <mat-icon>label</mat-icon>
           <span class="detail-label">Type:</span>

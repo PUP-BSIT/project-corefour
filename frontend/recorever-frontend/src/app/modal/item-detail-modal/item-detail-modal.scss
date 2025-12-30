@@ -225,6 +225,26 @@ $text-secondary: #8e8e93;
     }
   }
 
+  .detail-row.expiry-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #d32f2f;
+    font-weight: 500;
+    margin-bottom: 12px;
+
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+
+    .detail-value.text-danger {
+      color: #d32f2f !important;
+      font-weight: 700;
+    }
+  }
+
   .description-section,
   .remarks-section {
     margin-top: 12px;
@@ -246,6 +266,10 @@ $text-secondary: #8e8e93;
       color: $text-main;
       line-height: 1.4;
       font-size: 13px;
+      max-height: calc(1.4em * 2); 
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
   }
 }

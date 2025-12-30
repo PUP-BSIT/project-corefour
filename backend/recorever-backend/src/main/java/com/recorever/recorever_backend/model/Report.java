@@ -32,6 +32,9 @@ public class Report {
   @Transient
   private String reporter_name;
 
+  @Transient
+  private String expiry_date;
+
   @OneToMany(mappedBy = "reportId", fetch = FetchType.LAZY)
   private List<Image> images = new ArrayList<>();
 }
