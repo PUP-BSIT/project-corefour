@@ -1,4 +1,4 @@
-import { Component, input, Output, EventEmitter, computed, inject } from '@angular/core';
+import { Component, input, Output, EventEmitter, computed, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,6 +42,12 @@ export class ItemDetailModal {
   @Output() deleteClicked = new EventEmitter<void>();
   @Output() viewCodeClicked = new EventEmitter<void>();
   @Output() unarchiveClicked = new EventEmitter<void>();
+  @Output() statusChanged = new EventEmitter<string>();
+
+  public isStatusMenuOpen = signal<boolean>(false);
+
+  protected readonly availableStatuses: string[] = 
+    ['pending', 'approved', 'rejected', 'matched'];
 
   currentImageIndex = 0;
 
@@ -152,5 +158,9 @@ export class ItemDetailModal {
 
   onUnarchive(): void {
     this.unarchiveClicked.emit();
+  }
+  
+  public onUpdateStatus(newStatus: string): void {
+    this.statusChanged.emit(newStatus);
   }
 }
