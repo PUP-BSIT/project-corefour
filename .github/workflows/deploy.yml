@@ -1,57 +1,61 @@
-name: Auto Deploy Develop and Main Branches
+name: Auto Deploy Main Branch
 
 on:
- push:
- branches:
- - develop
- - main
+  push:
+    branches:
+      - main
 
 jobs:
- deploy:
- runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
- steps:
- - name: Checkout code
- uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
- - name: Set up SSH key
- uses: webfactory/ssh-agent@v0.8.0
- with:
- ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
- - name: Deploy to VPS
- run: |
- BRANCH=$(echo $GITHUB_REF | awk -F/ '{print $3}')
- ssh -o StrictHostKeyChecking=no root@72.61.120.30 << EOF
- set -e
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
 
- # Update code
- cd /root/project-corefour
- git pull origin $BRANCH
+      - name: Build Angular Frontend
+        run: |
+          cd frontend/recorever-frontend
+          npm install
+          npm run build -- --configuration=production
 
- # Build Angular frontend
- cd frontend/recorever-frontend
- npm install
- npm run build
+      - name: Build Spring Boot Backend
+        run: |
+          cd backend/recorever-backend
+          chmod +x mvnw
+          ./mvnw clean package
 
- # Copy index.html to correct location
- if [ "$BRANCH" = "main" ]; then
- cp dist/index.html /var/www/html/index.html
- else
- cp dist/index.html /var/www/dev/index.html
- fi
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
- # Build Spring Boot backend
- cd ../../backend/recorever-backend
- ./mvnw clean package
+      - name: Upload Files to VPS
+        run: >
+          scp -o StrictHostKeyChecking=no -r
+          frontend/recorever-frontend/dist/recorever-frontend/browser/*
+          root@72.61.120.30:/var/www/html/ &&
+          scp -o StrictHostKeyChecking=no
+          backend/recorever-backend/target/recorever-backend-0.0.1-SNAPSHOT.jar
+          root@72.61.120.30:/var/backend-app/
 
- cp target/recorever-backend-0.0.1-SNAPSHOT.jar \
- /var/backend-app/recorever-backend-0.0.1-SNAPSHOT.jar
-
- # Stop old backend (if running)
- pkill -f 'java -jar' || true
-
- # Run new backend
- nohup java -jar /var/backend-app/recorever-backend-0.0.1-SNAPSHOT.jar \
- > /root/recorever-backend.log 2>&1 &
- EOF
+      - name: Restart Application on VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no root@72.61.120.30 << 'EOF'
+          fuser -k 8080/tcp || true
+          nohup java -jar \
+            /var/backend-app/recorever-backend-0.0.1-SNAPSHOT.jar \
+            > /root/recorever-backend.log 2>&1 &
+          EOF
