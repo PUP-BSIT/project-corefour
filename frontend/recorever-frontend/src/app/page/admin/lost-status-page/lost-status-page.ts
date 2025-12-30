@@ -14,11 +14,11 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import { SearchBarComponent } from '../../../share-ui-blocks/search-bar/search-bar';
 import { Report, ReportFilters, PaginatedResponse } from '../../../models/item-model';
-import { ReportDetailModal } from '../../../modal/report-detail-modal/report-detail-modal';
 import { ItemService } from '../../../core/services/item-service';
 import { tap, catchError, of, switchMap, takeUntil, Subject, BehaviorSubject } from 'rxjs';
 import { ItemDetailModal } from "../../../modal/item-detail-modal/item-detail-modal";
 import { environment } from '../../../../environments/environment';
+import { AdminService } from '../../../core/services/admin-service';
 
 type SortOption = 'all' | 'az' | 'date';
 type LostReportStatusFilter = 'All Statuses' | 'pending' | 'approved' | 'matched' | 'rejected';
@@ -26,7 +26,7 @@ type LostReportStatusFilter = 'All Statuses' | 'pending' | 'approved' | 'matched
 @Component({
   selector: 'app-lost-status-page',
   standalone: true,
-  imports: [CommonModule, ReportItemGrid, SearchBarComponent, ReportDetailModal, ItemDetailModal],
+  imports: [CommonModule, ReportItemGrid, SearchBarComponent, ItemDetailModal],
   templateUrl: './lost-status-page.html',
   styleUrls: ['./lost-status-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -36,6 +36,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private itemService = inject(ItemService);
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
+  private adminService = inject(AdminService);
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
@@ -116,6 +117,18 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.observer?.disconnect();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  public onStatusUpdate(newStatus: string): void {
+    const item = this.selectedReport();
+    if (!item) return;
+
+    this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
+      next: () => {
+        this.onStatusUpdated(item); 
+      },
+      error: (err) => console.error('Failed to update status', err)
+    });
   }
 
   protected setStatusFilter(status: string): void {

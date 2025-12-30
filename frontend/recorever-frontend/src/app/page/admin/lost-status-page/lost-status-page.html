@@ -71,6 +71,7 @@
         [currentUserId]="currentUserId()"
         [userProfilePicture]="getUserProfilePicture()"
         [isAdmin]="true"
+        (statusChanged)="onStatusUpdate($event)"
         (close)="onCloseDetailView()">
     </app-item-detail-modal>
   }
