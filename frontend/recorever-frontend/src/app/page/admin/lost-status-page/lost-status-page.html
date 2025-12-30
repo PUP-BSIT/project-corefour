@@ -65,11 +65,13 @@
     </div>
   </div>
 
-  @if (selectedReport()) {
-    <app-report-detail-modal
-        [report]="selectedReport()!"
-        (close)="onCloseDetailView()"
-        (statusUpdated)="onStatusUpdated($event)">
-    </app-report-detail-modal>
+  @if (selectedReport(); as report) {
+    <app-item-detail-modal
+        [item]="report"
+        [currentUserId]="currentUserId()"
+        [userProfilePicture]="getUserProfilePicture()"
+        [isAdmin]="true"
+        (close)="onCloseDetailView()">
+    </app-item-detail-modal>
   }
 </div>
