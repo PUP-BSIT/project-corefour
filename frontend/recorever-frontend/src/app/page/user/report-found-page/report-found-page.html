@@ -7,10 +7,12 @@
 
   @if (showReferenceModal()) {
     <app-codes-modal
-        title="Found Item Submitted"
-        [code]="referenceCode()"
-        [subtext]="submissionDate()"
-        (close)="onModalClose()">
+      [title]="'Found Item Submitted'"
+      [code]="referenceCode()"
+      [subtext]="submissionDate()"
+      [showViewReportButton]="true"
+      (close)="onModalClose()"
+      (viewReport)="onViewReport()">
     </app-codes-modal>
   }
 </div>
