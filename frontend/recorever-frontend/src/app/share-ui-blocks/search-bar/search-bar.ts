@@ -11,7 +11,8 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatOptionModule } from '@angular/material/core';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-search-bar',
@@ -26,11 +27,14 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 })
 export class SearchBarComponent implements OnInit {
   @Input() suggestions: string[] = [];
+  @Input() placeholder: string = 'Search';
   @Output() search = new EventEmitter<string>();
   @Output() queryChange = new EventEmitter<string>();
 
-  searchControl = new FormControl('');
+  searchControl = new FormControl<string>('');
   
+  private searchHistory: Set<string> = new Set<string>();
+  private searchSubject = new Subject<string>();
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
@@ -43,11 +47,33 @@ export class SearchBarComponent implements OnInit {
       .subscribe((value: string | null) => {
         this.queryChange.emit(value || '');
       });
+
+    this.searchSubject
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        debounceTime(400),
+        map((term: string) => term.trim()),
+        distinctUntilChanged(),
+        filter((term: string) => {
+          if (term.length === 0) {
+            return true;
+          }
+          return !this.searchHistory.has(term);
+        }),
+        tap((term: string) => {
+          if (term.length > 0) {
+            this.searchHistory.add(term);
+          }
+        })
+      )
+      .subscribe((term: string) => {
+        this.search.emit(term);
+      });
   }
 
   onSearch(): void {
     const searchTerm = this.searchControl.value || '';
-    this.search.emit(searchTerm);
+    this.searchSubject.next(searchTerm);
   }
 
   onOptionSelected(): void {
@@ -56,6 +82,6 @@ export class SearchBarComponent implements OnInit {
 
   clearSearch(): void {
     this.searchControl.setValue('');
-    this.queryChange.emit('');
+    this.searchSubject.next('');
   }
 }
