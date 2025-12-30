@@ -17,6 +17,8 @@ import { Report, ReportFilters, PaginatedResponse } from '../../../models/item-m
 import { ReportDetailModal } from '../../../modal/report-detail-modal/report-detail-modal';
 import { ItemService } from '../../../core/services/item-service';
 import { tap, catchError, of, switchMap, takeUntil, Subject, BehaviorSubject } from 'rxjs';
+import { ItemDetailModal } from "../../../modal/item-detail-modal/item-detail-modal";
+import { environment } from '../../../../environments/environment';
 
 type SortOption = 'all' | 'az' | 'date';
 type LostReportStatusFilter = 'All Statuses' | 'pending' | 'approved' | 'matched' | 'rejected';
@@ -24,12 +26,13 @@ type LostReportStatusFilter = 'All Statuses' | 'pending' | 'approved' | 'matched
 @Component({
   selector: 'app-lost-status-page',
   standalone: true,
-  imports: [CommonModule, ReportItemGrid, SearchBarComponent, ReportDetailModal],
+  imports: [CommonModule, ReportItemGrid, SearchBarComponent, ReportDetailModal, ItemDetailModal],
   templateUrl: './lost-status-page.html',
   styleUrls: ['./lost-status-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
+  protected currentUserId = signal<number | null>(null);
   private itemService = inject(ItemService);
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
@@ -127,6 +130,17 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.resetAndReload();
   }
 
+  public getUserProfilePicture(): string {
+    const report = this.selectedReport();
+    
+    if (report && report.reporter_profile_picture) {
+      const baseUrl = environment.apiUrl.replace('http://', 'https://');
+      return `${baseUrl}/image/download/${report.reporter_profile_picture}`;
+    }
+
+    return 'assets/profile-avatar.png';
+  }
+
   private resetAndReload(): void {
     this.currentPage.set(1);
     this.reports.set([]);
@@ -145,7 +159,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   onViewDetails(report: Report): void {
     this.selectedReport.set(report);
   }
-  onCloseDetailView(): void {
+  public onCloseDetailView(): void {
     this.selectedReport.set(null);
   }
   onStatusUpdated(updatedReport: Report): void {
