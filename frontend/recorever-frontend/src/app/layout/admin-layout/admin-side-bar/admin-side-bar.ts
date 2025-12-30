@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
@@ -29,6 +29,8 @@ export class AdminSideBar implements OnDestroy {
 
   @Output() openSettingsModal = new EventEmitter<void>();
 
+  @ViewChild('profileSection') profileSection!: ElementRef;
+
   public currentUser$: Observable<User | null> = this.authService.currentUser$;
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
@@ -42,11 +44,10 @@ export class AdminSideBar implements OnDestroy {
       return 'assets/profile-avatar.png';
     }
     if (path.startsWith('http')) {
-      return path.replace('http://', 'https://');
+      return path;
     }
 
-    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
-    return `${secureBaseUrl}/image/download/${path}`;
+    return `${environment.apiUrl}/image/download/${path}`;
   }
 
   protected profileDropdownItems: ProfileNavItem[] = [
@@ -109,6 +110,17 @@ export class AdminSideBar implements OnDestroy {
           this.isLogoutModalOpen = false;
         }
       });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.isProfileDropdownOpen && 
+      this.profileSection && 
+      !this.profileSection.nativeElement.contains(event.target as Node)
+    ) {
+      this.isProfileDropdownOpen = false;
+    }
   }
 
   public toggleProfileDropdown(): void {
