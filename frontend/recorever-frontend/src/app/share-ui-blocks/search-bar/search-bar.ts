@@ -53,4 +53,9 @@ export class SearchBarComponent implements OnInit {
   onOptionSelected(): void {
     this.onSearch();
   }
+
+  clearSearch(): void {
+    this.searchControl.setValue('');
+    this.queryChange.emit('');
+  }
 }
