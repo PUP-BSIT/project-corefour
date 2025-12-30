@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
+import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -30,6 +30,8 @@ export class UserSideBar implements OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
+
+  @ViewChild('profileSection') profileSection!: ElementRef;
 
   public currentUser$: Observable<User | null> = this.authService.currentUser$;
   protected isLogoutModalOpen = false;
@@ -96,6 +98,17 @@ export class UserSideBar implements OnDestroy {
           this.isLogoutModalOpen = false;
         }
       });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.isProfileDropdownOpen && 
+      this.profileSection && 
+      !this.profileSection.nativeElement.contains(event.target as Node)
+    ) {
+      this.isProfileDropdownOpen = false;
+    }
   }
 
   public toggleTracking(): void {
