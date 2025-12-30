@@ -62,9 +62,10 @@ public class ReportRepository {
   public List<Report> getAllReports(int page, int size) {
       int offset = (page - 1) * size;
       String sql = """
-          SELECT r.*, u.name AS reporter_name
+          SELECT r.*, u.name AS reporter_name, rs.notify2_time AS expiry_date
           FROM reports r
           LEFT JOIN users u ON r.user_id = u.user_id
+          LEFT JOIN report_schedules rs ON r.report_id = rs.report_id
           WHERE r.is_deleted = 0
           ORDER BY r.date_reported DESC
           LIMIT ? OFFSET ?
@@ -178,9 +179,10 @@ public class ReportRepository {
 
   public List<Report> getReportsByType(String type) {
     String sql = """
-        SELECT r.*, u.name AS reporter_name
+        SELECT r.*, u.name AS reporter_name, rs.notify2_time AS expiry_date
         FROM reports r
         LEFT JOIN users u ON r.user_id = u.user_id
+        LEFT JOIN report_schedules rs ON r.report_id = rs.report_id
         WHERE r.type = ? AND r.is_deleted = 0
         ORDER BY r.date_reported DESC
         """;
