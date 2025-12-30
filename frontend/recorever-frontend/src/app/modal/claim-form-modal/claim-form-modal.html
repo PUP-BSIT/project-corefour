@@ -40,10 +40,10 @@
 
             <div class="image-section">
               <div class="carousel-container">
-                <img [src]="images()[activeImageIndex()]" alt="Item Image"
+                <img [src]="currentImageUrl()" alt="Item Image"
                     class="modal-image">
 
-                @if (images().length > 1) {
+                @if (photoUrls().length > 1) {
                   <button
                       mat-icon-button class="carousel-btn carousel-btn--prev"
                       (click)="prevImage($event)">
@@ -56,7 +56,7 @@
                   </button>
 
                   <div class="carousel-indicators">
-                    @for (img of images(); track $index) {
+                    @for (url of photoUrls(); track $index) {
                       <span
                           class="indicator"
                           [class.indicator--active]="activeImageIndex() ===

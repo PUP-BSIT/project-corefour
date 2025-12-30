@@ -33,6 +33,7 @@ import { ItemService } from '../../core/services/item-service';
 import { UserService } from '../../core/services/user-service';
 import { AdminService } from '../../core/services/admin-service';
 import { StatusBadge, ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
+import { environment } from '../../../environments/environment';
 
 export enum ClaimStatus {
   PENDING = 'pending',
@@ -78,7 +79,7 @@ export class ClaimFormModal implements OnInit {
     { value: ClaimStatus.PENDING, label: 'Pending' },
     { value: ClaimStatus.APPROVED, label: 'Verified' },
     { value: ClaimStatus.CLAIMED, label: 'Claimed' },
-    { value: ClaimStatus.REJECTED, label: 'Denied' }
+    { value: ClaimStatus.REJECTED, label: 'Rejected' }
   ];
 
   protected claimForm: FormGroup;
@@ -92,11 +93,6 @@ export class ClaimFormModal implements OnInit {
   protected isSaving = signal(false);
   protected activeImageIndex = signal(0);
   protected isDropdownOpen = signal(false);
-
-  protected images = signal<string[]>([
-    'assets/temp-photo-main.png',
-    'assets/temp-photo-item.png'
-  ]);
 
   protected isReportType = computed(() => 'type' in this.claimData);
 
@@ -121,12 +117,42 @@ export class ClaimFormModal implements OnInit {
     return 'Pending';
   });
 
-  // Replicated logic from report-item-card.ts
   protected referenceCodeValue = computed((): string => {
     const r = this.report();
     if (!r) return 'N/A';
-    // Logic: surrender_code -> claim_code -> 'N/A'
     return r.surrender_code || r.claim_code || 'N/A';
+  });
+
+  protected photoUrls = computed((): string[] => {
+    const report = this.report();
+    if (!report) return [];
+
+    if (report.images && report.images.length > 0) {
+      return report.images.map(img => img.imageUrl);
+    }
+
+    if (report.photoUrls && report.photoUrls.length > 0) {
+      return report.photoUrls;
+    }
+    return [];
+  });
+
+  protected currentImageUrl = computed((): string => {
+    const urls = this.photoUrls();
+
+    if (urls.length === 0) {
+      return 'assets/temp-photo-item.png';
+    }
+
+    const index = this.activeImageIndex() % urls.length;
+    const url = urls[index];
+
+    if (url && url.startsWith('http')) {
+      return url.replace('http://', 'https://');
+    }
+
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${url}`;
   });
 
   constructor() {
@@ -289,14 +315,18 @@ export class ClaimFormModal implements OnInit {
 
   protected nextImage(event: Event): void {
     event.stopPropagation();
-    this.activeImageIndex.update((i) => (i + 1) % this.images().length);
+    const len = this.photoUrls().length;
+    if (len > 0) {
+      this.activeImageIndex.update((i) => (i + 1) % len);
+    }
   }
 
   protected prevImage(event: Event): void {
     event.stopPropagation();
-    this.activeImageIndex.update(
-      (i) => (i - 1 + this.images().length) % this.images().length
-    );
+    const len = this.photoUrls().length;
+    if (len > 0) {
+      this.activeImageIndex.update((i) => (i - 1 + len) % len);
+    }
   }
 
   onClose(): void {
