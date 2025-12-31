@@ -126,7 +126,10 @@
     <button 
       type="submit" 
       class="btn btn-submit" 
-      [disabled]="isSubmitting || reportForm.invalid">
+      [disabled]="isSubmitting || reportForm.invalid"
+      [title]="reportForm.invalid
+        ? 'Please fill out all required fields correctly' : ''">
+      
       <div class="loading-container">
         @if (isSubmitting) {
           <mat-spinner diameter="18" strokeWidth="3"></mat-spinner>

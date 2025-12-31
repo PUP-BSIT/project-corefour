@@ -163,14 +163,28 @@ $secondary-text: #666;
       transition: background-color 0.15s ease;
     }
 
-    .btn-submit {
-      background-color: $text-color;
-      color: white;
+  .btn-submit {
+    background-color: $text-color;
+    color: white;
+    transition: all 0.3s ease;
 
-      &:hover {
-        background-color: color.adjust($text-color, $lightness: 10%);
+    &:disabled {
+      background-color: #cccccc !important;
+      color: #666666 !important;
+      cursor: not-allowed !important;
+      opacity: 0.7;
+      box-shadow: none;
+
+      .mat-mdc-progress-spinner circle {
+        stroke: #666666 !important;
       }
     }
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust($text-color, $lightness: 10%);
+      transform: translateY(-1px);
+    }
+  }
 
     .loading-container {
       display: flex;
