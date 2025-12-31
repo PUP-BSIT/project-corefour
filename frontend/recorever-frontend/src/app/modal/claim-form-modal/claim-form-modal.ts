@@ -35,6 +35,7 @@ import {
   MatAutocompleteModule,
   MatAutocompleteSelectedEvent
 } from '@angular/material/autocomplete';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Claim } from '../../models/claim-model';
 import { Report } from '../../models/item-model';
@@ -66,6 +67,7 @@ export enum ClaimStatus {
     MatInputModule,
     MatProgressSpinnerModule,
     MatAutocompleteModule,
+    MatTooltipModule,
     StatusBadge
   ],
   providers: [DatePipe],
@@ -298,6 +300,13 @@ export class ClaimFormModal implements OnInit {
 
   protected isStatusDisabled(status: string): boolean {
     return status === ClaimStatus.CLAIMED;
+  }
+
+  protected getOptionTooltip(status: string): string {
+    return status === ClaimStatus.CLAIMED
+      ? 'Please fill out Claimant Details and click "Submit"' +
+          'to mark this item as Claimed.'
+      : '';
   }
 
   protected toggleDropdown(event: Event): void {
