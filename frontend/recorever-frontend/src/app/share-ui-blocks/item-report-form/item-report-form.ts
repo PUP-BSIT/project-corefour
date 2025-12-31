@@ -88,11 +88,19 @@ export class ItemReportForm implements OnInit {
         { validators: [Validators.required] }
       ],
       date_lost_found: [new Date(), { 
-        validators: [
-          Validators.required, 
-          (control: any) => new Date(control.value) > new Date() ? { futureDate: true } : null
-        ] 
-      }],
+          validators: [
+            Validators.required,
+            (control: AbstractControl): ValidationErrors | null => {
+              if (!control.value) return null;
+
+              const selectedDate = new Date(control.value);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              selectedDate.setHours(0, 0, 0, 0);
+              return selectedDate > today ? { futureDate: true } : null;
+            }
+          ] 
+        }],
       description: ['', { 
         validators: [
           Validators.required,
