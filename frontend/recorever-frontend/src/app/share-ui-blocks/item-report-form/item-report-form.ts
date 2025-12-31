@@ -48,6 +48,7 @@ export class ItemReportForm implements OnInit {
   protected reportForm: ItemFormType;
   protected locationOptions = Object.values(StandardLocations);
   protected filteredLocations!: Observable<string[]>;
+  protected maxDate = new Date();
 
   private fb = inject(FormBuilder);
 
@@ -74,7 +75,12 @@ export class ItemReportForm implements OnInit {
         '',
         { validators: [Validators.required] }
       ],
-      date_lost_found: ['', { validators: [Validators.required] }],
+      date_lost_found: [new Date(), { 
+        validators: [
+          Validators.required, 
+          (control: any) => new Date(control.value) > new Date() ? { futureDate: true } : null
+        ] 
+      }],
       description:
           ['', { validators: [Validators.required, Validators.minLength(10),
               Validators.maxLength(500)]
