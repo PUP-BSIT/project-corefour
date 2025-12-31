@@ -1,7 +1,14 @@
 import { Component, Input, Output, EventEmitter, OnInit, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormControl, FormArray
+import { 
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+  FormControl, 
+  FormArray,
+  AbstractControl,
+  ValidationErrors
 } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
@@ -65,6 +72,11 @@ export class ItemReportForm implements OnInit {
     return this.reportForm.controls.photoUrls;
   }
 
+  protected get descriptionCharCount(): number {
+    const value = this.reportForm.controls.description.value || '';
+    return value.replace(/\s/g, '').length;
+  }
+
   constructor() {
     this.reportForm = this.fb.group({
       item_name: ['', {
@@ -81,9 +93,16 @@ export class ItemReportForm implements OnInit {
           (control: any) => new Date(control.value) > new Date() ? { futureDate: true } : null
         ] 
       }],
-      description:
-          ['', { validators: [Validators.required, Validators.minLength(10),
-              Validators.maxLength(500)]
+      description: ['', { 
+        validators: [
+          Validators.required,
+          (control: AbstractControl): ValidationErrors | null => {
+            const value = control.value || '';
+            const noSpacesLength = value.replace(/\s/g, '').length;
+            return noSpacesLength < 10 ? { minLengthNoSpaces: true } : null;
+          },
+          Validators.maxLength(500) 
+        ]
       }],
       photoUrls: this.fb.array<FormControl<string | null>>([])
     }) as ItemFormType;

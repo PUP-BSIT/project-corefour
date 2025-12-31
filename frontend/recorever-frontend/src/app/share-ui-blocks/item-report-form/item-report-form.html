@@ -61,11 +61,17 @@
           matInput
           formControlName="description"
           rows="5"></textarea>
+      
+      <mat-hint align="end">
+        {{ descriptionCharCount }} / 500
+      </mat-hint>
+
       @if (reportForm.controls.description.invalid &&
-           reportForm.controls.description.touched) {
+        reportForm.controls.description.touched) {
         <mat-error>Description is required (min 10 characters).</mat-error>
       }
-    </mat-form-field>
+
+      </mat-form-field>
   </div>
 
   <div class="form-field photo-upload-field">
