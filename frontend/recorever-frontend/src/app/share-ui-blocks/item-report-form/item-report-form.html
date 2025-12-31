@@ -36,13 +36,20 @@
       <mat-label>{{ dateLabel }}</mat-label>
       <input
           matInput
-          type="date"
+          [matDatepicker]="picker"
           formControlName="date_lost_found"
           placeholder="mm/dd/yyyy"
        />
-      @if (reportForm.controls.date_lost_found.invalid &&
-        reportForm.controls.date_lost_found.touched) {
-        <mat-error>Date is required.</mat-error>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    
+      @if (reportForm.controls.date_lost_found.touched) {
+        @if (reportForm.controls.date_lost_found.hasError('required')) {
+          <mat-error>Date is required.</mat-error>
+        }
+        @if (reportForm.controls.date_lost_found.hasError('futureDate')) {
+          <mat-error>Future dates are not allowed.</mat-error>
+        }
       }
     </mat-form-field>
   </div>
