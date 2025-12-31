@@ -210,9 +210,12 @@ export class ItemReportForm implements OnInit {
       const finalPayload: ReportSubmissionWithFiles = {
         ...basePayload,
         status: 'pending',
-        date_lost_found: formatDateForMySQL(this.reportForm.controls.date_lost_found.value!), 
+        date_lost_found:
+          formatDateForMySQL(this.reportForm.controls.date_lost_found.value!), 
         date_reported: formatDateForMySQL(new Date()), 
-        photoUrls: this.photoUrlsFormArray.value.filter((url): url is string => url !== null),
+        photoUrls:
+          this.photoUrlsFormArray
+            .value.filter((url): url is string => url !== null),
         files: this.selectedFiles,
       };
 
