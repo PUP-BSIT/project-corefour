@@ -115,6 +115,13 @@
     </div>
   </div>
 
+  @if (submissionError) {
+    <div class="submission-error-message">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ submissionError }}</span>
+    </div>
+  }
+
   <div class="form-actions">
     <button 
       type="submit" 
