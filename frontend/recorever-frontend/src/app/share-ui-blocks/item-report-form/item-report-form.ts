@@ -25,6 +25,7 @@ import {
     ReportSubmissionWithFiles,
     FilePreview
 } from '../../models/item-model';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-item-report-form',
@@ -36,7 +37,8 @@ import {
     MatInputModule,
     MatFormFieldModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './item-report-form.html',
   styleUrl: './item-report-form.scss',
@@ -56,6 +58,8 @@ export class ItemReportForm implements OnInit {
   protected locationOptions = Object.values(StandardLocations);
   protected filteredLocations!: Observable<string[]>;
   protected maxDate = new Date();
+  protected isSubmitting = false;
+  protected loadingMessage = 'Submitting...';
 
   private fb = inject(FormBuilder);
 
@@ -184,7 +188,15 @@ export class ItemReportForm implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.reportForm.valid) {
+    if (this.reportForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
+      this.loadingMessage = 'Submitting...';
+
+      const formatDateForMySQL = (dateInput: any): string => {
+        const d = new Date(dateInput);
+        return d.toISOString().slice(0, 19).replace('T', ' ');
+      };
+
       const basePayload: ReportSubmissionPayload = {
         type: this.formType,
         item_name: this.reportForm.controls.item_name.value!,
@@ -195,10 +207,9 @@ export class ItemReportForm implements OnInit {
       const finalPayload: ReportSubmissionWithFiles = {
         ...basePayload,
         status: 'pending',
-        date_lost_found: this.reportForm.controls.date_lost_found.value!,
-        date_reported: new Date().toISOString(),
-        photoUrls: this.photoUrlsFormArray.value.filter((url):
-            url is string => url !== null),
+        date_lost_found: formatDateForMySQL(this.reportForm.controls.date_lost_found.value!), 
+        date_reported: formatDateForMySQL(new Date()), 
+        photoUrls: this.photoUrlsFormArray.value.filter((url): url is string => url !== null),
         files: this.selectedFiles,
       };
 
