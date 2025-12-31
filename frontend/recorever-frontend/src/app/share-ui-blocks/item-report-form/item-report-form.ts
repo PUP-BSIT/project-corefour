@@ -26,6 +26,7 @@ import {
     FilePreview
 } from '../../models/item-model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIcon } from "@angular/material/icon";
 
 @Component({
   selector: 'app-item-report-form',
@@ -38,8 +39,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatFormFieldModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatProgressSpinnerModule
-  ],
+    MatProgressSpinnerModule,
+    MatIcon
+],
   templateUrl: './item-report-form.html',
   styleUrl: './item-report-form.scss',
 })
@@ -60,6 +62,7 @@ export class ItemReportForm implements OnInit {
   protected maxDate = new Date();
   protected isSubmitting = false;
   protected loadingMessage = 'Submitting...';
+  protected submissionError: string | null = null;
 
   private fb = inject(FormBuilder);
 
@@ -223,6 +226,11 @@ export class ItemReportForm implements OnInit {
     } else {
       this.reportForm.markAllAsTouched();
     }
+  }
+
+  public handleSubmissionError(errorMessage: string): void {
+    this.isSubmitting = false;
+    this.submissionError = errorMessage;
   }
 
   onCancel(): void {
