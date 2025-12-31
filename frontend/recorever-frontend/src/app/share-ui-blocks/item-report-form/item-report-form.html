@@ -116,8 +116,26 @@
   </div>
 
   <div class="form-actions">
-    <button type="submit" class="btn btn-submit">Submit</button>
-    <button type="button" class="btn btn-reset"
-        (click)="onCancel()">Reset</button>
+    <button 
+      type="submit" 
+      class="btn btn-submit" 
+      [disabled]="isSubmitting || reportForm.invalid">
+      <div class="loading-container">
+        @if (isSubmitting) {
+          <mat-spinner diameter="18" strokeWidth="3"></mat-spinner>
+          <span>{{ loadingMessage }}</span>
+        } @else {
+          <span>Submit Report</span>
+        }
+      </div>
+    </button>
+
+    <button 
+      type="button" 
+      class="btn btn-reset" 
+      [disabled]="isSubmitting"
+      (click)="onCancel()">
+      Reset
+    </button>
   </div>
 </form>
