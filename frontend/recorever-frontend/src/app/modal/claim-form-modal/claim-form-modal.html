@@ -132,10 +132,38 @@
             <div class="row">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Claimant Name</mat-label>
-                <input matInput formControlName="claimantName"
-                    placeholder="Enter full name">
+                <input matInput
+                       formControlName="claimantName"
+                       placeholder="Enter full name or search existing user"
+                       [matAutocomplete]="auto">
+                <mat-autocomplete #auto="matAutocomplete"
+                                  [displayWith]="displayUserFn"
+                                  (optionSelected)="onUserSelected($event)">
+                  @for (user of filteredUsers(); track user.user_id) {
+                    <mat-option [value]="user">
+                      <div class="user-option">
+                        <div class="option-avatar">
+                          @if (getUserAvatar(user)) {
+                            <img [src]="getUserAvatar(user)" alt="">
+                          } @else {
+                            <span class="initial">{{ user.name.charAt(0) }}
+                            </span>
+                          }
+                        </div>
+                        <div class="option-info">
+                          <span class="name">{{ user.name }}</span>
+                          <span class="email">{{ user.email }}</span>
+                        </div>
+                      </div>
+                    </mat-option>
+                  }
+                </mat-autocomplete>
+
                 @if (claimForm.get('claimantName')?.hasError('required')) {
                   <mat-error>Name is required</mat-error>
+                }
+                @if (isSearchingUsers()) {
+                  <mat-icon matSuffix class="spinning-loader">sync</mat-icon>
                 }
               </mat-form-field>
             </div>

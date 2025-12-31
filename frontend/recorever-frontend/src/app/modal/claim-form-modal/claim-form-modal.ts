@@ -16,7 +16,13 @@ import {
   FormGroup,
   Validators
 } from '@angular/forms';
-import { switchMap, finalize, tap } from 'rxjs/operators';
+import {
+  switchMap,
+  finalize,
+  tap,
+  debounceTime,
+  distinctUntilChanged
+} from 'rxjs/operators';
 import { of } from 'rxjs';
 
 // Material Imports
@@ -25,9 +31,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {
+  MatAutocompleteModule,
+  MatAutocompleteSelectedEvent
+} from '@angular/material/autocomplete';
 
 import { Claim } from '../../models/claim-model';
 import { Report } from '../../models/item-model';
+import { User } from '../../models/user-model';
 import { ClaimService } from '../../core/services/claim-service';
 import { ItemService } from '../../core/services/item-service';
 import { UserService } from '../../core/services/user-service';
@@ -54,6 +65,7 @@ export enum ClaimStatus {
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatAutocompleteModule,
     StatusBadge
   ],
   providers: [DatePipe],
@@ -93,6 +105,9 @@ export class ClaimFormModal implements OnInit {
   protected isSaving = signal(false);
   protected activeImageIndex = signal(0);
   protected isDropdownOpen = signal(false);
+
+  protected filteredUsers = signal<User[]>([]);
+  protected isSearchingUsers = signal(false);
 
   protected isReportType = computed(() => 'type' in this.claimData);
 
@@ -173,6 +188,45 @@ export class ClaimFormModal implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
+    this.setupUserSearch();
+  }
+
+  private setupUserSearch(): void {
+    this.claimForm.get('claimantName')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(() => this.isSearchingUsers.set(true)),
+      switchMap(value => {
+        if (typeof value !== 'string') return of([]);
+        if (value.length < 2) return of([]);
+        return this.userService.searchUsers(value).pipe(
+          tap(() => this.isSearchingUsers.set(false))
+        );
+      })
+    ).subscribe(users => {
+      this.filteredUsers.set(users);
+      this.isSearchingUsers.set(false);
+    });
+  }
+
+  protected displayUserFn(user: User): string {
+    return user && user.name ? user.name : '';
+  }
+
+  protected onUserSelected(event: MatAutocompleteSelectedEvent): void {
+    const user: User = event.option.value;
+
+    this.claimForm.patchValue({
+      contactEmail: user.email,
+      contactPhone: user.phone_number
+    });
+  }
+
+  protected getUserAvatar(user: User): string {
+    if (!user.profile_picture) return '';
+    if (user.profile_picture.startsWith('http')) return user.profile_picture;
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${user.profile_picture}`;
   }
 
   private loadData(): void {
@@ -200,7 +254,8 @@ export class ClaimFormModal implements OnInit {
 
       this.itemService.getReports({ type: 'found' }).pipe(
         switchMap((reports) => {
-          const foundReport = reports.items.find(r => r.report_id === claim.report_id);
+          const foundReport =
+              reports.items.find(r => r.report_id === claim.report_id);
           this.report.set(foundReport || null);
           this.patchFormForExistingClaim(claim);
 
@@ -219,7 +274,8 @@ export class ClaimFormModal implements OnInit {
   }
 
   private patchFormForExistingClaim(claim: Claim): void {
-    const formattedDate = this.datePipe.transform(claim.created_at, 'mediumDate') || '';
+    const formattedDate =
+        this.datePipe.transform(claim.created_at, 'mediumDate') || '';
     this.claimForm.patchValue({
         claimantName: claim.claimant_name || '',
         claimDate: formattedDate,
@@ -231,7 +287,8 @@ export class ClaimFormModal implements OnInit {
 
   protected onStatusOptionClick(status: string): void {
     if (status === ClaimStatus.CLAIMED) {
-      alert('Please fill out Claimant Details and click "Submit" to mark this item as Claimed.');
+      alert('Please fill out Claimant Details and click' +
+          '"Submit" to mark this item as Claimed.');
       this.closeDropdown();
       return;
     }
@@ -285,12 +342,16 @@ export class ClaimFormModal implements OnInit {
     this.isSaving.set(true);
     const formValues = this.claimForm.getRawValue();
 
+    const cName = typeof formValues.claimantName === 'object'
+      ? formValues.claimantName.name
+      : formValues.claimantName;
+
     if (this.activeReport()) {
       const report = this.activeReport()!;
 
       const payload = {
         report_id: report.report_id,
-        claimant_name: formValues.claimantName,
+        claimant_name: cName,
         contact_email: formValues.contactEmail,
         contact_phone: formValues.contactPhone,
         admin_remarks: formValues.remarks
@@ -298,7 +359,8 @@ export class ClaimFormModal implements OnInit {
 
       this.claimService.createManualClaim(payload).pipe(
         tap(() => {
-          this.report.update(r => r ? { ...r, status: ClaimStatus.CLAIMED } : null);
+          this.report.update(r => r ? { ...r, status: ClaimStatus.CLAIMED }
+              : null);
         }),
         finalize(() => {
           this.isSaving.set(false);
