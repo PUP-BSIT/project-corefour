@@ -60,7 +60,16 @@
 }
 
 @if (selectedItem(); as item) {
-  <app-item-detail-modal
+  @if (isArchiveView()) {
+    <app-claim-form-modal
+      [claimData]="item"
+      [isReadOnly]="true"
+      [isArchive]="true"
+      (close)="selectedItem.set(null)"
+      (unarchive)="onModalUnarchive()">
+    </app-claim-form-modal>
+  } @else {
+    <app-item-detail-modal
       [item]="item"
       [currentUserId]="currentUserId()"
       [userProfilePicture]="getUserProfilePicture()"
@@ -71,7 +80,8 @@
       (editClicked)="onModalEdit()"
       (deleteClicked)="onModalDelete()"
       (viewCodeClicked)="onModalViewCode()">
-  </app-item-detail-modal>
+    </app-item-detail-modal>
+  }
 }
 
 @if (itemToUnarchive()) {

@@ -101,12 +101,15 @@
               <button
                   class="status-btn"
                   [ngClass]="(report()?.status || 'pending').toLowerCase()"
+                  [style.cursor]="isReadOnly ? 'default' : 'pointer'"
                   (click)="toggleDropdown($event)">
                 {{ report()?.status || 'Pending' }}
-                <span class="arrow">▼</span>
+                @if (!isReadOnly) {
+                  <span class="arrow">▼</span>
+                }
               </button>
 
-              @if (isDropdownOpen()) {
+              @if (isDropdownOpen() && !isReadOnly) {
                 <div class="dropdown-content"
                     (click)="$event.stopPropagation()">
                   @for (option of STATUS_OPTIONS; track option.value) {
@@ -129,7 +132,9 @@
         </div>
 
         <div class="right-panel" [formGroup]="claimForm">
-          <h2 class="form-title">Claim Processing</h2>
+          <h2 class="form-title">
+            {{ isArchive ? 'Archive Details' : 'Claim Processing' }}
+          </h2>
 
           <div class="form-section">
             <h3 class="section-label">Claimant Information</h3>
@@ -208,21 +213,35 @@
             <h3 class="section-label">Administration</h3>
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Remarks / Notes</mat-label>
-              <textarea matInput formControlName="remarks" rows="3"
+              <textarea matInput formControlName="remarks" rows="2"
                   placeholder="Internal notes..."></textarea>
             </mat-form-field>
           </div>
 
           <div class="action-buttons">
-            <button mat-stroked-button (click)="onClose()">Cancel</button>
-            <button mat-raised-button color="primary"
-                    [disabled]="isSaving() || claimForm.invalid"
-                    (click)="saveItemDetails()">
-              @if (isSaving()) {
-                <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
-              }
-              {{ isSaving() ? 'Saving...' : 'Submit Claim' }}
+            @if (isArchive) {
+              <button mat-stroked-button
+                      color="warn"
+                      class="unarchive-btn"
+                      (click)="onUnarchive()">
+                Unarchive
+              </button>
+            }
+
+            <button mat-stroked-button (click)="onClose()">
+              {{ isReadOnly ? 'Close' : 'Cancel' }}
             </button>
+
+            @if (!isReadOnly) {
+              <button mat-raised-button color="primary"
+                      [disabled]="isSaving() || claimForm.invalid"
+                      (click)="saveItemDetails()">
+                @if (isSaving()) {
+                  <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+                }
+                {{ isSaving() ? 'Saving...' : 'Submit Claim' }}
+              </button>
+            }
           </div>
         </div>
       </div>

@@ -84,8 +84,12 @@ export class ClaimFormModal implements OnInit {
   private datePipe = inject(DatePipe);
 
   @Input({ required: true }) claimData!: Claim | Report;
+  @Input() isReadOnly: boolean = false;
+  @Input() isArchive: boolean = false;
+
   @Output() close = new EventEmitter<void>();
   @Output() statusChange = new EventEmitter<string>();
+  @Output() unarchive = new EventEmitter<void>();
 
   protected readonly ClaimStatus = ClaimStatus;
 
@@ -189,11 +193,16 @@ export class ClaimFormModal implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.isReadOnly) {
+      this.claimForm.disable();
+    }
     this.loadData();
     this.setupUserSearch();
   }
 
   private setupUserSearch(): void {
+    if (this.isReadOnly) return;
+
     this.claimForm.get('claimantName')?.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -288,6 +297,8 @@ export class ClaimFormModal implements OnInit {
   }
 
   protected onStatusOptionClick(status: string): void {
+    if (this.isReadOnly) return;
+
     if (status === ClaimStatus.CLAIMED) {
       alert('Please fill out Claimant Details and click' +
           '"Submit" to mark this item as Claimed.');
@@ -299,7 +310,7 @@ export class ClaimFormModal implements OnInit {
   }
 
   protected isStatusDisabled(status: string): boolean {
-    return status === ClaimStatus.CLAIMED;
+    return status === ClaimStatus.CLAIMED || this.isReadOnly;
   }
 
   protected getOptionTooltip(status: string): string {
@@ -311,6 +322,7 @@ export class ClaimFormModal implements OnInit {
 
   protected toggleDropdown(event: Event): void {
     event.stopPropagation();
+    if (this.isReadOnly) return;
     this.isDropdownOpen.update(v => !v);
   }
 
@@ -343,6 +355,8 @@ export class ClaimFormModal implements OnInit {
   }
 
   protected saveItemDetails(): void {
+    if (this.isReadOnly) return;
+
     if (this.claimForm.invalid) {
       this.claimForm.markAllAsTouched();
       return;
@@ -382,6 +396,10 @@ export class ClaimFormModal implements OnInit {
        this.isSaving.set(false);
        this.onClose();
     }
+  }
+
+  protected onUnarchive(): void {
+    this.unarchive.emit();
   }
 
   protected nextImage(event: Event): void {
