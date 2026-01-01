@@ -62,7 +62,8 @@
   </div>
 
   <div class="form-field photo-upload-field">
-    <label>Upload Photo: <small>(Upload if available)</small></label>
+    <label>Upload Photo: 
+      <small>(Upload if available, max 5 photos)</small></label>
 
     <input
         #fileInput
@@ -73,10 +74,13 @@
         (change)="onFileSelected($event)"
     />
 
-    <div class="upload-area" (click)="fileInput.click()">
-      <span class="upload-icon">↑</span>
-      <p>Click to select photos</p>
-    </div>
+    @if (selectedFilesPreview.length === 0
+        && reportForm.controls.photoUrls.length === 0) {
+      <div class="upload-area" (click)="fileInput.click()">
+        <span class="upload-icon">↑</span>
+        <p>Click to select photos</p>
+      </div>
+    }
 
     <div class="photo-thumbnails">
       @for (photo of selectedFilesPreview; track $index) {
@@ -98,6 +102,15 @@
             </span>
           </div>
         }
+      }
+
+      @if ((selectedFilesPreview.length 
+              + reportForm.controls.photoUrls.length) > 0 && 
+          (selectedFilesPreview.length
+              + reportForm.controls.photoUrls.length) < 5) {
+        <div class="photo-box add-photo-box" (click)="fileInput.click()">
+          <span class="plus-icon">+</span>
+        </div>
       }
     </div>
   </div>
