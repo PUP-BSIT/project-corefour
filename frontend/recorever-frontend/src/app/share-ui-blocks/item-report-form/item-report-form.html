@@ -36,13 +36,20 @@
       <mat-label>{{ dateLabel }}</mat-label>
       <input
           matInput
-          type="date"
+          [matDatepicker]="picker"
           formControlName="date_lost_found"
           placeholder="mm/dd/yyyy"
        />
-      @if (reportForm.controls.date_lost_found.invalid &&
-        reportForm.controls.date_lost_found.touched) {
-        <mat-error>Date is required.</mat-error>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    
+      @if (reportForm.controls.date_lost_found.touched) {
+        @if (reportForm.controls.date_lost_found.hasError('required')) {
+          <mat-error>Date is required.</mat-error>
+        }
+        @if (reportForm.controls.date_lost_found.hasError('futureDate')) {
+          <mat-error>Future dates are not allowed.</mat-error>
+        }
       }
     </mat-form-field>
   </div>
@@ -54,11 +61,17 @@
           matInput
           formControlName="description"
           rows="5"></textarea>
+      
+      <mat-hint align="end">
+        {{ descriptionCharCount }} / 500
+      </mat-hint>
+
       @if (reportForm.controls.description.invalid &&
-           reportForm.controls.description.touched) {
+        reportForm.controls.description.touched) {
         <mat-error>Description is required (min 10 characters).</mat-error>
       }
-    </mat-form-field>
+
+      </mat-form-field>
   </div>
 
   <div class="form-field photo-upload-field">
@@ -115,9 +128,37 @@
     </div>
   </div>
 
+  @if (submissionError) {
+    <div class="submission-error-message">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ submissionError }}</span>
+    </div>
+  }
+
   <div class="form-actions">
-    <button type="submit" class="btn btn-submit">Submit</button>
-    <button type="button" class="btn btn-reset"
-        (click)="onCancel()">Reset</button>
+    <button 
+      type="submit" 
+      class="btn btn-submit" 
+      [disabled]="isSubmitting || reportForm.invalid"
+      [title]="reportForm.invalid
+        ? 'Please fill out all required fields correctly' : ''">
+      
+      <div class="loading-container">
+        @if (isSubmitting) {
+          <mat-spinner diameter="18" strokeWidth="3"></mat-spinner>
+          <span>{{ loadingMessage }}</span>
+        } @else {
+          <span>Submit Report</span>
+        }
+      </div>
+    </button>
+
+    <button 
+      type="button" 
+      class="btn btn-reset" 
+      [disabled]="isSubmitting"
+      (click)="onCancel()">
+      Reset
+    </button>
   </div>
 </form>
