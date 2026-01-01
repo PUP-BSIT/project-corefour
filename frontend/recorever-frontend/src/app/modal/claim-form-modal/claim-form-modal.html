@@ -116,10 +116,10 @@
                     @if (option.value !==
                         (report()?.status || 'pending').toLowerCase()) {
                       <div
-                          [class.disabled-option]="isStatusDisabled(option.value)"
-                          [matTooltip]="getOptionTooltip(option.value)"
-                          matTooltipPosition="left"
-                          (click)="onStatusOptionClick(option.value)">
+                        [class.disabled-option]="isStatusDisabled(option.value)"
+                        [matTooltip]="getOptionTooltip(option.value)"
+                        matTooltipPosition="left"
+                        (click)="onStatusOptionClick(option.value)">
                         {{ option.label }}
                       </div>
                     }
