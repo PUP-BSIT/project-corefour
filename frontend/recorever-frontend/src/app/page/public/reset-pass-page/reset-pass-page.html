@@ -1,1 +1,122 @@
-<p>reset-pass-page works!</p>
+<div class="forgot-pass-page">
+  <div class="form-container">
+    @if (currentView() === 'FORM') {
+      <h2 class="form-title">Choose a new password</h2>
+      <div class="form-wrapper">
+        <form [formGroup]="resetPasswordForm" (ngSubmit)="onSubmit()">
+          
+          <div class="form-field">
+            <label class="input-label">New Password*</label>
+            <mat-form-field appearance="outline" class="full-width" 
+              [class.field-error]="resetPasswordForm.get('newPassword')?.invalid 
+                && resetPasswordForm.get('newPassword')?.touched">
+              <input matInput 
+                     [type]="hidePassword() ? 'password' : 'text'" 
+                     formControlName="newPassword" 
+                     (focus)="isPasswordFocused.set(true)" 
+                     (blur)="isPasswordFocused.set(false)">
+              <button type="button" matSuffix 
+                      (click)="hidePassword.set(!hidePassword())" 
+                      class="visibility-btn-circle">
+                <mat-icon>
+                  {{ hidePassword() ? 'visibility_off' : 'visibility' }}
+                </mat-icon>
+              </button>
+            </mat-form-field>
+
+            @if (isPasswordFocused() || 
+                 resetPasswordForm.get('newPassword')?.value) {
+              <div class="password-requirements-area">
+                @if (resetPasswordForm.get('newPassword')?.
+                       hasError('minlength')) {
+                  <span class="req-text">Must be at least 8 characters</span>
+                }
+
+                <div class="strength-container-row">
+                  <span class="label">Strength:</span>
+                  <div class="bar-bg">
+                    <div class="bar-fill" 
+                         [attr.data-strength]="passwordStrength()">
+                    </div>
+                  </div>
+                  <span class="status-text" 
+                        [attr.data-color]="passwordStrength()">
+                    {{ passwordStrength() | titlecase }}
+                  </span>
+                </div>
+
+                <div class="bullets-list">
+                  @if (resetPasswordForm.get('newPassword')?.
+                         errors?.['complexity']?.needsNumber) {
+                    <span class="bullet">
+                      • Must contain at least one number.
+                    </span>
+                  }
+                  @if (resetPasswordForm.get('newPassword')?.
+                         errors?.['complexity']?.needsCapital) {
+                    <span class="bullet">
+                      • Must contain at least one capital letter.
+                    </span>
+                  }
+                  @if (resetPasswordForm.get('newPassword')?.
+                         errors?.['complexity']?.needsSpecialChar) {
+                    <span class="bullet">
+                      • Must contain at least one special character.
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="input-label">Confirm Password*</label>
+            <mat-form-field appearance="outline" class="full-width">
+              <input matInput 
+                     [type]="hideConfirmPassword() ? 'password' : 'text'" 
+                     formControlName="confirmPassword">
+              <button type="button" matSuffix 
+                      (click)="hideConfirmPassword.set(!hideConfirmPassword())" 
+                      class="visibility-btn-circle">
+                <mat-icon>
+                  {{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}
+                </mat-icon>
+              </button>
+              @if (resetPasswordForm.get('confirmPassword')?.
+                     hasError('mismatch') && 
+                   resetPasswordForm.get('confirmPassword')?.touched) {
+                <mat-error>Passwords do not match.</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-submit" type="submit" 
+                    [disabled]="isLoading() || resetPasswordForm.invalid">
+              {{ isLoading() ? 'Submitting...' : 'Submit' }}
+            </button>
+            <div class="back-to-login">
+              <span class="login-link" routerLink="/login">
+                Back to Log In
+              </span>
+            </div>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (currentView() === 'SUCCESS') {
+      <div class="form-wrapper success-view-large">
+        <div class="success-content">
+          <mat-icon class="success-icon-big">check_circle</mat-icon>
+          <h3>Password Successfully Changed!</h3>
+          <p>Your account is now secured. You can now use your new password 
+             to access your account.</p>
+          <button class="btn btn-submit btn-large" routerLink="/login">
+            Back to Login
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
