@@ -5,6 +5,7 @@ import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,9 @@ public class UserService {
 
     @Autowired  
     private UserRepository repo;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -127,6 +131,20 @@ public class UserService {
         
         String newHashed = BCrypt.hashpw(newPassword, BCrypt.gensalt());
         repo.updatePassword(user.getUser_id(), newHashed);
+    }
+
+    public boolean emailExists(String email) {
+        return repo.findByEmail(email) != null;
+    }
+
+    public boolean resetUserPassword(String email, String newPassword) {
+        User user = repo.findByEmail(email);
+        
+        if (user != null) {
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            return repo.updatePassword(user.getUser_id(), encodedPassword);
+        }
+        return false;
     }
 
     public void deleteAccount(int userId) {
