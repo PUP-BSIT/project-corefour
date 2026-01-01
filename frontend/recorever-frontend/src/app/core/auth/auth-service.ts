@@ -173,4 +173,8 @@ export class AuthService {
       return null;
     }
   }
+
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.API_BASE_URL}/auth/forgot-password`, { email });
+  }
 }
