@@ -230,17 +230,17 @@
 
           <div class="action-buttons">
             @if (isArchive) {
-              <button mat-stroked-button
-                      color="warn"
-                      class="unarchive-btn"
+              <button mat-button
+                      class="unarchive-card-btn"
                       (click)="onUnarchive()">
-                Unarchive
+                <mat-icon>unarchive</mat-icon>
+                UNARCHIVE
+              </button>
+            } @else {
+              <button mat-stroked-button (click)="onClose()">
+                {{ isReadOnly ? 'Close' : 'Cancel' }}
               </button>
             }
-
-            <button mat-stroked-button (click)="onClose()">
-              {{ isReadOnly ? 'Close' : 'Cancel' }}
-            </button>
 
             @if (!isReadOnly) {
               <button mat-raised-button color="primary"

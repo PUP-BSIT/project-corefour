@@ -387,7 +387,7 @@ $claimed-dark: #333333;
       font-size: 13px;
       font-weight: 600;
       color: $text-main;
-      margin: 0 0 6px 0;
+      margin: 0 0 10px 0;
 
       .optional {
         font-weight: 400;
@@ -420,8 +420,16 @@ $claimed-dark: #333333;
       min-width: 100px;
     }
 
-    .unarchive-btn {
-      margin-right: auto;
+    .unarchive-card-btn {
+      color: #ff9500 !important;
+      font-weight: 700 !important;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      mat-icon {
+        margin-right: 4px;
+      }
     }
 
     .btn-spinner {
