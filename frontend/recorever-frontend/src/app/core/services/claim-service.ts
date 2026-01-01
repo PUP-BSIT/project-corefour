@@ -27,23 +27,27 @@ export class ClaimService {
     );
   }
 
+  getClaimByReportId(reportId: number): Observable<Claim> {
+  return this.http.get<Claim>(`${this.apiUrl}/claim/report/${reportId}`);
+}
+
   getMyClaims(userId: number): Observable<Claim[]> {
     return this.http.get<Claim[]>(`${this.apiUrl}/claims/user`);
   }
 
-  submitClaim(reportId: number): Observable<{ 
-      claim_id: number; 
-      claim_code: string 
+  submitClaim(reportId: number): Observable<{
+      claim_id: number;
+      claim_code: string
   }> {
     return this.http.post<{ claim_id: number; claim_code: string }>(
-        `${this.apiUrl}/claim`, 
+        `${this.apiUrl}/claim`,
         { report_id: reportId }
     );
   }
 
   updateClaimStatus(
-      claimId: number, 
-      status: string, 
+      claimId: number,
+      status: string,
       remarks: string
   ): Observable<void> {
     const payload = { admin_remarks: remarks };

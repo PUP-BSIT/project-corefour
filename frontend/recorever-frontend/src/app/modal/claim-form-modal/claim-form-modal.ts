@@ -21,9 +21,10 @@ import {
   finalize,
   tap,
   debounceTime,
-  distinctUntilChanged
+  distinctUntilChanged,
+  map
 } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { of, Observable, forkJoin } from 'rxjs';
 
 // Material Imports
 import { MatButtonModule } from '@angular/material/button';
@@ -193,11 +194,8 @@ export class ClaimFormModal implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.isReadOnly) {
-      this.claimForm.disable();
-    }
-    this.loadData();
-    this.setupUserSearch();
+  this.loadData();
+  this.setupUserSearch();
   }
 
   private setupUserSearch(): void {
@@ -252,12 +250,40 @@ export class ClaimFormModal implements OnInit {
       const todayStr = this.datePipe.transform(new Date(), 'mediumDate');
       this.claimForm.patchValue({ claimDate: todayStr });
 
-      this.userService.getUserById(report.user_id).pipe(
-        finalize(() => this.isLoading.set(false))
-      ).subscribe({
-        next: (user) => this.reportOwnerName.set(user?.name || 'Unknown User'),
-        error: (err) => console.error('Error loading report owner', err)
-      });
+      if (this.isArchive && report.status === 'claimed') {
+
+        this.claimService.getClaimByReportId(report.report_id).pipe(
+          tap((claim: Claim) => {
+            console.log('🔍 ✅ Claim received from backend:', claim);
+            console.log('🔍 ✅ Claimant name from backend:',
+                claim.claimant_name);
+
+            if (claim) {
+              this.activeClaim.set(claim);
+              this.patchFormForExistingClaim(claim);
+            } else {
+              console.log('🔍 ❌ No claim data received');
+            }
+          }),
+          switchMap(() => this.userService.getUserById(report.user_id)),
+          finalize(() => this.isLoading.set(false))
+        ).subscribe({
+          next: (user) => {
+            this.reportOwnerName.set(user?.name || 'Unknown User');
+          },
+          error: (err) => {
+            this.isLoading.set(false);
+          }
+        });
+      } else {
+        this.userService.getUserById(report.user_id).pipe(
+          finalize(() => this.isLoading.set(false))
+        ).subscribe({
+          next: (user) =>
+              this.reportOwnerName.set(user?.name || 'Unknown User'),
+          error: (err) => console.error('Error loading report owner', err)
+        });
+      }
     }
     else {
       const claim = data as Claim;
@@ -285,16 +311,24 @@ export class ClaimFormModal implements OnInit {
   }
 
   private patchFormForExistingClaim(claim: Claim): void {
-    const formattedDate =
-        this.datePipe.transform(claim.created_at, 'mediumDate') || '';
-    this.claimForm.patchValue({
-        claimantName: claim.claimant_name || '',
-        claimDate: formattedDate,
-        contactEmail: claim.contact_email || '',
-        contactPhone: claim.contact_phone || '',
-        remarks: claim.admin_remarks || ''
-    });
+
+  const formattedDate =
+      this.datePipe.transform(claim.created_at, 'mediumDate') || '';
+
+  const valuesToPatch = {
+    claimantName: claim.claimant_name || '',
+    claimDate: formattedDate,
+    contactEmail: claim.contact_email || '',
+    contactPhone: claim.contact_phone || '',
+    remarks: claim.admin_remarks || ''
+  };
+
+  this.claimForm.patchValue(valuesToPatch);
+
+  if (this.isReadOnly) {
+    this.claimForm.disable();
   }
+}
 
   protected onStatusOptionClick(status: string): void {
     if (this.isReadOnly) return;

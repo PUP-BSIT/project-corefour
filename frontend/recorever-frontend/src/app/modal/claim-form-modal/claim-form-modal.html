@@ -140,12 +140,29 @@
             <h3 class="section-label">Claimant Information</h3>
 
             <div class="row">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Claimant Name</mat-label>
-                <input matInput
-                       formControlName="claimantName"
-                       placeholder="Enter full name or search existing user"
-                       [matAutocomplete]="auto">
+              @if (isReadOnly) {
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Claimant Name</mat-label>
+                  <input matInput formControlName="claimantName">
+                </mat-form-field>
+              }
+
+              @if (!isReadOnly) {
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Claimant Name</mat-label>
+                  <input matInput
+                        formControlName="claimantName"
+                        placeholder="Enter full name or search existing user"
+                        [matAutocomplete]="auto">
+
+                  @if (claimForm.get('claimantName')?.hasError('required')) {
+                    <mat-error>Name is required</mat-error>
+                  }
+                  @if (isSearchingUsers()) {
+                    <mat-icon matSuffix class="spinning-loader">sync</mat-icon>
+                  }
+                </mat-form-field>
+
                 <mat-autocomplete #auto="matAutocomplete"
                                   [displayWith]="displayUserFn"
                                   (optionSelected)="onUserSelected($event)">
@@ -168,14 +185,7 @@
                     </mat-option>
                   }
                 </mat-autocomplete>
-
-                @if (claimForm.get('claimantName')?.hasError('required')) {
-                  <mat-error>Name is required</mat-error>
-                }
-                @if (isSearchingUsers()) {
-                  <mat-icon matSuffix class="spinning-loader">sync</mat-icon>
-                }
-              </mat-form-field>
+              }
             </div>
 
             <div class="row">
