@@ -118,10 +118,24 @@ export class ItemReportForm implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files;
+    const maxPhotos = 5;
+    const maxSizeInBytes = 10 * 1024 * 1024;
 
     if (files) {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        const currentTotal = this.selectedFiles.length +
+          this.photoUrlsFormArray.length;
+
+        if (currentTotal >= maxPhotos) {
+          alert("Maximum of 5 photos only.");
+          break;
+        }
+
+        if (file.size > maxSizeInBytes) {
+          alert(`File ${file.name} is too large. Max size is 10MB.`);
+          continue;
+        }
 
         if (!file.type.match('image/(jpeg|png)')) {
           console.error(`File type not supported: ${file.name}`);
@@ -129,12 +143,10 @@ export class ItemReportForm implements OnInit {
         }
 
         const url = URL.createObjectURL(file);
-
         this.selectedFiles.push(file);
         this.selectedFilesPreview.push({
             file: file, url: url, name: file.name });
       }
-
       input.value = '';
     }
   }
