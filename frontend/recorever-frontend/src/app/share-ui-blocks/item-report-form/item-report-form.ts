@@ -18,6 +18,7 @@ import {
     ReportSubmissionWithFiles,
     FilePreview
 } from '../../models/item-model';
+import { ToastService } from '../../core/services/toast-service';
 
 @Component({
   selector: 'app-item-report-form',
@@ -50,6 +51,7 @@ export class ItemReportForm implements OnInit {
   protected filteredLocations!: Observable<string[]>;
 
   private fb = inject(FormBuilder);
+  private toastService = inject(ToastService);
 
   // Getters
   public get locationLabel(): string {
@@ -128,17 +130,17 @@ export class ItemReportForm implements OnInit {
           this.photoUrlsFormArray.length;
 
         if (currentTotal >= maxPhotos) {
-          alert("Maximum of 5 photos only.");
+          this.toastService.showError("Maximum of 5 photos only.");
           break;
         }
 
         if (file.size > maxSizeInBytes) {
-          alert(`File ${file.name} is too large. Max size is 10MB.`);
+          this.toastService.showError(`File ${file.name} is too large. Max size is 10MB.`);
           continue;
         }
 
         if (!file.type.match('image/(jpeg|png)')) {
-          console.error(`File type not supported: ${file.name}`);
+          this.toastService.showError("Only JPEG and PNG images are supported.");
           continue;
         }
 
