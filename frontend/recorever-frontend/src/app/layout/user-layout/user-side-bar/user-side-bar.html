@@ -1,56 +1,58 @@
 <div class="user-side-bar">
 
-  <div class="user-profile-header" #profileSection>
-    <div class="profile-click-area" (click)="toggleProfileDropdown()"
-      [class.dropdown-open]="isProfileDropdownOpen">
-      
-      <img [src]="getProfileImageUrl(currentUser()?.profile_picture)"
-           alt="Profile Avatar"
-           class="profile-avatar-img">
-           
-      <div class="profile-info">
-        <span class="profile-name">{{ currentUser()?.name }}</span>
-        <span class="profile-dropdown-arrow">▿</span>
-      </div>
-    </div>
-    
-    <div class="notification-click-area">
-      <app-notification></app-notification>
-    </div>
-
-    @if (isProfileDropdownOpen) {
-    <div class="profile-dropdown-menu">
-      <div class="dropdown-user-info">
+  @if (currentUser()) {
+    <div class="user-profile-header" #profileSection>
+      <div class="profile-click-area" (click)="toggleProfileDropdown()"
+        [class.dropdown-open]="isProfileDropdownOpen">
+        
         <img [src]="getProfileImageUrl(currentUser()?.profile_picture)"
              alt="Profile Avatar"
-             class="dropdown-avatar-img">
-        <div class="dropdown-name">{{ currentUser()?.name }}</div>
-        <div class="dropdown-email">{{ currentUser()?.email }}</div>
+             class="profile-avatar-img">
+             
+        <div class="profile-info">
+          <span class="profile-name">{{ currentUser()?.name }}</span>
+          <span class="profile-dropdown-arrow">▿</span>
+        </div>
+      </div>
+      
+      <div class="notification-click-area">
+        <app-notification></app-notification>
       </div>
 
-      @for (item of profileDropdownItems; track item.label) {
-        @if (item.label === 'Add Account') {
-          <div class="dropdown-divider"></div>
-        }
+      @if (isProfileDropdownOpen) {
+      <div class="profile-dropdown-menu">
+        <div class="dropdown-user-info">
+          <img [src]="getProfileImageUrl(currentUser()?.profile_picture)"
+               alt="Profile Avatar"
+               class="dropdown-avatar-img">
+          <div class="dropdown-name">{{ currentUser()?.name }}</div>
+          <div class="dropdown-email">{{ currentUser()?.email }}</div>
+        </div>
 
-        @if (item.action === 'navigate') {
-          <a [routerLink]="item.route" (click)="handleDropdownAction(item)"
-              class="dropdown-item">
-            <img [src]="item.iconPath" alt="{{ item.label }} Icon"
-                class="dropdown-item-icon">
-            {{ item.label }}
-          </a>
-        } @else {
-          <div (click)="handleDropdownAction(item)" class="dropdown-item">
-            <img [src]="item.iconPath" alt="{{ item.label }} Icon"
-                class="dropdown-item-icon">
-            {{ item.label }}
-          </div>
+        @for (item of profileDropdownItems; track item.label) {
+          @if (item.label === 'Add Account') {
+            <div class="dropdown-divider"></div>
+          }
+
+          @if (item.action === 'navigate') {
+            <a [routerLink]="item.route" (click)="handleDropdownAction(item)"
+                class="dropdown-item">
+              <img [src]="item.iconPath" alt="{{ item.label }} Icon"
+                  class="dropdown-item-icon">
+              {{ item.label }}
+            </a>
+          } @else {
+            <div (click)="handleDropdownAction(item)" class="dropdown-item">
+              <img [src]="item.iconPath" alt="{{ item.label }} Icon"
+                  class="dropdown-item-icon">
+              {{ item.label }}
+            </div>
+          }
         }
+      </div>
       }
     </div>
-    }
-  </div>
+  }
 
   <div class="nav-section main-nav">
     @for (item of mainNav; track item.label) {

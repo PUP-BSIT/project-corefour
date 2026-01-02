@@ -28,20 +28,17 @@ import { environment } from '../../../../environments/environment';
 })
 export class UserSideBar implements OnDestroy {
   private authService = inject(AuthService);
-  public router = inject(Router);
+  private router = inject(Router);
   private dialog = inject(MatDialog);
 
   @ViewChild('profileSection') profileSection!: ElementRef;
 
-  public currentUser = toSignal(
+  public currentUser = toSignal<User | null>(
     this.authService.currentUser$.pipe(
       catchError(() => of(null))
     ), 
     { initialValue: null }
   );
-
-  public currentUser$ = this.authService.currentUser$;
-  private currentUserSignal = toSignal(this.currentUser$);
 
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
@@ -171,7 +168,7 @@ export class UserSideBar implements OnDestroy {
   }
 
   public onProtectedLinkClick(route: string): void {
-    if (this.currentUserSignal()) {
+    if (this.currentUser()) {
       // User is logged in, navigate
       this.router.navigate([route]);
     } else {
