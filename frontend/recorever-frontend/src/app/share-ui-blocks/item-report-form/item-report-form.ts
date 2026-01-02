@@ -27,6 +27,7 @@ import {
 } from '../../models/item-model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIcon } from "@angular/material/icon";
+import { ToastService } from '../../core/services/toast-service';
 
 @Component({
   selector: 'app-item-report-form',
@@ -66,6 +67,7 @@ export class ItemReportForm implements OnInit {
   protected submissionError: string | null = null;
 
   private fb = inject(FormBuilder);
+  private toastService = inject(ToastService);
 
   // Getters
   public get locationLabel(): string {
@@ -163,23 +165,35 @@ export class ItemReportForm implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files;
+    const maxPhotos = 5;
+    const maxSizeInBytes = 10 * 1024 * 1024;
 
     if (files) {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        const currentTotal = this.selectedFiles.length +
+          this.photoUrlsFormArray.length;
+
+        if (currentTotal >= maxPhotos) {
+          this.toastService.showError("Maximum of 5 photos only.");
+          break;
+        }
+
+        if (file.size > maxSizeInBytes) {
+          this.toastService.showError(`File ${file.name} is too large. Max size is 10MB.`);
+          continue;
+        }
 
         if (!file.type.match('image/(jpeg|png)')) {
-          console.error(`File type not supported: ${file.name}`);
+          this.toastService.showError("Only JPEG and PNG images are supported.");
           continue;
         }
 
         const url = URL.createObjectURL(file);
-
         this.selectedFiles.push(file);
         this.selectedFilesPreview.push({
             file: file, url: url, name: file.name });
       }
-
       input.value = '';
     }
   }
