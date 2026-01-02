@@ -35,6 +35,10 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN") 
 
+                // Allow public access to view reports and locations
+                .requestMatchers(HttpMethod.GET, "/api/reports").permitAll() 
+                .requestMatchers(HttpMethod.GET, "/api/reports/top-locations").permitAll()
+
                 // Require authentication for uploading and managing images
                 .requestMatchers(HttpMethod.POST, 
                     "/api/report/*/upload-image", 
