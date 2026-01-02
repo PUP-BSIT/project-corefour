@@ -1,8 +1,9 @@
 import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
-import { CommonModule, AsyncPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { Subject, switchMap, takeUntil, catchError, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
 import { AppRoutePaths } from '../../../app.routes';
 import { Notification } from '../../../share-ui-blocks/notification/notification';
@@ -19,7 +20,6 @@ import { environment } from '../../../../environments/environment';
     CommonModule, 
     RouterModule, 
     Notification,
-    AsyncPipe,
     ConfirmationModal,
     MatDialogModule
   ], 
@@ -33,14 +33,20 @@ export class UserSideBar implements OnDestroy {
 
   @ViewChild('profileSection') profileSection!: ElementRef;
 
-  public currentUser$: Observable<User | null> = this.authService.currentUser$;
+  public currentUser = toSignal(
+    this.authService.currentUser$.pipe(
+      catchError(() => of(null))
+    ), 
+    { initialValue: null }
+  );
+
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
 
   private logoutTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
-    protected getProfileImageUrl(path: string | null | undefined): string {
+  protected getProfileImageUrl(path: string | null | undefined): string {
       if (!path) {
         return 'assets/profile-avatar.png';
       }
