@@ -2,11 +2,11 @@
   <h1 class="page-title">{{ pageTitle() }}</h1>
 
   <app-item-report-form 
-    [formType]="'lost'"
-    [initialData]="initialData()"
-    [isEditMode]="isEditMode()"
-    (formSubmitted)="handleSubmission($event)"
-    (formCancelled)="handleCancel()" />
+      [formType]="'lost'"
+      [initialData]="initialData()"
+      [isEditMode]="isEditMode()"
+      (formSubmitted)="handleSubmission($event)"
+      (formCancelled)="handleCancel()" />
 
   @if (submissionError()) {
     <p class="error-message text-danger">{{ submissionError() }}</p>
