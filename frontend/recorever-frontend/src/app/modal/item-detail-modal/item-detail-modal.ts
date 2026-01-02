@@ -1,4 +1,4 @@
-import { Component, input, Output, EventEmitter, computed, inject } from '@angular/core';
+import { Component, input, Output, EventEmitter, computed, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -34,6 +34,7 @@ export class ItemDetailModal {
   userProfilePicture = input<string | null>(null);
   currentUserId = input<number | null>(null);
   isArchiveView = input<boolean>(false);
+  isAdmin = input<boolean>(false);
 
   @Output() close = new EventEmitter<void>();
   @Output() viewTicket = new EventEmitter<void>();
@@ -41,6 +42,12 @@ export class ItemDetailModal {
   @Output() deleteClicked = new EventEmitter<void>();
   @Output() viewCodeClicked = new EventEmitter<void>();
   @Output() unarchiveClicked = new EventEmitter<void>();
+  @Output() statusChanged = new EventEmitter<string>();
+
+  public isStatusMenuOpen = signal<boolean>(false);
+
+  protected readonly availableStatuses: string[] = 
+    ['pending', 'approved', 'rejected', 'matched'];
 
   currentImageIndex = 0;
 
@@ -70,10 +77,11 @@ export class ItemDetailModal {
     const url = urls[this.currentImageIndex];
 
     if (url && url.startsWith('http')) {
-      return url;
+      return url.replace('http://', 'https://');
     }
-  
-    return `${environment.apiUrl}/image/download/${url}`; 
+
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${url}`; 
   });
 
   displayStatus = computed((): ItemStatus => {
@@ -150,5 +158,9 @@ export class ItemDetailModal {
 
   onUnarchive(): void {
     this.unarchiveClicked.emit();
+  }
+  
+  public onUpdateStatus(newStatus: string): void {
+    this.statusChanged.emit(newStatus);
   }
 }

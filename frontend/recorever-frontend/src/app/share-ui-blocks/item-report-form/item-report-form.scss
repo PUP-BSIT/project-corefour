@@ -127,6 +127,26 @@ $secondary-text: #666;
     }
   }
 
+  .submission-error-message {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #fdecea;
+    color: #d32f2f;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(211, 47, 47, 0.2);
+    font-size: 14px;
+    animation: fadeIn 0.3s ease-in;
+
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+  }
+
   .form-actions {
     display: flex;
     justify-content: flex-end;
@@ -143,13 +163,34 @@ $secondary-text: #666;
       transition: background-color 0.15s ease;
     }
 
-    .btn-submit {
-      background-color: $text-color;
-      color: white;
+  .btn-submit {
+    background-color: $text-color;
+    color: white;
+    transition: all 0.3s ease;
 
-      &:hover {
-        background-color: color.adjust($text-color, $lightness: 10%);
+    &:disabled {
+      background-color: #cccccc !important;
+      color: #666666 !important;
+      cursor: not-allowed !important;
+      opacity: 0.7;
+      box-shadow: none;
+
+      .mat-mdc-progress-spinner circle {
+        stroke: #666666 !important;
       }
+    }
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust($text-color, $lightness: 10%);
+      transform: translateY(-1px);
+    }
+  }
+
+    .loading-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
 
     .btn-reset {

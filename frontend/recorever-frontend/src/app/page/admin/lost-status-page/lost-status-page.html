@@ -1,6 +1,6 @@
 <div class="report-status-page">
   <header class="report-status-page__header">
-    <h1 class="report-status-page__title">Lost Status Management</h1>
+    <h1 class="report-status-page__title">Manage Lost Item</h1>
 
     <div class="report-status-page__search-wrapper">
       <app-search-bar (search)="onSearchSubmit($event)"></app-search-bar>
@@ -65,11 +65,14 @@
     </div>
   </div>
 
-  @if (selectedReport()) {
-    <app-report-detail-modal
-        [report]="selectedReport()!"
-        (close)="onCloseDetailView()"
-        (statusUpdated)="onStatusUpdated($event)">
-    </app-report-detail-modal>
+  @if (selectedReport(); as report) {
+    <app-item-detail-modal
+        [item]="report"
+        [currentUserId]="currentUserId()"
+        [userProfilePicture]="getUserProfilePicture()"
+        [isAdmin]="true"
+        (statusChanged)="onStatusUpdate($event)"
+        (close)="onCloseDetailView()">
+    </app-item-detail-modal>
   }
 </div>

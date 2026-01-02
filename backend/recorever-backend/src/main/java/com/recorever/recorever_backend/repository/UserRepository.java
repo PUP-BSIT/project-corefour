@@ -107,6 +107,11 @@ public class UserRepository {
         return jdbcTemplate.update(sql, name, phone, email, picture, id) > 0;
     }
 
+    public boolean updatePassword(int userId, String newHash) {
+        String sql = "UPDATE users SET password_hash = ? WHERE user_id = ?";
+        return jdbcTemplate.update(sql, newHash, userId) > 0;
+    }
+
     public boolean deleteUser(int id) {
         String sql = "UPDATE users SET is_deleted = 1 WHERE user_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, id) > 0;

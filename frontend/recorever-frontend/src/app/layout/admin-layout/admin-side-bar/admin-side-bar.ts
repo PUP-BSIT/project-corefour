@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
@@ -28,6 +28,8 @@ export class AdminSideBar implements OnDestroy {
   private router = inject(Router);
 
   @Output() openSettingsModal = new EventEmitter<void>();
+
+  @ViewChild('profileSection') profileSection!: ElementRef;
 
   public currentUser$: Observable<User | null> = this.authService.currentUser$;
   protected isLogoutModalOpen = false;
@@ -61,7 +63,7 @@ export class AdminSideBar implements OnDestroy {
       route: "/admin/dashboard",
     },
     {
-      label: "Lost Status Management",
+      label: "Manage Lost Item",
       iconPath: "/assets/report-status.png",
       route: AppRoutePaths.REPORT_STATUS_MANAGEMENT,
     },
@@ -108,6 +110,17 @@ export class AdminSideBar implements OnDestroy {
           this.isLogoutModalOpen = false;
         }
       });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.isProfileDropdownOpen && 
+      this.profileSection && 
+      !this.profileSection.nativeElement.contains(event.target as Node)
+    ) {
+      this.isProfileDropdownOpen = false;
+    }
   }
 
   public toggleProfileDropdown(): void {

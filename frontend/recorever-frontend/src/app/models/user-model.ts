@@ -17,6 +17,15 @@ export type NavItem = {
 export type ProfileNavItem = {
   label: string;
   iconPath: string;
-  action: 'navigate' | 'emit' | 'addAccount' | 'logout';
+  action: 'navigate' | 'emit' | 'addAccount' | 'logout' | 'openSettings';
   route?: string;
+};
+
+export type ChangePasswordRequest = {
+  oldPassword: string;
+  newPassword: string;
+};
+
+export type UniqueCheckResponse = {
+  isUnique: boolean;
 };

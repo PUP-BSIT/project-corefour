@@ -1,7 +1,7 @@
 <div class="user-side-bar">
 
   @if (currentUser$ | async; as user) {
-    <div class="user-profile-header">
+    <div class="user-profile-header" #profileSection>
       <div class="profile-click-area" (click)="toggleProfileDropdown()"
         [class.dropdown-open]="isProfileDropdownOpen">
         <img [src]="getProfileImageUrl(user.profile_picture)"

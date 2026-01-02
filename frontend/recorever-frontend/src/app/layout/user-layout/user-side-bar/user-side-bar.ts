@@ -1,12 +1,14 @@
-import { Component, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
+import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
 import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
 import { AppRoutePaths } from '../../../app.routes';
 import { Notification } from '../../../share-ui-blocks/notification/notification';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ConfirmationModal } from '../../../modal/confirmation-modal/confirmation-modal';
+import { SettingsModal } from '../../../modal/settings-modal/settings-modal';
 import { LogoutResponse } from '../../../models/auth-model';
 import { environment } from '../../../../environments/environment';
 
@@ -18,16 +20,18 @@ import { environment } from '../../../../environments/environment';
     RouterModule, 
     Notification,
     AsyncPipe,
-    ConfirmationModal
+    ConfirmationModal,
+    MatDialogModule
   ], 
   templateUrl: './user-side-bar.html',
   styleUrl: './user-side-bar.scss',
 })
-export class UserSideBar implements OnDestroy{
+export class UserSideBar implements OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
-  @Output() openSettingsModal = new EventEmitter<void>();
+  @ViewChild('profileSection') profileSection!: ElementRef;
 
   public currentUser$: Observable<User | null> = this.authService.currentUser$;
   protected isLogoutModalOpen = false;
@@ -41,17 +45,18 @@ export class UserSideBar implements OnDestroy{
         return 'assets/profile-avatar.png';
       }
       if (path.startsWith('http')) {
-        return path;
+        return path.replace('http://', 'https://');
       }
 
-      return `${environment.apiUrl}/image/download/${path}`;
+      const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+      return `${secureBaseUrl}/image/download/${path}`;
     }
 
   protected profileDropdownItems: ProfileNavItem[] = [
     { label: 'Profile', iconPath: 'assets/profile-avatar.png',
         action: 'navigate', route: AppRoutePaths.PROFILE },
     { label: 'Settings', iconPath: 'assets/setting.png',
-        action: 'emit' },
+        action: 'openSettings' },
     { label: 'About us', iconPath: 'assets/about-us.png',
         action: 'navigate', route: AppRoutePaths.ABOUT_US },
     { label: 'Add Account', iconPath: 'assets/add-icon.png',
@@ -95,6 +100,17 @@ export class UserSideBar implements OnDestroy{
       });
   }
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.isProfileDropdownOpen && 
+      this.profileSection && 
+      !this.profileSection.nativeElement.contains(event.target as Node)
+    ) {
+      this.isProfileDropdownOpen = false;
+    }
+  }
+
   public toggleTracking(): void {
     this.isTrackingOpen = !this.isTrackingOpen;
   }
@@ -112,8 +128,9 @@ export class UserSideBar implements OnDestroy{
           this.router.navigate([item.route]);
         }
         break;
-      case 'emit':
-        this.openSettingsModal.emit();
+      case 'openSettings':
+        this.dialog.open(SettingsModal, {
+        });
         break;
       case 'addAccount':
         this.router.navigate(['/login']);
