@@ -55,12 +55,23 @@
 
   <div class="nav-section main-nav">
     @for (item of mainNav; track item.label) {
-      <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
-        <img [src]="item.iconPath" 
-              alt="{{ item.label }} Icon" 
-              class="nav-icon">
-        <div class="nav-label">{{ item.label }}</div>
-      </a>
+      @if (isProtected(item.route)) {
+        <a class="nav-item cursor-pointer"
+            [class.active]="isRouteActive(item.route)"
+            (click)="onProtectedLinkClick(item.route)">
+          <img [src]="item.iconPath" 
+               alt="{{ item.label }} Icon" 
+               class="nav-icon">
+          <div class="nav-label">{{ item.label }}</div>
+        </a>
+      } @else {
+        <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+          <img [src]="item.iconPath" 
+               alt="{{ item.label }} Icon" 
+               class="nav-icon">
+          <div class="nav-label">{{ item.label }}</div>
+        </a>
+      }
     }
   </div>
 
@@ -102,9 +113,22 @@
       title="Log Out"
       message="Are you sure you want to log out of your account?"
       confirmLabel="Log Out"
-      variant="primary"
+      variant="danger"
       (confirm)="onLogoutConfirm()"
       (cancel)="onLogoutCancel()">
+    </app-confirmation-modal>
+  }
+
+  @if (showLoginModal) {
+    <app-confirmation-modal
+      title="Log in Required"
+      message="You need to be logged in to access this feature. "
+      subMessage="Please log in to your account to continue reporting or 
+                  claiming items."
+      confirmLabel="Log In"
+      variant="primary"
+      (confirm)="onLoginModalConfirm()"
+      (cancel)="onLoginModalCancel()">
     </app-confirmation-modal>
   }
 </div>

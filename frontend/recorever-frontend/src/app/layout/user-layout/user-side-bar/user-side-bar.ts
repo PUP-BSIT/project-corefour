@@ -2,6 +2,7 @@ import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild } fro
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
 import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
 import { AppRoutePaths } from '../../../app.routes';
@@ -28,29 +29,38 @@ import { environment } from '../../../../environments/environment';
 })
 export class UserSideBar implements OnDestroy {
   private authService = inject(AuthService);
-  private router = inject(Router);
+  public router = inject(Router);
   private dialog = inject(MatDialog);
 
   @ViewChild('profileSection') profileSection!: ElementRef;
 
-  public currentUser$: Observable<User | null> = this.authService.currentUser$;
+  public currentUser$ = this.authService.currentUser$;
+  private currentUserSignal = toSignal(this.currentUser$);
+
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
+  
+  protected showLoginModal = false;
+  
+  private protectedRoutes = [
+    AppRoutePaths.REPORT_LOST,
+    AppRoutePaths.REPORT_FOUND
+  ];
 
   private logoutTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
-    protected getProfileImageUrl(path: string | null | undefined): string {
-      if (!path) {
-        return 'assets/profile-avatar.png';
-      }
-      if (path.startsWith('http')) {
-        return path.replace('http://', 'https://');
-      }
-
-      const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
-      return `${secureBaseUrl}/image/download/${path}`;
+  protected getProfileImageUrl(path: string | null | undefined): string {
+    if (!path) {
+      return 'assets/profile-avatar.png';
     }
+    if (path.startsWith('http')) {
+      return path.replace('http://', 'https://');
+    }
+
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${path}`;
+  }
 
   protected profileDropdownItems: ProfileNavItem[] = [
     { label: 'Profile', iconPath: 'assets/profile-avatar.png',
@@ -94,7 +104,7 @@ export class UserSideBar implements OnDestroy {
         next: (_response: LogoutResponse) => {
           this.isLogoutModalOpen = false;
         },
-        error: (_err) => {
+        error: (_err: Error) => {
           this.isLogoutModalOpen = false;
         }
       });
@@ -139,6 +149,38 @@ export class UserSideBar implements OnDestroy {
         this.isLogoutModalOpen = true;
         break;
     }
+  }
+
+  public isProtected(route: string): boolean {
+    return this.protectedRoutes.includes(route);
+  }
+
+  public isRouteActive(route: string): boolean {
+    return this.router.isActive(route, { 
+      paths: 'exact', 
+      queryParams: 'ignored', 
+      fragment: 'ignored', 
+      matrixParams: 'ignored' 
+    });
+  }
+
+  public onProtectedLinkClick(route: string): void {
+    if (this.currentUserSignal()) {
+      // User is logged in, navigate
+      this.router.navigate([route]);
+    } else {
+      // User is NOT logged in, show modal
+      this.showLoginModal = true;
+    }
+  }
+
+  public onLoginModalConfirm(): void {
+    this.showLoginModal = false;
+    this.router.navigate(['/login']);
+  }
+
+  public onLoginModalCancel(): void {
+    this.showLoginModal = false;
   }
 
   protected onLogoutConfirm(): void {
