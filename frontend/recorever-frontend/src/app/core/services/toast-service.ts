@@ -21,4 +21,13 @@ export class ToastService {
       });
     }
   }
+
+  showError(message: string) {
+    this.snackBar.open(message, 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+      horizontalPosition: 'right',
+      verticalPosition: 'bottom',
+    });
+  }
 }

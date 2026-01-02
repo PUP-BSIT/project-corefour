@@ -124,6 +124,24 @@ $secondary-text: #666;
       &.existing-photo {
         border-color: $primary-green;
       }
+
+      &.add-photo-box {
+        border: 2px dashed $border-color;
+        background-color: $light-grey;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background-color: color.adjust($light-grey, $lightness: -5%);
+          border-color: $primary-green;
+        }
+
+        .plus-icon {
+          font-size: 40px;
+          color: $secondary-text;
+          font-weight: 300;
+        }
+      }
     }
   }
 
