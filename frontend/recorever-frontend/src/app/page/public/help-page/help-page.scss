@@ -1,0 +1,148 @@
+$primary-color: #800000;
+$green-accent: #006400;
+$text-dark: #333333;
+$text-light: #555555;
+$white: #ffffff;
+$bg-light: #f8f9fa;
+$border-color: rgba(0, 0, 0, 0.1);
+
+.help-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  font-family: 'Poppins', sans-serif;
+  color: $text-dark;
+}
+
+.section-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 60px;
+
+  .hero-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    line-height: 1.1;
+
+    .highlight {
+      background: linear-gradient(
+        90deg,
+        $primary-color 0%,
+        $green-accent 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-block;
+    }
+  }
+
+  p {
+    font-size: 1.125rem;
+    color: $text-light;
+  }
+}
+
+.content-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.info-card {
+  background: $white;
+  border-radius: 16px;
+  border: 1px solid $border-color;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  padding: 2rem;
+
+  .card-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $primary-color;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba($primary-color, 0.1);
+  }
+
+  .card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba($primary-color, 0.1);
+
+    .card-title {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .badge {
+      font-size: 0.85rem;
+      background: $bg-light;
+      color: $text-light;
+      padding: 0.4rem 0.8rem;
+      border-radius: 50px;
+      border: 1px solid $border-color;
+    }
+  }
+}
+
+.card-body {
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  p {
+    color: $text-light;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  ul {
+    padding-left: 0;
+    list-style: none;
+
+    li {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: $text-light;
+      line-height: 1.6;
+
+      &::before {
+        content: "•";
+        color: $green-accent;
+        font-weight: bold;
+        position: absolute;
+        left: 0;
+      }
+    }
+  }
+}
+
+.contact-box {
+  background: lighten($bg-light, 1%);
+  border-left: 4px solid $primary-color;
+  padding: 1.5rem;
+  border-radius: 0 8px 8px 0;
+  margin-top: 1rem;
+
+  p {
+    margin-bottom: 0.5rem;
+    color: $text-dark;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
