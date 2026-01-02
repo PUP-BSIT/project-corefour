@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 interface FooterLink {
   label: string;
   url: string;
+  fragment?: string;
 }
 
 @Component({
@@ -16,21 +17,26 @@ interface FooterLink {
 })
 export class Footer {
 
-  protected siteLinks: FooterLink[] = [
-    { label: 'Lost', url: '/lost' },
-    { label: 'Report Lost', url: '/report/lost' },
-    { label: 'Found', url: '/found' },
-    { label: 'Report Found', url: '/report/found' },
-  ];
-
   protected helpLinks: FooterLink[] = [
-    { label: 'Customer Support', url: '/support' },
-    { label: 'Terms & Conditions', url: '/terms' },
-    { label: 'Privacy Policy', url: '/privacy' },
+    { 
+      label: 'Customer Support', 
+      url: '/help-page', 
+      fragment: 'support' 
+    },
+    { 
+      label: 'Terms & Conditions', 
+      url: '/help-page', 
+      fragment: 'terms' 
+    },
+    { 
+      label: 'Privacy Policy', 
+      url: '/help-page', 
+      fragment: 'privacy' 
+    },
   ];
 
   protected mainLinks: FooterLink[] = [
     { label: 'Github', url: 'https://github.com/PUP-BSIT/project-corefour' },
-    { label: 'About Us', url: '/about' },
+    { label: 'About Us', url: '/about-us' },
   ];
 }
