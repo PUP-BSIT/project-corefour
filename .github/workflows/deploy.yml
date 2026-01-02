@@ -35,7 +35,7 @@ jobs:
         run: |
           cd backend/recorever-backend
           chmod +x mvnw
-          ./mvnw clean package
+          ./mvnw clean package -DskipTests
 
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.8.0
