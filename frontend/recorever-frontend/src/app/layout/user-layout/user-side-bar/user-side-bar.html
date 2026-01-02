@@ -94,7 +94,8 @@
   </div>
 
   <div class="help-link">
-    <a [routerLink]="">Help & Support</a>
+    <a [routerLink]="['/app/help-page']" routerLinkActive="active">
+        Help & Support</a>
   </div>
 
   @if (isLogoutModalOpen) {
