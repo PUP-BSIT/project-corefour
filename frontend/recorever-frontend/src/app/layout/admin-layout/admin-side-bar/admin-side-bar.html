@@ -1,15 +1,14 @@
 <div class="admin-side-bar">
 
-  @if (currentUser$ | async; as user) {
     <div class="user-profile-header" #profileSection>
       <div class="profile-click-area" (click)="toggleProfileDropdown()"
         [class.dropdown-open]="isProfileDropdownOpen">
-        <img [src]="getProfileImageUrl(user.profile_picture)"
+        <img [src]="getProfileImageUrl(currentUser()?.profile_picture)"
              alt="Profile Avatar"
              class="profile-avatar-img">
              
         <div class="profile-info">
-          <span class="profile-name">{{ user.name }}</span>
+          <span class="profile-name">{{ currentUser()?.name }}</span>
           <span class="profile-dropdown-arrow">▿</span>
         </div>
       </div>
@@ -21,11 +20,11 @@
       @if (isProfileDropdownOpen) {
       <div class="profile-dropdown-menu">
         <div class="dropdown-user-info">
-          <img [src]="getProfileImageUrl(user.profile_picture)"
+          <img [src]="getProfileImageUrl(currentUser()?.profile_picture)"
                alt="Profile Avatar"
                class="dropdown-avatar-img">
-          <div class="dropdown-name">{{ user.name }}</div>
-          <div class="dropdown-email">{{ user.email }}</div>
+          <div class="dropdown-name">{{ currentUser()?.name }}</div>
+          <div class="dropdown-email">{{ currentUser()?.email }}</div>
         </div>
 
         @for (item of profileDropdownItems; track item.label) {
@@ -50,7 +49,6 @@
       </div>
       }
     </div>
-  }
 
   <div class="nav-section main-nav">
     @for (item of mainNav; track item.label) {
