@@ -204,37 +204,48 @@ public class ReportController {
     }
 
     @PutMapping("/report/{id}")
-    public ResponseEntity<?> updateReport(
+    public ResponseEntity<ReportResponseDTO> updateReport(
             Authentication authentication,
             @PathVariable int id,
-            @RequestBody ReportCreationDTO reportDto) {
-        
+            @Valid @ModelAttribute ReportCreationDTO reportDto) {
+
         Report report = service.getById(id);
         if (report == null) {
-            return ResponseEntity.status(404).body("Report not found");
+            return ResponseEntity.status(404).body(null);
         }
-        
+
         User authenticatedUser = (User) authentication.getPrincipal();
         if (report.getUser_id() != authenticatedUser.getUser_id()) {
-            return ResponseEntity.status(403).body("You are not authorized to update this report.");
+            return ResponseEntity.status(403).body(null);
         }
 
-        // Check: User cannot edit an approved, matched, or claimed report.
-        if (report.getStatus().equalsIgnoreCase("approved") || 
-            report.getStatus().equalsIgnoreCase("matched") || 
-            report.getStatus().equalsIgnoreCase("claimed")) {
-            return ResponseEntity.status(403).body("Cannot update a report that has already been approved, matched, or claimed.");
+        if (!report.getStatus().equalsIgnoreCase("pending")) {
+            return ResponseEntity.status(403).body(null);
         }
 
-        boolean updated = service.updateEditableFields(
+        service.updateEditableFields(
             id, 
             reportDto.getItem_name(), 
             reportDto.getLocation(), 
             reportDto.getDescription()
         );
 
-        if (!updated) return ResponseEntity.badRequest().body("Invalid update or no fields provided.");
-        
+        List<MultipartFile> files = reportDto.getFiles();
+        if (files != null && !files.isEmpty() && files.get(0).getSize() > 0) {
+            files.forEach(file -> {
+                String uniqueFileName = imageService.storeFile(file);
+                
+                Image image = new Image(
+                    file.getOriginalFilename(),
+                    file.getContentType(), 
+                    uniqueFileName, 
+                    id
+                );
+
+                imageService.saveImageMetadata(image);
+            });
+        }
+
         Report updatedReport = service.getById(id);
         return ResponseEntity.ok(mapToReportResponseDTO(updatedReport));
     }
