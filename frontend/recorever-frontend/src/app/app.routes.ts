@@ -57,7 +57,6 @@ export const routes: Routes = [
   {
     path: 'app',
     component: UserLayout,
-    canActivate: [authGuard],
     children: [
       { path: 'lost-items',
         loadComponent: () => 
@@ -72,20 +71,24 @@ export const routes: Routes = [
         data: { itemType: 'found' }
       },
       { path: 'report-lost',
+        canActivate: [authGuard],
         loadComponent: () => 
           import('./page/user/report-lost-page/report-lost-page')
             .then(m => m.ReportLostPage)
       },
       { path: 'report-found',
+        canActivate: [authGuard],
         loadComponent: () => 
           import('./page/user/report-found-page/report-found-page')
             .then(m => m.ReportFoundPage)
       },
       { path: 'profile',
+        canActivate: [authGuard],
         loadComponent: () => import('./page/user/profile-page/profile-page')
           .then(m => m.ProfilePage)
       },
       { path: 'profile/:id',
+        canActivate: [authGuard],
         loadComponent: () => import('./page/user/profile-page/profile-page')
           .then(m => m.ProfilePage)
       },
