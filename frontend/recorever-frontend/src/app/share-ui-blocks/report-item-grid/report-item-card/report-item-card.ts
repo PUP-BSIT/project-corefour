@@ -4,6 +4,7 @@ import {
   Output,
   EventEmitter,
   computed,
+  signal,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -52,9 +53,21 @@ export class ReportItemCard {
   @Output() viewCodeClicked = new EventEmitter<void>();
   @Output() unarchiveClicked = new EventEmitter<void>();
 
-  showReferenceModal: boolean = false;
-  modalTitle: string = '';
-  modalDescription: string = '';
+  activeModalMode = signal<'ticket' | 'finder' | null>(null);
+
+  modalTitle = computed((): string => {
+    return 'Item Reference Details';
+  });
+
+  modalDescription = computed((): string => {
+    if (this.activeModalMode() === 'ticket') {
+      return 'To claim this item, please present this code to the ' +
+             'administrator. You will be asked to provide proof of ' +
+             'ownership (e.g., describing the contents or showing an ID)';
+    }
+    return 'Use this code when surrendering the item to the administrator. ' +
+           'This confirms you are the authorized finder';
+  });
 
   currentImageIndex = 0;
 
@@ -133,7 +146,7 @@ export class ReportItemCard {
 
   public getCodeButtonLabel(): string {
     const report = this.report();
-    return (report.type === 'lost' || report.claim_code)
+    return report.type === 'lost' || report.claim_code
       ? 'View Ticket ID'
       : 'View Reference Code';
   }
@@ -153,7 +166,7 @@ export class ReportItemCard {
     event.stopPropagation();
     const urls = this.photoUrls();
     this.currentImageIndex =
-        (this.currentImageIndex - 1 + urls.length) % urls.length;
+      (this.currentImageIndex - 1 + urls.length) % urls.length;
   }
 
   public onCardClick(): void {
@@ -161,12 +174,7 @@ export class ReportItemCard {
   }
 
   public onTicketClick(): void {
-    this.modalTitle = 'Item Reference Details';
-    this.modalDescription = 
-        'To claim this item, please present this code to the administrator. ' +
-        'You will be asked to provide proof of ownership '  +
-        '(e.g., describing the contents or showing an ID)';
-    this.showReferenceModal = true;
+    this.activeModalMode.set('ticket');
   }
 
   public onEdit(event: Event): void {
@@ -181,16 +189,15 @@ export class ReportItemCard {
 
   public onViewCode(event: Event): void {
     event.stopPropagation();
-    this.modalTitle = 'Item Reference Details';
-    this.modalDescription = 
-            'Use this code when surrendering the item to the administrator. ' +
-            'This confirms you are the authorized finder';
-    this.showReferenceModal = true;
-
+    this.activeModalMode.set('finder');
   }
 
   public onUnarchive(event: Event): void {
     event.stopPropagation();
     this.unarchiveClicked.emit();
+  }
+
+  public onCloseModal(): void {
+    this.activeModalMode.set(null);
   }
 }

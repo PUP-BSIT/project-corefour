@@ -142,11 +142,11 @@
   </mat-card-actions>
 </mat-card>
 
-@if (showReferenceModal) {
+@if (activeModalMode()) {
   <app-codes-modal
-      [title]="modalTitle"
+      [title]="modalTitle()"
       [code]="referenceCodeValue()"
-      [description]="modalDescription"
-      (close)="showReferenceModal = false">
+      [description]="modalDescription()"
+      (close)="onCloseModal()">
   </app-codes-modal>
 }
