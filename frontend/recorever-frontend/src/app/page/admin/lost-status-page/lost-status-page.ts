@@ -11,6 +11,7 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { RouterModule, ActivatedRoute, Params } from '@angular/router';
 import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import { SearchBarComponent } from '../../../share-ui-blocks/search-bar/search-bar';
 import { Report, ReportFilters, PaginatedResponse } from '../../../models/item-model';
@@ -39,6 +40,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
   private adminService = inject(AdminService);
   private toastService = inject(ToastService);
+  private route = inject(ActivatedRoute);
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
@@ -54,6 +56,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private currentSearchQuery = signal<string>('');
   protected currentSort = signal<SortOption>('date');
   protected currentStatusFilter = signal<LostReportStatusFilter>('All Statuses');
+  protected highlightId = signal<number | null>(null);
 
   protected readonly statusFilters: LostReportStatusFilter[] = [
     'All Statuses', 'pending', 'approved', 'matched', 'rejected'
@@ -64,6 +67,12 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     const sortType = this.currentSort();
 
     return [...data].sort((a, b) => {
+      const hId = this.highlightId();
+      if (hId) {
+        if (a.report_id === hId) return -1;
+        if (b.report_id === hId) return 1;
+      }
+
       if (sortType === 'az') {
         return (a.item_name || '').localeCompare(b.item_name || '');
       }
@@ -76,6 +85,13 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params: Params) => {
+        const hId = params['highlightId'];
+        this.highlightId.set(hId ? Number(hId) : null);
+      });
+
     this.refreshTrigger$.pipe(
       tap(() => this.isLoading.set(true)),
       switchMap(() => {

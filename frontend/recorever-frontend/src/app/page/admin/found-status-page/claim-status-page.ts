@@ -11,7 +11,7 @@ import {
   OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Params } from '@angular/router';
+import { RouterModule, Params, ActivatedRoute } from '@angular/router';
 import { catchError, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { Subject, BehaviorSubject, of } from 'rxjs';
 
@@ -52,6 +52,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
 
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
@@ -70,6 +71,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   protected currentSort = signal<SortOption>('all');
   protected currentStatusFilter = signal<StatusFilter>('All Statuses');
+  protected highlightId = signal<number | null>(null);
 
   protected readonly statusFilters: StatusFilter[] = [
       'All Statuses', 'pending', 'approved', 'rejected'];
@@ -99,6 +101,12 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     return [...data].sort((a, b) => {
+      const hId = this.highlightId();
+      if (hId) {
+        if (a.report_id === hId) return -1;
+        if (b.report_id === hId) return 1;
+      }
+
       if (sortType === 'az') {
         return (a.item_name || '').localeCompare(b.item_name || '');
       }
@@ -111,12 +119,20 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params: Params) => {
+        const hId = params['highlightId'];
+        this.highlightId.set(hId ? Number(hId) : null);
+      });
+
     this.refreshTrigger$.pipe(
       tap(() => this.isLoading.set(true)),
       switchMap(() => {
         const currentStatus = this.currentStatusFilter();
         const statusParam: ReportStatus | undefined =
-            currentStatus === 'All Statuses' ? undefined : (currentStatus as unknown as ReportStatus);
+            currentStatus === 'All Statuses' ? undefined :
+                (currentStatus as unknown as ReportStatus);
 
         const filters: ReportFilters = {
           type: 'found' as const,

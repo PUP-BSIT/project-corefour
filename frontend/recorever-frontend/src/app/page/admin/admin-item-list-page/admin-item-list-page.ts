@@ -24,6 +24,7 @@ import { Filter, FilterState } from '../../../share-ui-blocks/filter/filter';
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { AdminService } from '../../../core/services/admin-service';
+import { ToastService } from '../../../core/services/toast-service';
 
 import {
   ItemDetailModal
@@ -66,6 +67,7 @@ export class AdminItemListPage implements OnInit, OnDestroy {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
   private adminService = inject(AdminService);
+  private toastService = inject(ToastService);
   private datePipe = inject(DatePipe);
 
   private destroy$ = new Subject<void>();
@@ -271,10 +273,22 @@ export class AdminItemListPage implements OnInit, OnDestroy {
             reports.filter((r: Report) => r.report_id !== item.report_id)
           );
           this.itemToUnarchive.set(null);
+
+          const actionRoute = item.type === 'found' ?
+              '/admin/claim-status' : '/admin/report-status';
+          const actionLabel = item.type === 'found' ?
+              'View Found Status' : 'View Lost Item';
+
+          this.toastService.showSuccess(
+            'Item unarchived successfully.',
+            actionLabel,
+            actionRoute,
+            { highlightId: item.report_id }
+          );
         }),
         catchError((err: HttpErrorResponse) => {
           console.error('Failed to unarchive item', err);
-          alert('Failed to unarchive item.');
+          this.toastService.showError('Failed to unarchive item.');
           return of(null);
         })
       )

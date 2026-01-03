@@ -8,7 +8,7 @@
 
     <div class="status-filter-wrapper">
       <label for="status-filter">Status:</label>
-      <select id="status-filter" 
+      <select id="status-filter"
               #statusSelect
               [value]="currentStatusFilter()"
               (change)="setStatusFilter(statusSelect.value)">
@@ -23,17 +23,17 @@
 
   <div class="controls-bar">
     <div class="sort-tabs">
-      <button class="tab-btn" 
+      <button class="tab-btn"
           [class.active]="currentSort() === 'all'"
           (click)="setSort('all')">
         All
       </button>
-      <button class="tab-btn" 
+      <button class="tab-btn"
           [class.active]="currentSort() === 'az'"
           (click)="setSort('az')">
         A-Z ↑
       </button>
-      <button class="tab-btn" 
+      <button class="tab-btn"
           [class.active]="currentSort() === 'date'"
           (click)="setSort('date')">
         Date ↑
@@ -45,6 +45,7 @@
     @if (reports().length > 0) {
       <app-report-item-grid
           [items]="sortedReports()"
+          [highlightId]="highlightId()"
           (cardClicked)="onViewDetails($event)">
       </app-report-item-grid>
     }
@@ -56,11 +57,13 @@
            <span>Loading more reports...</span>
         </div>
       } @else if (isError()) {
-        <div class="status-message error">Error fetching reports. Please try again.</div>
+        <div class="status-message error">
+            Error fetching reports. Please try again.</div>
       } @else if (reports().length === 0) {
         <div class="status-message">No reports found.</div>
       } @else if (currentPage() >= totalPages()) {
-        <div class="status-message end-message">No more reports to display.</div>
+        <div class="status-message end-message">
+            No more reports to display.</div>
       }
     </div>
   </div>
