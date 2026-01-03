@@ -20,6 +20,7 @@ export class CodesModal {
 
   title = input.required<string>();
   code = input.required<string | number>();
+  description = input<string>(); 
   subtext = input<string | number>();
   showViewReportButton = input<boolean>(false);
 
