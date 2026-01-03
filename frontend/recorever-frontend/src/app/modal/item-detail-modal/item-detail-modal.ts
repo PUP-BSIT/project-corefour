@@ -1,4 +1,4 @@
-import { Component, input, Output, EventEmitter, computed, inject } from '@angular/core';
+import { Component, input, Output, EventEmitter, computed, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,6 +10,7 @@ import { StatusBadge } from '../../share-ui-blocks/status-badge/status-badge';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
+import { CodesModal } from '../codes-modal/codes-modal';
 
 @Component({
   selector: 'app-item-detail-modal',
@@ -23,6 +24,7 @@ import { Router } from '@angular/router';
     MatDividerModule,
     StatusBadge,
     TimeAgoPipe,
+    CodesModal,
   ],
   templateUrl: './item-detail-modal.html',
   styleUrls: ['./item-detail-modal.scss'],
@@ -42,6 +44,13 @@ export class ItemDetailModal {
   @Output() deleteClicked = new EventEmitter<void>();
   @Output() viewCodeClicked = new EventEmitter<void>();
   @Output() unarchiveClicked = new EventEmitter<void>();
+  @Output() statusChanged = new EventEmitter<string>();
+
+  public isStatusMenuOpen = signal<boolean>(false);
+  showClaimModal = false;
+
+  protected readonly availableStatuses: string[] = 
+    ['pending', 'approved', 'rejected', 'matched'];
 
   currentImageIndex = 0;
 
@@ -90,6 +99,11 @@ export class ItemDetailModal {
     return this.currentUserId() === this.item().user_id;
   });
 
+  referenceCodeValue = computed((): string => {
+    const r = this.item();
+    return r.surrender_code || r.claim_code || 'N/A';
+  });
+
   getUserName(): string {
     const report = this.item();
     return report.reporter_name || `User ${report.user_id}`;
@@ -132,7 +146,7 @@ export class ItemDetailModal {
   }
 
   onViewTicket(): void {
-    this.viewTicket.emit();
+    this.showClaimModal = true;
   }
 
   onEdit(event: Event): void {
@@ -153,4 +167,8 @@ export class ItemDetailModal {
   onUnarchive(): void {
     this.unarchiveClicked.emit();
   }
-}
+  
+  public onUpdateStatus(newStatus: string): void {
+    this.statusChanged.emit(newStatus);
+  }
+}   

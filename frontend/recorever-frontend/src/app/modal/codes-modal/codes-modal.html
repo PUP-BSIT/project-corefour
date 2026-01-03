@@ -1,13 +1,25 @@
 <div class="modal-overlay" (click)="onDone()">
   <div class="modal-card" (click)="$event.stopPropagation()">
 
+    @if (title() === 'Found Item Submitted') {
+      <div class="icon-container">
+        <img src="assets/check-icon.png" 
+             alt="Success" 
+             class="success-icon">
+      </div>
+    }
+
     <h2 class="modal-title">{{ title() }}</h2>
 
-    @if (title() === 'Found Item Submitted') {
+    @if (description()) {
       <p class="modal-subtext">
-        Thank you for submitting a <strong>found item</strong>!
-            Please keep this code safe. You may need it for item submission
-            with the administrator.
+        {{ description() }}
+      </p>
+    } @else if (title() === 'Found Item Submitted') {
+      <p class="modal-subtext">
+        Thank you for submitting a found item! Please keep this code safe. 
+        You will need to present this code at the admin office when 
+        surrendering the item.
       </p>
     }
 
@@ -37,7 +49,14 @@
       </div>
     }
 
-    <button class="done-btn" (click)="onDone()">Close</button>
+    <div class="button-group">
+      @if (showViewReportButton()) {
+        <button class="btn btn-outline-primary" (click)="onViewReport()">
+          View my report
+        </button>
+      }
+      <button class="btn btn-primary" (click)="onDone()">Close</button>
+    </div>
 
   </div>
 </div>

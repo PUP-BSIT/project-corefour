@@ -173,4 +173,15 @@ export class AuthService {
       return null;
     }
   }
+
+  forgotPassword(email: string): Observable<Object> {
+    return this.http.post(`${this.API_BASE_URL}/forgot-password`, { email });
+  }
+
+  resetPasswordPublic(email: string, newPassword: string): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(
+      `${this.API_BASE_URL}/reset-password-public`, 
+      { email, newPassword }
+    );
+  }
 }

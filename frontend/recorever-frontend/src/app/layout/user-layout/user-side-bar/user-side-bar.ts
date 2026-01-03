@@ -1,8 +1,9 @@
-import { Component, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
-import { CommonModule, AsyncPipe } from '@angular/common';
+import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { Subject, switchMap, takeUntil, catchError, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
 import { AppRoutePaths } from '../../../app.routes';
 import { Notification } from '../../../share-ui-blocks/notification/notification';
@@ -19,7 +20,6 @@ import { environment } from '../../../../environments/environment';
     CommonModule, 
     RouterModule, 
     Notification,
-    AsyncPipe,
     ConfirmationModal,
     MatDialogModule
   ], 
@@ -31,14 +31,29 @@ export class UserSideBar implements OnDestroy {
   private router = inject(Router);
   private dialog = inject(MatDialog);
 
-  public currentUser$: Observable<User | null> = this.authService.currentUser$;
+  @ViewChild('profileSection') profileSection!: ElementRef;
+
+  public currentUser = toSignal<User | null>(
+    this.authService.currentUser$.pipe(
+      catchError(() => of(null))
+    ), 
+    { initialValue: null }
+  );
+
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
+  
+  protected showLoginModal = false;
+  
+  private protectedRoutes = [
+    AppRoutePaths.REPORT_LOST,
+    AppRoutePaths.REPORT_FOUND
+  ];
 
   private logoutTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
-    protected getProfileImageUrl(path: string | null | undefined): string {
+  protected getProfileImageUrl(path: string | null | undefined): string {
       if (!path) {
         return 'assets/profile-avatar.png';
       }
@@ -46,9 +61,9 @@ export class UserSideBar implements OnDestroy {
         return path.replace('http://', 'https://');
       }
 
-      const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
-      return `${secureBaseUrl}/image/download/${path}`;
-    }
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${path}`;
+  }
 
   protected profileDropdownItems: ProfileNavItem[] = [
     { label: 'Profile', iconPath: 'assets/profile-avatar.png',
@@ -92,10 +107,21 @@ export class UserSideBar implements OnDestroy {
         next: (_response: LogoutResponse) => {
           this.isLogoutModalOpen = false;
         },
-        error: (_err) => {
+        error: (_err: Error) => {
           this.isLogoutModalOpen = false;
         }
       });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.isProfileDropdownOpen && 
+      this.profileSection && 
+      !this.profileSection.nativeElement.contains(event.target as Node)
+    ) {
+      this.isProfileDropdownOpen = false;
+    }
   }
 
   public toggleTracking(): void {
@@ -126,6 +152,38 @@ export class UserSideBar implements OnDestroy {
         this.isLogoutModalOpen = true;
         break;
     }
+  }
+
+  public isProtected(route: string): boolean {
+    return this.protectedRoutes.includes(route);
+  }
+
+  public isRouteActive(route: string): boolean {
+    return this.router.isActive(route, { 
+      paths: 'exact', 
+      queryParams: 'ignored', 
+      fragment: 'ignored', 
+      matrixParams: 'ignored' 
+    });
+  }
+
+  public onProtectedLinkClick(route: string): void {
+    if (this.currentUser()) {
+      // User is logged in, navigate
+      this.router.navigate([route]);
+    } else {
+      // User is NOT logged in, show modal
+      this.showLoginModal = true;
+    }
+  }
+
+  public onLoginModalConfirm(): void {
+    this.showLoginModal = false;
+    this.router.navigate(['/login']);
+  }
+
+  public onLoginModalCancel(): void {
+    this.showLoginModal = false;
   }
 
   protected onLogoutConfirm(): void {
