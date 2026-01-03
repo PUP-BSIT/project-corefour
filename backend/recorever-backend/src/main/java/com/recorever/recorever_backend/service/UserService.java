@@ -5,6 +5,7 @@ import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,7 +19,19 @@ public class UserService {
     private UserRepository repo;
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private JwtUtil jwtUtil;
+    public static class ChangePasswordRequest {
+        private String oldPassword;
+        private String newPassword;
+
+        public String getOldPassword() { return oldPassword; }
+        public void setOldPassword(String oldPassword) { this.oldPassword = oldPassword; }
+        public String getNewPassword() { return newPassword; }
+        public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
+    }
 
     public int register(String name, String phoneNumber, String email, String password) {
         int result = repo.registerUser(name, phoneNumber, email, password);
@@ -103,5 +116,38 @@ public class UserService {
         }
 
         return Map.of("success", true);
+    }
+
+    public void changePassword(User user, String oldPassword, String newPassword) {
+        if (!BCrypt.checkpw(oldPassword, user.getPassword_hash())) {
+            throw new IllegalArgumentException("Incorrect old password");
+        }
+
+        String passwordPattern = "^(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$";
+        
+        if (!newPassword.matches(passwordPattern)) {
+            throw new IllegalArgumentException("Password must contain at least one number and one special character.");
+        }
+        
+        String newHashed = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+        repo.updatePassword(user.getUser_id(), newHashed);
+    }
+
+    public boolean emailExists(String email) {
+        return repo.findByEmail(email) != null;
+    }
+
+    public boolean resetUserPassword(String email, String newPassword) {
+        User user = repo.findByEmail(email);
+        
+        if (user != null) {
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            return repo.updatePassword(user.getUser_id(), encodedPassword);
+        }
+        return false;
+    }
+
+    public void deleteAccount(int userId) {
+        repo.deleteUser(userId);
     }
 }

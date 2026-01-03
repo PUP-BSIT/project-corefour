@@ -1,12 +1,15 @@
-import { Component, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
-import { CommonModule, AsyncPipe } from '@angular/common';
+import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Subject, switchMap, takeUntil, catchError, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
 import { AppRoutePaths } from '../../../app.routes';
 import { Notification } from '../../../share-ui-blocks/notification/notification';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ConfirmationModal } from '../../../modal/confirmation-modal/confirmation-modal';
+import { SettingsModal } from '../../../modal/settings-modal/settings-modal';
 import { LogoutResponse } from '../../../models/auth-model';
 import { environment } from '../../../../environments/environment';
 
@@ -17,41 +20,49 @@ import { environment } from '../../../../environments/environment';
     CommonModule, 
     RouterModule, 
     Notification,
-    AsyncPipe,
-    ConfirmationModal
+    ConfirmationModal,
+    MatDialogModule
   ], 
   templateUrl: './user-side-bar.html',
   styleUrl: './user-side-bar.scss',
 })
-export class UserSideBar implements OnDestroy{
+export class UserSideBar implements OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
-  @Output() openSettingsModal = new EventEmitter<void>();
+  @ViewChild('profileSection') profileSection!: ElementRef;
 
-  public currentUser$: Observable<User | null> = this.authService.currentUser$;
+  public currentUser = toSignal(
+    this.authService.currentUser$.pipe(
+      catchError(() => of(null))
+    ), 
+    { initialValue: null }
+  );
+
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
 
   private logoutTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
-    protected getProfileImageUrl(path: string | null | undefined): string {
+  protected getProfileImageUrl(path: string | null | undefined): string {
       if (!path) {
         return 'assets/profile-avatar.png';
       }
       if (path.startsWith('http')) {
-        return path;
+        return path.replace('http://', 'https://');
       }
 
-      return `${environment.apiUrl}/image/download/${path}`;
+      const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+      return `${secureBaseUrl}/image/download/${path}`;
     }
 
   protected profileDropdownItems: ProfileNavItem[] = [
     { label: 'Profile', iconPath: 'assets/profile-avatar.png',
         action: 'navigate', route: AppRoutePaths.PROFILE },
     { label: 'Settings', iconPath: 'assets/setting.png',
-        action: 'emit' },
+        action: 'openSettings' },
     { label: 'About us', iconPath: 'assets/about-us.png',
         action: 'navigate', route: AppRoutePaths.ABOUT_US },
     { label: 'Add Account', iconPath: 'assets/add-icon.png',
@@ -95,6 +106,17 @@ export class UserSideBar implements OnDestroy{
       });
   }
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.isProfileDropdownOpen && 
+      this.profileSection && 
+      !this.profileSection.nativeElement.contains(event.target as Node)
+    ) {
+      this.isProfileDropdownOpen = false;
+    }
+  }
+
   public toggleTracking(): void {
     this.isTrackingOpen = !this.isTrackingOpen;
   }
@@ -112,8 +134,9 @@ export class UserSideBar implements OnDestroy{
           this.router.navigate([item.route]);
         }
         break;
-      case 'emit':
-        this.openSettingsModal.emit();
+      case 'openSettings':
+        this.dialog.open(SettingsModal, {
+        });
         break;
       case 'addAccount':
         this.router.navigate(['/login']);

@@ -113,6 +113,14 @@
         <mat-icon>unarchive</mat-icon>
         UNARCHIVE
       </button>
+
+    } @else if (report().type === 'lost' && report().expiry_date) {
+      <div class="admin-reference-display expiry-highlight">
+        <span class="label">EXPIRES:</span>
+        <span class="expiry-highlight">
+          {{ report().expiry_date | date: 'shortDate' }}</span>
+      </div>
+
     } @else if (report().type === 'found' && !isOwner()) {
       @if (shouldShowCodeAutomatically()) {
         <div class="admin-reference-display">

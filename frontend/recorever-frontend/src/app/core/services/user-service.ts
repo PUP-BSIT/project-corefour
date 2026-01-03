@@ -3,11 +3,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap, timer, map, catchError, switchMap, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../auth/auth-service';
-import type { User } from '../../models/user-model';
-import { AbstractControl,
-        AsyncValidatorFn,
-        ValidationErrors
-    } from '@angular/forms';
+import { 
+  AbstractControl,
+  AsyncValidatorFn,
+  ValidationErrors
+} from '@angular/forms';
+
+import type { User, ChangePasswordRequest, UniqueCheckResponse } from '../../models/user-model';
 
 @Injectable({
   providedIn: 'root'
@@ -39,8 +41,9 @@ export class UserService {
     const params = new HttpParams()
       .set('field', field)
       .set('value', value);
+      
     return this.http
-      .get<{ isUnique: boolean }>(
+      .get<UniqueCheckResponse>(
         `${this.API_BASE_URL}/check-unique`, { params }
       )
       .pipe(
@@ -85,5 +88,16 @@ export class UserService {
         this.authService.updateCurrentUser(updatedUser);
       })
     );
+  }
+
+  changePassword(request: ChangePasswordRequest): Observable<void> {
+    return this.http.put<void>(
+      `${this.API_BASE_URL}/change-password`, 
+      request
+    );
+  }
+
+  deleteAccount(): Observable<void> {
+    return this.http.delete<void>(`${this.API_BASE_URL}/delete-account`);
   }
 }

@@ -1,0 +1,37 @@
+<div class="forgot-pass-page">
+  <div class="form-container">
+    <h2 class="form-title">Enter your email to reset password</h2>
+
+    <div class="form-wrapper">
+      <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()">
+        <div class="form-field">
+          <label class="input-label">Email</label>
+          
+          <mat-form-field appearance="outline" class="full-width">
+            <input 
+              matInput 
+              formControlName="email" 
+              type="email" 
+              placeholder="example@email.com">
+            
+            @if (forgotPasswordForm.get('email')?.invalid
+                && forgotPasswordForm.get('email')?.touched) {
+              <mat-error>Please enter a valid email address.</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-submit" type="submit" [disabled]="isLoading">
+            {{ isLoading ? 'Verifying...' : 'Reset Password' }}
+          </button>
+          
+          <div class="back-to-login">
+            <span class="text-muted">Remember Password? </span>
+            <span class="login-link" routerLink="/login">Log In here</span>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

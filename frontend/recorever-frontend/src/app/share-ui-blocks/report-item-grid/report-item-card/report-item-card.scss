@@ -3,6 +3,7 @@
 $primary-purple: #5d50d0;
 $text-main: #1c1c1e;
 $text-secondary: #8e8e93;
+$danger-red: #d32f2f;
 
 :host {
   display: block;
@@ -213,6 +214,12 @@ $text-secondary: #8e8e93;
       color: $primary-purple;
       font-weight: 700;
     }
+
+    .expiry-highlight {
+      font-size: 0.9rem;
+      color: $danger-red;
+      font-weight: 700;
+   }
   }
 }
 
@@ -313,7 +320,15 @@ $text-secondary: #8e8e93;
     margin: 4px 0 0 0;
     .detail-item {
       font-size: 0.75rem;
-      &:not(:first-child) { display: none; }
+
+      &:not(:first-child):not(.expiry-highlight) { 
+        display: none; 
+      }
+      
+      &.expiry-highlight {
+        margin-top: 2px;
+        mat-icon { font-size: 14px; width: 14px; height: 14px; }
+      }
     }
   }
 }

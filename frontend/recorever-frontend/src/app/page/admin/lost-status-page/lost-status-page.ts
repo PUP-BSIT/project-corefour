@@ -14,9 +14,11 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import { SearchBarComponent } from '../../../share-ui-blocks/search-bar/search-bar';
 import { Report, ReportFilters, PaginatedResponse } from '../../../models/item-model';
-import { ReportDetailModal } from '../../../modal/report-detail-modal/report-detail-modal';
 import { ItemService } from '../../../core/services/item-service';
 import { tap, catchError, of, switchMap, takeUntil, Subject, BehaviorSubject } from 'rxjs';
+import { ItemDetailModal } from "../../../modal/item-detail-modal/item-detail-modal";
+import { environment } from '../../../../environments/environment';
+import { AdminService } from '../../../core/services/admin-service';
 
 type SortOption = 'all' | 'az' | 'date';
 type LostReportStatusFilter = 'All Statuses' | 'pending' | 'approved' | 'matched' | 'rejected';
@@ -24,15 +26,17 @@ type LostReportStatusFilter = 'All Statuses' | 'pending' | 'approved' | 'matched
 @Component({
   selector: 'app-lost-status-page',
   standalone: true,
-  imports: [CommonModule, ReportItemGrid, SearchBarComponent, ReportDetailModal],
+  imports: [CommonModule, ReportItemGrid, SearchBarComponent, ItemDetailModal],
   templateUrl: './lost-status-page.html',
   styleUrls: ['./lost-status-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
+  protected currentUserId = signal<number | null>(null);
   private itemService = inject(ItemService);
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
+  private adminService = inject(AdminService);
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
@@ -115,6 +119,18 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  public onStatusUpdate(newStatus: string): void {
+    const item = this.selectedReport();
+    if (!item) return;
+
+    this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
+      next: () => {
+        this.onStatusUpdated(item); 
+      },
+      error: (err) => console.error('Failed to update status', err)
+    });
+  }
+
   protected setStatusFilter(status: string): void {
     this.currentStatusFilter.set(status as LostReportStatusFilter);
     this.resetAndReload();
@@ -125,6 +141,17 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     if (this.currentSearchQuery() === trimmedQuery) return;
     this.currentSearchQuery.set(trimmedQuery);
     this.resetAndReload();
+  }
+
+  public getUserProfilePicture(): string {
+    const report = this.selectedReport();
+    
+    if (report && report.reporter_profile_picture) {
+      const baseUrl = environment.apiUrl.replace('http://', 'https://');
+      return `${baseUrl}/image/download/${report.reporter_profile_picture}`;
+    }
+
+    return 'assets/profile-avatar.png';
   }
 
   private resetAndReload(): void {
@@ -145,7 +172,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   onViewDetails(report: Report): void {
     this.selectedReport.set(report);
   }
-  onCloseDetailView(): void {
+  public onCloseDetailView(): void {
     this.selectedReport.set(null);
   }
   onStatusUpdated(updatedReport: Report): void {

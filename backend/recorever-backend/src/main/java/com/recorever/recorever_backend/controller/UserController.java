@@ -4,6 +4,7 @@ package com.recorever.recorever_backend.controller;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.service.ImageService;
 import com.recorever.recorever_backend.service.UserService;
+import com.recorever.recorever_backend.service.UserService.ChangePasswordRequest;
 import com.recorever.recorever_backend.repository.UserRepository;
 
 // DTO Imports
@@ -99,7 +100,8 @@ public class UserController {
                 .path("/")
                 .maxAge(3600) // 1 hour 
                 .build();
-            response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE,
+                accessTokenCookie.toString());
 
             // Create HTTP-ONLY Refresh Token Cookie
             ResponseCookie refreshTokenCookie =
@@ -109,20 +111,23 @@ public class UserController {
                 .path("/api/refresh-token")
                 .maxAge(7 * 24 * 3600) // 7 days
                 .build();
-            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+            response.addHeader
+                (HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
             UserResponseDTO userDto = mapToUserResponseDTO(user);
 
             return ResponseEntity.ok(userDto); 
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(401)
+                .body(Map.of("error", e.getMessage()));
         }
     }
     
     
     @GetMapping("/get-user-data")
-    public ResponseEntity<UserResponseDTO> getUser(Authentication authentication) {
+    public ResponseEntity<UserResponseDTO>
+            getUser(Authentication authentication) {
         User authenticatedUser = (User) authentication.getPrincipal();
         UserResponseDTO responseDto = mapToUserResponseDTO(authenticatedUser);
         return ResponseEntity.ok(responseDto);
@@ -132,7 +137,8 @@ public class UserController {
     public ResponseEntity<?> getUserById(@PathVariable int id) {
         User user = repo.findById(id);
         if (user == null) {
-            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+            return ResponseEntity.status(404)
+                .body(Map.of("error", "User not found"));
         }
         UserResponseDTO responseDto = mapToUserResponseDTO(user);
         return ResponseEntity.ok(responseDto);
@@ -160,12 +166,13 @@ public class UserController {
     }
 
     @PutMapping("/update-user-data")
-    public ResponseEntity<?> updateUser(Authentication authentication,
-                                        @RequestParam(required = false) String name,
-                                        @RequestParam(required = false) String phone_number,
-                                        @RequestParam(required = false) String email,
-                                        @RequestParam(required = false) MultipartFile profile_picture_file) {
-        
+    public ResponseEntity<?> 
+        updateUser(Authentication authentication,
+        @RequestParam(required = false) String name,
+        @RequestParam(required = false) String phone_number,
+        @RequestParam(required = false) String email,
+        @RequestParam(required = false) MultipartFile profile_picture_file) {
+
         User user = (User) authentication.getPrincipal();
         String profilePictureFilename = user.getProfile_picture();
 
@@ -173,10 +180,17 @@ public class UserController {
             if (user.getProfile_picture() != null) {
                 imageService.deleteFile(user.getProfile_picture());
             }
-            profilePictureFilename = imageService.storeFile(profile_picture_file);
+            profilePictureFilename = imageService.storeFile(
+                profile_picture_file);
         }
         
-        Map<String, Object> result = service.updateUserProfile(user, name, phone_number, email, profilePictureFilename);
+        Map<String, Object> result = service
+            .updateUserProfile(
+                user,
+                name,
+                phone_number,
+                email,
+                profilePictureFilename);
 
         if (result.containsKey("error")) {
             return ResponseEntity.badRequest().body(result);
@@ -202,9 +216,73 @@ public class UserController {
                                             "User account deactivated "));
     }
 
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+        Authentication authentication,
+        @RequestBody ChangePasswordRequest request
+    ) {
+        User user = (User) authentication.getPrincipal();
+        try {
+            service.changePassword(user, request.getOldPassword(), request.getNewPassword());
+            return ResponseEntity.ok(
+                Map.of("success",
+                    true,
+                    "message",
+                    "Password changed successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(
+        @RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (service.emailExists(email)) {
+            return ResponseEntity.ok(
+                Map.of("success",
+                true,
+                "message",
+                "Email verified."));
+        }
+        return ResponseEntity.status(404)
+            .body(Map.of("error", "Email not found."));
+    }
+
+    // Endpoint para i-update ang password nang walang 'oldPassword'
+    @PutMapping("/reset-password-public")
+    public ResponseEntity<?> resetPasswordPublic(
+        @RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String newPassword = request.get("newPassword");
+
+        if (service.resetUserPassword(email, newPassword)) {
+            return ResponseEntity.ok(
+                Map.of("success",
+                    true,
+                    "message",
+                    "Password has been reset."));
+        }
+        return ResponseEntity.status(400).body(
+            Map.of("error", "Failed to reset password."));
+    }
+
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<?> deleteAccount(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        service.deleteAccount(user.getUser_id());
+        return ResponseEntity.ok(
+            Map.of("success",
+                true,
+                "message",
+                "Account deleted successfully"));
+    }
+
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refresh(
-        @CookieValue(name = "refreshToken", required = false) String oldRefreshToken, 
+        @CookieValue(name = "refreshToken",
+            required = false) String oldRefreshToken, 
         HttpServletResponse response 
     ) {
         if (oldRefreshToken == null || oldRefreshToken.isEmpty()) {
@@ -218,7 +296,7 @@ public class UserController {
                 .isBefore(LocalDateTime.now())) {
             clearCookie(response, "refreshToken");
             return ResponseEntity.status(401).body(Map.of("error_message",
-                                        "Invalid or expired refresh token"));
+                                    "Invalid or expired refresh token"));
         }
         
         // Call the service to get new tokens
@@ -237,16 +315,17 @@ public class UserController {
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         
         // Set new Refresh Token Cookie
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", newRefreshToken)
-            .httpOnly(true)
-            .secure(true) 
-            .path("/api/refresh-token") 
-            .maxAge(7 * 24 * 3600) // 7 days
-            .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+        ResponseCookie refreshTokenCookie =
+            ResponseCookie.from("refreshToken", newRefreshToken)
+                .httpOnly(true)
+                .secure(true) 
+                .path("/api/refresh-token") 
+                .maxAge(7 * 24 * 3600) // 7 days
+                .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-        UserResponseDTO userDto = mapToUserResponseDTO(user);
-        return ResponseEntity.ok(userDto); 
+            UserResponseDTO userDto = mapToUserResponseDTO(user);
+            return ResponseEntity.ok(userDto); 
     }
 
     private void clearCookie(HttpServletResponse response, String cookieName) {
