@@ -1,7 +1,7 @@
 <div class="modal-overlay" (click)="onClose()">
   <div class="modal-container" (click)="$event.stopPropagation()">
 
-    @if (isArchiveView()) {
+    @if (isArchiveView() || isAdmin()) {
       <button class="close-btn" (click)="onClose()">
         <mat-icon>close</mat-icon>
       </button>
@@ -34,7 +34,7 @@
             <mat-menu #modalMenu="matMenu" xPosition="before">
               @if (item().type !== 'lost' || item().claim_code) {
                 <button mat-menu-item (click)="onViewCode($event)">
-                  <mat-icon>qr_code_2</mat-icon>
+                  <mat-icon>tag</mat-icon>
                   <span>{{ getCodeButtonLabel() }}</span>
                 </button>
               }
@@ -176,7 +176,7 @@
           </mat-menu>
         }
 
-        @if (!isArchiveView()) {
+        @if (!isArchiveView() && !isAdmin()) {
           <button mat-stroked-button
                   class="action-btn"
                   (click)="onClose()">

@@ -7,6 +7,7 @@ $verified-green: #2e7d32;
 $denied-red: #ef4444;
 $pending-yellow: #fbbf24;
 $claimed-dark: #333333;
+$matched-color: #ff9500 !important;;;
 
 :host {
   .full-width, .w-100 { width: 100%; }
@@ -306,7 +307,7 @@ $claimed-dark: #333333;
 
   .status-btn {
     width: 100%;
-    padding: 12px 0;
+    padding: 10px 0;
     border-radius: 25px;
     border: none;
     font-size: 1rem;
@@ -327,6 +328,18 @@ $claimed-dark: #333333;
     &.pending { background-color: $pending-yellow; color: black; }
     &.claimed { background-color: $claimed-dark; }
     &.denied, &.rejected { background-color: $denied-red; }
+
+    // Style for the unarchive button to match ItemDetailModal
+    &.unarchive {
+      background-color: $matched-color;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: #f6f5f3;
+      }
+    }
 
     .arrow { font-size: 0.7rem; }
   }

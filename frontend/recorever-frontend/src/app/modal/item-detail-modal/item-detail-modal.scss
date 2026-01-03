@@ -322,7 +322,8 @@ $rejected-color: #D32F2F;
     &.status-btn--claimed { background-color: $claimed-color; color: white; }
 
     &.action-btn--unarchive {
-      background-color: #ff9500 !important;;
+      background-color: #ff9500 !important;
+      transition: background-color 0.2s ease;
     }
   }
 }
