@@ -15,139 +15,148 @@ import java.util.UUID;
 @Service
 public class UserService {
 
-    @Autowired  
-    private UserRepository repo;
+  @Autowired
+  private UserRepository repo;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+  @Autowired
+  private JwtUtil jwtUtil;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-    public static class ChangePasswordRequest {
-        private String oldPassword;
-        private String newPassword;
+  public static class ChangePasswordRequest {
+    private String oldPassword;
+    private String newPassword;
 
-        public String getOldPassword() { return oldPassword; }
-        public void setOldPassword(String oldPassword) { this.oldPassword = oldPassword; }
-        public String getNewPassword() { return newPassword; }
-        public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
+    public String getOldPassword() {
+      return oldPassword;
     }
 
-    public int register(String name, String phoneNumber, String email, String password) {
-        int result = repo.registerUser(name, phoneNumber, email, password);
-        return result;
+    public void setOldPassword(String oldPassword) {
+      this.oldPassword = oldPassword;
     }
 
-    public Map<String, Object> login(String email, String password) {
-        User user = repo.findByEmail(email);
-
-        if (user == null || !BCrypt.checkpw(password, user.getPassword_hash())) {
-            throw new IllegalArgumentException("Invalid email or password"); 
-        }
-
-        String accessToken = jwtUtil.generateToken(user.getUser_id(), user.getName());
-
-        String refreshToken = UUID.randomUUID().toString();
-        LocalDateTime expiry = LocalDateTime.now().plusDays(7); // 7 days
-
-        repo.saveRefreshToken(user.getUser_id(), refreshToken, expiry);
-
-        return Map.of(
-            "accessToken", accessToken, 
-            "refreshToken", refreshToken, 
-            "user", user
-        );
+    public String getNewPassword() {
+      return newPassword;
     }
 
-    public Map<String, Object> refreshTokens(User user) {
-        String newAccessToken = jwtUtil.generateToken(user.getUser_id(), user.getName());
+    public void setNewPassword(String newPassword) {
+      this.newPassword = newPassword;
+    }
+  }
 
-        String newRefreshToken = UUID.randomUUID().toString();
-        LocalDateTime newExpiry = LocalDateTime.now().plusDays(7); // 7 days
+  public int register(String name, String phoneNumber, String email, String password) {
+    int result = repo.registerUser(name, phoneNumber, email, password);
+    return result;
+  }
 
-        repo.saveRefreshToken(user.getUser_id(), newRefreshToken, newExpiry); 
+  public Map<String, Object> login(String email, String password) {
+    User user = repo.findByEmail(email);
 
-        return Map.of(
-            "accessToken", newAccessToken,
-            "refreshToken", newRefreshToken,
-            "user", user
-        );
+    if (user == null || !BCrypt.checkpw(password, user.getPassword_hash())) {
+      throw new IllegalArgumentException("Invalid email or password");
     }
 
-    public Map<String, Object> updateUserProfile(User user, String name, String phoneNumber, String email, String profilePicture) {
-        
-        int userId = user.getUser_id();
+    String accessToken = jwtUtil.generateToken(user.getUser_id(), user.getName());
 
-        if (name != null && !name.isEmpty() && !name.equals(user.getName())) {
-            if (repo.isNameTaken(name, userId)) {
-                return Map.of("error", "Username is already taken.");
-            }
-            user.setName(name);
-        }
+    String refreshToken = UUID.randomUUID().toString();
+    LocalDateTime expiry = LocalDateTime.now().plusDays(7); // 7 days
 
-        if (phoneNumber != null && !phoneNumber.isEmpty() && !phoneNumber.equals(user.getPhone_number())) {
-            if (repo.isPhoneNumberTaken(phoneNumber, userId)) {
-                return Map.of("error", "Phone number is already in use by another account.");
-            }
-            user.setPhone_number(phoneNumber);
-        }
+    repo.saveRefreshToken(user.getUser_id(), refreshToken, expiry);
 
-        if (email != null && !email.isEmpty() && !email.equals(user.getEmail())) {
-            if (repo.isEmailTaken(email, userId)) {
-                return Map.of("error", "Email is already in use by another account.");
-            }
-            user.setEmail(email);
-        }
+    return Map.of(
+        "accessToken", accessToken,
+        "refreshToken", refreshToken,
+        "user", user);
+  }
 
-        if (profilePicture != null && !profilePicture.isEmpty()) {
-            user.setProfile_picture(profilePicture);
-        }
+  public Map<String, Object> refreshTokens(User user) {
+    String newAccessToken = jwtUtil.generateToken(user.getUser_id(), user.getName());
 
-        boolean updated = repo.updateUser(
-            user.getUser_id(), 
-            user.getName(), 
-            user.getPhone_number(), 
-            user.getEmail(),
-            user.getProfile_picture()
-        );
+    String newRefreshToken = UUID.randomUUID().toString();
+    LocalDateTime newExpiry = LocalDateTime.now().plusDays(7); // 7 days
 
-        if (!updated) {
-             return Map.of("error", "Failed to update user.");
-        }
+    repo.saveRefreshToken(user.getUser_id(), newRefreshToken, newExpiry);
 
-        return Map.of("success", true);
+    return Map.of(
+        "accessToken", newAccessToken,
+        "refreshToken", newRefreshToken,
+        "user", user);
+  }
+
+  public Map<String, Object> updateUserProfile(User user, String name, String phoneNumber, String email,
+      String profilePicture) {
+
+    int userId = user.getUser_id();
+
+    if (name != null && !name.isEmpty() && !name.equals(user.getName())) {
+      if (repo.isNameTaken(name, userId)) {
+        return Map.of("error", "Username is already taken.");
+      }
+      user.setName(name);
     }
 
-    public void changePassword(User user, String oldPassword, String newPassword) {
-        if (!BCrypt.checkpw(oldPassword, user.getPassword_hash())) {
-            throw new IllegalArgumentException("Incorrect old password");
-        }
-
-        String passwordPattern = "^(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$";
-        
-        if (!newPassword.matches(passwordPattern)) {
-            throw new IllegalArgumentException("Password must contain at least one number and one special character.");
-        }
-        
-        String newHashed = BCrypt.hashpw(newPassword, BCrypt.gensalt());
-        repo.updatePassword(user.getUser_id(), newHashed);
+    if (phoneNumber != null && !phoneNumber.isEmpty() && !phoneNumber.equals(user.getPhone_number())) {
+      if (repo.isPhoneNumberTaken(phoneNumber, userId)) {
+        return Map.of("error", "Phone number is already in use by another account.");
+      }
+      user.setPhone_number(phoneNumber);
     }
 
-    public boolean emailExists(String email) {
-        return repo.findByEmail(email) != null;
+    if (email != null && !email.isEmpty() && !email.equals(user.getEmail())) {
+      if (repo.isEmailTaken(email, userId)) {
+        return Map.of("error", "Email is already in use by another account.");
+      }
+      user.setEmail(email);
     }
 
-    public boolean resetUserPassword(String email, String newPassword) {
-        User user = repo.findByEmail(email);
-        
-        if (user != null) {
-            String encodedPassword = passwordEncoder.encode(newPassword);
-            return repo.updatePassword(user.getUser_id(), encodedPassword);
-        }
-        return false;
+    if (profilePicture != null && !profilePicture.isEmpty()) {
+      user.setProfile_picture(profilePicture);
     }
 
-    public void deleteAccount(int userId) {
-        repo.deleteUser(userId);
+    boolean updated = repo.updateUser(
+        user.getUser_id(),
+        user.getName(),
+        user.getPhone_number(),
+        user.getEmail(),
+        user.getProfile_picture());
+
+    if (!updated) {
+      return Map.of("error", "Failed to update user.");
     }
+
+    return Map.of("success", true);
+  }
+
+  public void changePassword(User user, String oldPassword, String newPassword) {
+    if (!BCrypt.checkpw(oldPassword, user.getPassword_hash())) {
+      throw new IllegalArgumentException("Incorrect old password");
+    }
+
+    String passwordPattern = "^(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$";
+
+    if (!newPassword.matches(passwordPattern)) {
+      throw new IllegalArgumentException("Password must contain at least one number and one special character.");
+    }
+
+    String newHashed = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+    repo.updatePassword(user.getUser_id(), newHashed);
+  }
+
+  // --- Added missing methods below ---
+
+  public boolean emailExists(String email) {
+    return repo.findByEmail(email) != null;
+  }
+
+  public boolean resetUserPassword(String email, String newPassword) {
+    User user = repo.findByEmail(email);
+
+    if (user != null) {
+      String encodedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+      return repo.updatePassword(user.getUser_id(), encodedPassword);
+    }
+    return false;
+  }
+
+  public void deleteAccount(int userId) {
+    repo.deleteUser(userId);
+  }
 }
