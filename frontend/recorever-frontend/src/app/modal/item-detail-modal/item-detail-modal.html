@@ -1,5 +1,6 @@
 <div class="modal-overlay" (click)="onClose()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+  <div class="modal-container"
+      (click)="$event.stopPropagation(); closeDropdown()">
 
     @if (isArchiveView() || isAdmin()) {
       <button class="close-btn" (click)="onClose()">
@@ -153,27 +154,33 @@
         }
 
         @if (isAdmin() && !isArchiveView()) {
-          <button mat-raised-button
-                  class="action-btn"
-                  [class]="'status-btn--' + item().status"
-                  [matMenuTriggerFor]="statusMenu">
-            {{ (item().status === 'approved' ? 'Verified' : item().status) | titlecase }}
-            <span class="dropdown-arrow" [class.open]="isStatusMenuOpen()">▼</span>
-          </button>
+          <div class="status-dropdown-wrapper" style="flex: 1;">
+            <button
+                class="status-btn"
+                [ngClass]="(item().status || 'pending').toLowerCase()"
+                (click)="toggleDropdown($event)">
+              {{ (item().status === 'approved' ? 'Verified' : item().status) | titlecase }}
+              <span class="arrow">▼</span>
+            </button>
 
-          <mat-menu #statusMenu="matMenu"
-                    (opened)="isStatusMenuOpen.set(true)"
-                    (closed)="isStatusMenuOpen.set(false)">
-            @for (status of availableStatuses; track status) {
-              <button mat-menu-item
-                      (click)="$event.stopPropagation(); onUpdateStatus(status)"
-                      [class.active-status-item]="item().status === status">
-                <span class="status-text">
-                  {{ (status === 'approved' ? 'Verified' : status) | titlecase }}
-                </span>
-              </button>
+            @if (isDropdownOpen()) {
+              <div class="dropdown-content"
+                   (click)="$event.stopPropagation()">
+                @for (option of STATUS_OPTIONS; track option.value) {
+                  @if (option.value !==
+                      (item().status || 'pending').toLowerCase()) {
+                    <div
+                      [class.disabled-option]="isStatusDisabled(option.value)"
+                      [matTooltip]="getOptionTooltip(option.value)"
+                      matTooltipPosition="left"
+                      (click)="onStatusOptionClick(option.value)">
+                      {{ option.label }}
+                    </div>
+                  }
+                }
+              </div>
             }
-          </mat-menu>
+          </div>
         }
 
         @if (!isArchiveView() && !isAdmin()) {

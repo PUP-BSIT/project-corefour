@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import type { Report } from '../../models/item-model';
 import { ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
 import { StatusBadge } from '../../share-ui-blocks/status-badge/status-badge';
@@ -22,6 +23,7 @@ import { CodesModal } from '../codes-modal/codes-modal';
     MatIconModule,
     MatMenuModule,
     MatDividerModule,
+    MatTooltipModule,
     StatusBadge,
     TimeAgoPipe,
     CodesModal,
@@ -46,11 +48,16 @@ export class ItemDetailModal {
   @Output() unarchiveClicked = new EventEmitter<void>();
   @Output() statusChanged = new EventEmitter<string>();
 
-  public isStatusMenuOpen = signal<boolean>(false);
+  public isDropdownOpen = signal<boolean>(false);
   showClaimModal = false;
 
-  protected readonly availableStatuses: string[] = 
-    ['pending', 'approved', 'rejected', 'matched'];
+  // Preserved dropdown options for Manage Lost Items
+  protected readonly STATUS_OPTIONS = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'approved', label: 'Verified' },
+    { value: 'rejected', label: 'Rejected' },
+    { value: 'matched', label: 'Matched' }
+  ];
 
   currentImageIndex = 0;
 
@@ -72,7 +79,7 @@ export class ItemDetailModal {
 
   currentImageUrl = computed((): string => {
     const urls = this.photoUrls();
-    
+
     if (urls.length === 0) {
       return 'assets/temp-photo-item.png';
     }
@@ -84,7 +91,7 @@ export class ItemDetailModal {
     }
 
     const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
-    return `${secureBaseUrl}/image/download/${url}`; 
+    return `${secureBaseUrl}/image/download/${url}`;
   });
 
   displayStatus = computed((): ItemStatus => {
@@ -124,7 +131,7 @@ export class ItemDetailModal {
     const userId = this.item().user_id;
     if (userId) {
       this.onClose();
-      this.router.navigate(['/app/profile', userId]); 
+      this.router.navigate(['/app/profile', userId]);
     }
   }
 
@@ -167,8 +174,29 @@ export class ItemDetailModal {
   onUnarchive(): void {
     this.unarchiveClicked.emit();
   }
-  
-  public onUpdateStatus(newStatus: string): void {
-    this.statusChanged.emit(newStatus);
+
+  protected toggleDropdown(event: Event): void {
+    event.stopPropagation();
+    if (this.isArchiveView()) return;
+    this.isDropdownOpen.update(v => !v);
   }
-}   
+
+  protected closeDropdown(): void {
+    this.isDropdownOpen.set(false);
+  }
+
+  protected onStatusOptionClick(status: string): void {
+    if (this.isArchiveView()) return;
+
+    this.statusChanged.emit(status);
+    this.closeDropdown();
+  }
+
+  protected isStatusDisabled(status: string): boolean {
+    return false;
+  }
+
+  protected getOptionTooltip(status: string): string {
+    return '';
+  }
+}
