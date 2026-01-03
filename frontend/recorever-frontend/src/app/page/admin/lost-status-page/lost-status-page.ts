@@ -125,10 +125,13 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.refreshTrigger$.pipe(
       tap(() => this.isLoading.set(true)),
       switchMap(() => {
+        const apiStatus = this.currentStatusFilter() === 'All Statuses'
+          ? undefined
+          : (this.currentStatusFilter() as Report['status']);
+
         const filters: ReportFilters = {
           type: 'lost' as const,
-          status: this.currentStatusFilter() === 'All Statuses'
-              ? undefined : (this.currentStatusFilter() as any),
+          status: apiStatus,
           query: this.currentSearchQuery() || undefined,
           page: this.currentPage(),
           size: this.pageSize()
@@ -148,8 +151,9 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe((response: PaginatedResponse<Report>) => {
       this.reports.update(existing => 
-        this.currentPage() === 1 ? response.items
-            : [...existing, ...response.items]
+        this.currentPage() === 1 
+          ? response.items 
+          : [...existing, ...response.items]
       );
       this.totalPages.set(response.totalPages);
       this.isLoading.set(false);
