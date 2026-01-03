@@ -1,0 +1,45 @@
+<div class="page-container">
+  <div class="notification-card">
+    <header class="page-header">
+      <h1>Notifications</h1>
+      
+      @if (notifications.length > 0) {
+        <span class="count">
+          {{ notifications.length }} Total
+        </span>
+      }
+    </header>
+
+    <div class="notification-list">
+      @for (notification of notifications; track notification.notif_id) {
+        <div 
+          class="notification-row" 
+          [class.unread]="notification.status === 'unread'"
+          (click)="onNotificationClick(notification)">
+          
+          <div class="status-indicator"></div>
+          
+          <div class="content">
+            <p class="message" [innerHTML]="notification.message"></p>
+            <span class="date">{{ notification.created_at | timeAgo }}</span>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state">
+          @if (!isLoading) {
+            <img src="assets/no-notifications.svg" alt="No data">
+          }
+          <p>You're all caught up!</p>
+        </div>
+      }
+    </div>
+
+    @if (currentPage < totalPages) {
+      <div class="page-footer">
+        <button class="load-more" (click)="loadPage(currentPage + 1)" [disabled]="isLoading">
+          {{ isLoading ? 'Loading...' : 'Load Older Notifications' }}
+        </button>
+      </div>
+    }
+  </div>
+</div>

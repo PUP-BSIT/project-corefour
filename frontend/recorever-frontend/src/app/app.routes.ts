@@ -104,6 +104,11 @@ export const routes: Routes = [
         loadComponent: () => import('./page/user/profile-page/profile-page')
           .then(m => m.ProfilePage)
       },
+      { path: 'notifications',
+        loadComponent: () => import(
+          './page/shared-page/notification-page/notification-page'
+        ).then(m => m.NotificationPage)
+      },
       { path: 'about-us',
         loadComponent: () => import('./page/public/about-us-page/about-us-page')
           .then(m => m.AboutUsPage)
@@ -164,6 +169,11 @@ export const routes: Routes = [
         loadComponent: () => 
           import('./page/admin/found-status-page/claim-status-page')
             .then(m => m.ClaimStatusPage)
+      },
+      { path: 'notifications',
+        loadComponent: () => import(
+          './page/shared-page/notification-page/notification-page'
+        ).then(m => m.NotificationPage)
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],

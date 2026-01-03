@@ -3,11 +3,18 @@ import { CommonModule, ViewportScroller } from '@angular/common';
 import { RouterModule, Router, RouteReuseStrategy } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { Notification } from '../notification/notification';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatIconModule,
+    MatButtonModule,
+    Notification
+  ],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
