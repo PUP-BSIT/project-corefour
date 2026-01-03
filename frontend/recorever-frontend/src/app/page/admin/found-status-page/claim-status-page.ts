@@ -10,9 +10,15 @@ import {
   AfterViewInit,
   OnDestroy
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { catchError, finalize, switchMap, takeUntil, tap } from 'rxjs/operators';
+import {
+  catchError,
+  switchMap,
+  takeUntil,
+  tap
+} from 'rxjs/operators';
+import { Subject, BehaviorSubject, of } from 'rxjs';
 
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
@@ -29,11 +35,11 @@ import {
 import {
   ClaimFormModal
 } from '../../../modal/claim-form-modal/claim-form-modal';
-import { Subject } from 'rxjs/internal/Subject';
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
-import { of } from 'rxjs';
+import {
+  Filter,
+  FilterState
+} from '../../../share-ui-blocks/filter/filter';
 
-type SortOption = 'all' | 'az' | 'date';
 type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'rejected';
 
 @Component({
@@ -44,7 +50,8 @@ type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'rejected';
     RouterModule,
     SearchBarComponent,
     ClaimFormModal,
-    ReportItemGrid
+    ReportItemGrid,
+    Filter
   ],
   templateUrl: './claim-status-page.html',
   styleUrl: './claim-status-page.scss',
@@ -66,9 +73,14 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   protected reports = signal<Report[]>([]);
   protected searchQuery = signal('');
-  protected currentSort = signal<SortOption>('all');
   protected currentStatusFilter = signal<StatusFilter>('All Statuses');
   protected isLoading = signal(true);
+
+  protected currentFilter = signal<FilterState>({
+    sort: 'newest',
+    date: null,
+    location: ''
+  });
 
   protected selectedReport = signal<Report | null>(null);
 
@@ -77,15 +89,21 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   protected isAdmin = computed(() => {
     const user = this.authService.currentUserValue;
-    const roleCheck = user?.role === 'admin';
-    return roleCheck;
+    return user?.role === 'admin';
+  });
+
+  protected locations = computed(() => {
+    const locs = this.reports()
+      .map(r => r.location)
+      .filter(l => !!l);
+    return [...new Set(locs)] as string[];
   });
 
   protected filteredReports = computed(() => {
     let data = this.reports();
     const query = this.searchQuery().toLowerCase();
     const status = this.currentStatusFilter();
-    const sortType = this.currentSort();
+    const filter = this.currentFilter();
 
     data = data.filter(r => r.status.toLowerCase() !== 'claimed');
 
@@ -100,15 +118,30 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
       );
     }
 
+    if (filter.location) {
+      const locTerm = filter.location.toLowerCase();
+      data = data.filter(r =>
+        (r.location || '').toLowerCase().includes(locTerm)
+      );
+    }
+
+    if (filter.date) {
+      const filterDate = new Date(filter.date).setHours(0, 0, 0, 0);
+      data = data.filter(r => {
+        const reportDate = new Date(r.date_reported).setHours(0, 0, 0, 0);
+        return reportDate === filterDate;
+      });
+    }
+
     return [...data].sort((a, b) => {
-      if (sortType === 'az') {
-        return (a.item_name || '').localeCompare(b.item_name || '');
+      const dateA = new Date(a.date_reported).getTime();
+      const dateB = new Date(b.date_reported).getTime();
+
+      if (filter.sort === 'newest') {
+        return dateB - dateA;
+      } else {
+        return dateA - dateB;
       }
-      if (sortType === 'date') {
-        return new Date(b.date_reported).getTime() -
-               new Date(a.date_reported).getTime();
-      }
-      return 0;
     });
   });
 
@@ -161,6 +194,10 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.resetPagination();
   }
 
+  protected onFilterChange(state: FilterState): void {
+    this.currentFilter.set(state);
+  }
+
   private resetPagination(): void {
     this.currentPage.set(1);
     this.reports.set([]);
@@ -171,13 +208,6 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.observer?.disconnect();
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  protected setSort(option: SortOption): void {
-    if (option === 'all') {
-      this.currentStatusFilter.set('All Statuses');
-    }
-    this.currentSort.set(option);
   }
 
   protected onViewDetails(reportId: number): void {
