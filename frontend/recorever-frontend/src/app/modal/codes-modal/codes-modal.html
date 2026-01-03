@@ -11,7 +11,11 @@
 
     <h2 class="modal-title">{{ title() }}</h2>
 
-    @if (title() === 'Found Item Submitted') {
+    @if (description()) {
+      <p class="modal-subtext">
+        {{ description() }}
+      </p>
+    } @else if (title() === 'Found Item Submitted') {
       <p class="modal-subtext">
         Thank you for submitting a found item! Please keep this code safe. 
         You will need to present this code at the admin office when 

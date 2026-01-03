@@ -48,7 +48,8 @@ import { ToastService } from '../../core/services/toast-service';
 })
 export class ItemReportForm implements OnInit {
 
-  @Input() existingItemData?: Report;
+  @Input() initialData?: Report | null;
+  @Input() isEditMode = false;
   @Input() formType: 'lost' | 'found' = 'lost';
 
   @Output() formSubmitted = new EventEmitter<ReportSubmissionWithFiles>();
@@ -132,22 +133,26 @@ export class ItemReportForm implements OnInit {
       map((value: string | null) => this.filterLocations(value || ''))
     );
 
-    if (this.existingItemData) {
+    if (this.initialData) {
+      const rawDate = this.initialData.date_lost_found
+        || this.initialData.date_reported;
+      const formattedDate = rawDate ? new Date(rawDate)
+        .toISOString().split('T')[0] : '';
+
       this.reportForm.patchValue({
-        item_name: this.existingItemData.item_name,
-        location: this.existingItemData.location,
-        date_lost_found: this.existingItemData.date_lost_found ||
-            this.existingItemData.date_reported,
-        description: this.existingItemData.description
+        item_name: this.initialData.item_name,
+        location: this.initialData.location,
+        date_lost_found: formattedDate,
+        description: this.initialData.description
       });
 
-      if (this.existingItemData.photoUrls) {
-        this.existingItemData.photoUrls.forEach((url: string) => {
-          this.photoUrlsFormArray.push(this.fb.control<string | null>(url));
+      if (this.initialData.photoUrls) {
+        this.photoUrlsFormArray.clear();
+        this.initialData.photoUrls.forEach((url: string) => {
+          this.photoUrlsFormArray.push(this.fb.control(url));
         });
       }
     }
-
   }
 
   private filterLocations(value: string): string[] {
@@ -223,6 +228,7 @@ export class ItemReportForm implements OnInit {
 
       const finalPayload: ReportSubmissionWithFiles = {
         ...basePayload,
+        report_id: this.isEditMode ? this.initialData?.report_id : undefined,
         status: 'pending',
         date_lost_found:
           formatDateForMySQL(this.reportForm.controls.date_lost_found.value!), 
@@ -251,6 +257,7 @@ export class ItemReportForm implements OnInit {
   }
 
   onCancel(): void {
+    this.formCancelled.emit();
     this.reportForm.reset({
       date_lost_found: new Date().toISOString() as any,
     });

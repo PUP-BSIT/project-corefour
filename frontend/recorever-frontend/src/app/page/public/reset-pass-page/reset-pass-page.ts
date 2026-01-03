@@ -94,7 +94,7 @@ export class ResetPassPage implements OnInit {
     if (/[A-Z]/.test(value)) score++;
 
     if (score <= 2) this.passwordStrength.set('weak');
-    else if (score <= 4) this.passwordStrength.set('medium');
+    else if (score <= 3) this.passwordStrength.set('medium');
     else this.passwordStrength.set('strong');
   }
 
