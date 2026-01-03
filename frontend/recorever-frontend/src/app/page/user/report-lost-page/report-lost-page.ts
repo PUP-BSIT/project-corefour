@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, EMPTY, finalize, tap } from 'rxjs';
@@ -14,22 +14,37 @@ import { ItemService } from '../../../core/services/item-service';
   templateUrl: './report-lost-page.html',
   styleUrls: ['./report-lost-page.scss']
 })
-export class ReportLostPage {
+export class ReportLostPage implements OnInit {
   private router = inject(Router);
   private itemService = inject(ItemService);
 
   protected submissionError = signal<string | null>(null);
-  protected isSubmitting = signal(false);
+  protected isSubmitting = signal<boolean>(false);
+  protected isEditMode = signal<boolean>(false);
+  protected pageTitle = signal<string>('Report Lost Item');
+  protected initialData = signal<Report | null>(null);
 
-  handleSubmission(
-      data: FinalReportSubmission & { files?: File[] }
-  ): void {
+  ngOnInit(): void {
+    const state = history.state;
+
+    if (state && state.mode === 'EDIT' && state.data) {
+      this.isEditMode.set(true);
+      this.initialData.set(state.data as Report);
+      this.pageTitle.set('Edit Report Lost Item');
+    }
+  }
+
+  handleSubmission(data: FinalReportSubmission & { files?: File[] }): void {
     const files = data.files ?? [];
     this.isSubmitting.set(true);
     this.submissionError.set(null);
 
-    this.itemService.submitFullReport(data, files).pipe(
-      tap((response: Report) => {
+    const request$ = this.isEditMode() 
+      ? this.itemService.updateReport(data, files) 
+      : this.itemService.submitFullReport(data, files);
+
+    request$.pipe(
+      tap(() => {
         this.router.navigate(['/app/lost-items']);
       }),
       catchError((error: HttpErrorResponse) => {

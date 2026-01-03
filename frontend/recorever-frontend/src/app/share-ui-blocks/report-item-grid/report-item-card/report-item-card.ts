@@ -4,6 +4,7 @@ import {
   Output,
   EventEmitter,
   computed,
+  inject,
   signal,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -18,6 +19,8 @@ import { StatusBadge } from '../../status-badge/status-badge';
 import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { environment } from '../../../../environments/environment';
+import { Router } from '@angular/router';
+import { AppRoutePaths } from '../../../app.routes';
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 @Component({
@@ -45,6 +48,8 @@ export class ReportItemCard {
   isUserProfilePage = input<boolean>(false);
   isArchiveView = input<boolean>(false);
   isAdmin = input<boolean>(false);
+
+  private router = inject(Router);
 
   @Output() cardClicked = new EventEmitter<void>();
   @Output() ticketClicked = new EventEmitter<void>();
@@ -178,6 +183,19 @@ export class ReportItemCard {
   }
 
   public onEdit(event: Event): void {
+    
+    const reportData = this.report();
+    const path = reportData.type === 'lost' 
+      ? '/app/report-lost' 
+      : '/app/report-found';
+
+    this.router.navigate([path], {
+      state: { 
+        data: reportData, 
+        mode: 'EDIT' 
+      }
+    });
+
     this.editClicked.emit();
   }
 

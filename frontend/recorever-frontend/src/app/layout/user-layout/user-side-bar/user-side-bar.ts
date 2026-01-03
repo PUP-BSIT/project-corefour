@@ -33,7 +33,7 @@ export class UserSideBar implements OnDestroy {
 
   @ViewChild('profileSection') profileSection!: ElementRef;
 
-  public currentUser = toSignal(
+  public currentUser = toSignal<User | null>(
     this.authService.currentUser$.pipe(
       catchError(() => of(null))
     ), 
@@ -42,6 +42,13 @@ export class UserSideBar implements OnDestroy {
 
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
+  
+  protected showLoginModal = false;
+  
+  private protectedRoutes = [
+    AppRoutePaths.REPORT_LOST,
+    AppRoutePaths.REPORT_FOUND
+  ];
 
   private logoutTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
@@ -54,9 +61,9 @@ export class UserSideBar implements OnDestroy {
         return path.replace('http://', 'https://');
       }
 
-      const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
-      return `${secureBaseUrl}/image/download/${path}`;
-    }
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${path}`;
+  }
 
   protected profileDropdownItems: ProfileNavItem[] = [
     { label: 'Profile', iconPath: 'assets/profile-avatar.png',
@@ -100,7 +107,7 @@ export class UserSideBar implements OnDestroy {
         next: (_response: LogoutResponse) => {
           this.isLogoutModalOpen = false;
         },
-        error: (_err) => {
+        error: (_err: Error) => {
           this.isLogoutModalOpen = false;
         }
       });
@@ -145,6 +152,38 @@ export class UserSideBar implements OnDestroy {
         this.isLogoutModalOpen = true;
         break;
     }
+  }
+
+  public isProtected(route: string): boolean {
+    return this.protectedRoutes.includes(route);
+  }
+
+  public isRouteActive(route: string): boolean {
+    return this.router.isActive(route, { 
+      paths: 'exact', 
+      queryParams: 'ignored', 
+      fragment: 'ignored', 
+      matrixParams: 'ignored' 
+    });
+  }
+
+  public onProtectedLinkClick(route: string): void {
+    if (this.currentUser()) {
+      // User is logged in, navigate
+      this.router.navigate([route]);
+    } else {
+      // User is NOT logged in, show modal
+      this.showLoginModal = true;
+    }
+  }
+
+  public onLoginModalConfirm(): void {
+    this.showLoginModal = false;
+    this.router.navigate(['/login']);
+  }
+
+  public onLoginModalCancel(): void {
+    this.showLoginModal = false;
   }
 
   protected onLogoutConfirm(): void {

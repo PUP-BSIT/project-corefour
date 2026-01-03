@@ -1,7 +1,10 @@
 <div class="report-page-container">
-  <h1 class="page-title">Report Found Item</h1>
+  <h1 class="page-title">{{ pageTitle() }}</h1>
 
-  <app-item-report-form [formType]="'found'"
+  <app-item-report-form 
+      [formType]="'found'"
+      [initialData]="initialData()"
+      [isEditMode]="isEditMode()"
       (formSubmitted)="handleSubmission($event)"
       (formCancelled)="handleCancel()" />
 
