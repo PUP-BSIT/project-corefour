@@ -72,8 +72,6 @@ export class UserSideBar implements OnDestroy {
         action: 'openSettings' },
     { label: 'About us', iconPath: 'assets/about-us.png',
         action: 'navigate', route: AppRoutePaths.ABOUT_US },
-    { label: 'Add Account', iconPath: 'assets/add-icon.png',
-        action: 'addAccount' },
     { label: 'Log out', iconPath: 'assets/log-out.png', action: 'logout' },
   ];
 
@@ -88,14 +86,8 @@ export class UserSideBar implements OnDestroy {
         iconPath: 'assets/reported-found-item.png' },
   ];
 
-  protected isTrackingOpen = true;
   protected profileRoute = AppRoutePaths.PROFILE;
   protected aboutUsRoute = AppRoutePaths.ABOUT_US;
-
-  protected trackingNav: NavItem[] = [
-    { label: 'Classic Louie V. bag', route: '/app/tracking/123',
-          iconPath: 'assets/tracking-item.png' },
-  ];
 
   constructor() {
     this.logoutTrigger$
@@ -124,10 +116,6 @@ export class UserSideBar implements OnDestroy {
     }
   }
 
-  public toggleTracking(): void {
-    this.isTrackingOpen = !this.isTrackingOpen;
-  }
-
   public toggleProfileDropdown(): void {
     this.isProfileDropdownOpen = !this.isProfileDropdownOpen;
   }
@@ -144,9 +132,6 @@ export class UserSideBar implements OnDestroy {
       case 'openSettings':
         this.dialog.open(SettingsModal, {
         });
-        break;
-      case 'addAccount':
-        this.router.navigate(['/login']);
         break;
       case 'logout':
         this.isLogoutModalOpen = true;

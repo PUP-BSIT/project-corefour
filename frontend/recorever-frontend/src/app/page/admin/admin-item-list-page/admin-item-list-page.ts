@@ -32,6 +32,7 @@ import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 import {
   UnarchiveConfirmationModal
 } from '../../../modal/unarchive-confirmation-modal/unarchive-confirmation-modal';
+import { ClaimFormModal } from '../../../modal/claim-form-modal/claim-form-modal';
 
 import type {
   Report,
@@ -53,7 +54,8 @@ type ItemType = 'lost' | 'found';
     Filter,
     ItemDetailModal,
     CodesModal,
-    UnarchiveConfirmationModal
+    UnarchiveConfirmationModal,
+    ClaimFormModal
   ],
   providers: [DatePipe],
   templateUrl: './admin-item-list-page.html',
@@ -132,7 +134,7 @@ export class AdminItemListPage implements OnInit, OnDestroy {
       const filterDateStr = this.datePipe.transform(dateFilter, 'yyyy-MM-dd');
       reports = reports.filter(report => {
         const reportDateStr =
-            this.datePipe.transform(report.date_reported, 'yyyy-MM-dd');
+            this.datePipe.transform(report.date_lost_found, 'yyyy-MM-dd');
         return reportDateStr === filterDateStr;
       });
     }

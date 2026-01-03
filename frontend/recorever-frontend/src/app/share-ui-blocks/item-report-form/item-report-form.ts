@@ -257,7 +257,6 @@ export class ItemReportForm implements OnInit {
   }
 
   onCancel(): void {
-    this.formCancelled.emit();
     this.reportForm.reset({
       date_lost_found: new Date().toISOString() as any,
     });

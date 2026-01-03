@@ -10,36 +10,62 @@ import {
   OnDestroy,
   ChangeDetectionStrategy
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { ReportItemGrid } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
-import { SearchBarComponent } from '../../../share-ui-blocks/search-bar/search-bar';
-import { Report, ReportFilters, PaginatedResponse } from '../../../models/item-model';
+import { CommonModule } from '@angular/common';
+import {
+  ReportItemGrid 
+} from '../../../share-ui-blocks/report-item-grid/report-item-grid';
+import {
+  SearchBarComponent
+} from '../../../share-ui-blocks/search-bar/search-bar';
+import {
+  Report,
+  ReportFilters,
+  PaginatedResponse,
+  StandardLocations
+} from '../../../models/item-model';
 import { ItemService } from '../../../core/services/item-service';
-import { tap, catchError, of, switchMap, takeUntil, Subject, BehaviorSubject } from 'rxjs';
-import { ItemDetailModal } from "../../../modal/item-detail-modal/item-detail-modal";
+import {
+  tap,
+  catchError,
+  of,
+  switchMap,
+  takeUntil,
+  Subject,
+  BehaviorSubject
+} from 'rxjs';
+import {
+  ItemDetailModal
+} from "../../../modal/item-detail-modal/item-detail-modal";
 import { environment } from '../../../../environments/environment';
 import { AdminService } from '../../../core/services/admin-service';
+import { Filter, FilterState } from '../../../share-ui-blocks/filter/filter';
 
-type SortOption = 'all' | 'az' | 'date';
-type LostReportStatusFilter = 'All Statuses' | 'pending' | 'approved' | 'matched' | 'rejected';
+type LostReportStatusFilter = 'All Statuses' | 'pending' 
+      | 'approved' | 'matched' | 'rejected';
 
 @Component({
   selector: 'app-lost-status-page',
   standalone: true,
-  imports: [CommonModule, ReportItemGrid, SearchBarComponent, ItemDetailModal],
+  imports: [
+    CommonModule,
+    ReportItemGrid,
+    SearchBarComponent,
+    ItemDetailModal,
+    Filter],
   templateUrl: './lost-status-page.html',
   styleUrls: ['./lost-status-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
-  protected currentUserId = signal<number | null>(null);
   private itemService = inject(ItemService);
+  private adminService = inject(AdminService);
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
-  private adminService = inject(AdminService);
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
+
+  protected currentUserId = signal<number | null>(null);
   protected currentPage = signal(1);
   protected totalPages = signal(1);
   protected pageSize = signal(10);
@@ -50,52 +76,84 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   protected isError = signal(false);
 
   private currentSearchQuery = signal<string>('');
-  protected currentSort = signal<SortOption>('date');
-  protected currentStatusFilter = signal<LostReportStatusFilter>('All Statuses');
+  protected currentSort = signal<'newest' | 'oldest'>('newest');
+  protected currentDateFilter = signal<Date | null>(null);
+  protected currentLocationFilter = signal<string>('');
+  protected currentStatusFilter = signal<LostReportStatusFilter>(
+      'All Statuses');
 
   protected readonly statusFilters: LostReportStatusFilter[] = [
     'All Statuses', 'pending', 'approved', 'matched', 'rejected'
   ];
 
-  protected sortedReports = computed(() => {
-    let data = this.reports();
-    const sortType = this.currentSort();
+  public readonly locationFilters: string[] = [
+    ...Object.values(StandardLocations) as string[],
+  ];
 
-    return [...data].sort((a, b) => {
-      if (sortType === 'az') {
-        return (a.item_name || '').localeCompare(b.item_name || '');
-      }
-      if (sortType === 'date') {
-        return (Date.parse(b.date_reported || '') || 0) -
-               (Date.parse(a.date_reported || '') || 0);
-      }
-      return 0;
+  protected sortedReports = computed(() => {
+    let data = [...this.reports()];
+    const sortType = this.currentSort();
+    const dateFilter = this.currentDateFilter();
+    const locationFilter = this.currentLocationFilter();
+
+    if (dateFilter) {
+      const filterDateStr = dateFilter.toDateString();
+      data = data.filter(r => new Date(r.date_lost_found || '')
+          .toDateString() === filterDateStr);
+    }
+
+    if (locationFilter) {
+      data = data.filter(r => 
+        r.location?.toLowerCase().includes(locationFilter.toLowerCase())
+      );
+    }
+
+    return data.sort((a, b) => {
+      const dateA = Date.parse(a.date_reported || '') || 0;
+      const dateB = Date.parse(b.date_reported || '') || 0;
+      return sortType === 'newest' ? dateB - dateA : dateA - dateB;
     });
   });
+
+  public onFilterChange(state: FilterState): void {
+    this.currentSort.set(state.sort);
+    this.currentDateFilter.set(state.date);
+    this.currentLocationFilter.set(state.location);
+  }
 
   ngOnInit(): void {
     this.refreshTrigger$.pipe(
       tap(() => this.isLoading.set(true)),
       switchMap(() => {
+        const apiStatus = this.currentStatusFilter() === 'All Statuses'
+          ? undefined
+          : (this.currentStatusFilter() as Report['status']);
+
         const filters: ReportFilters = {
           type: 'lost' as const,
-          status: this.currentStatusFilter() === 'All Statuses' ? undefined : (this.currentStatusFilter() as any),
+          status: apiStatus,
           query: this.currentSearchQuery() || undefined,
           page: this.currentPage(),
           size: this.pageSize()
         };
 
         return this.itemService.getReports(filters).pipe(
-          catchError(err => {
+          catchError(() => {
             this.isError.set(true);
-            return of({ items: [], totalPages: 1, totalItems: 0, currentPage: 1 });
+            return of({
+                items: [],
+                totalPages: 1,
+                totalItems: 0,
+                currentPage: 1 });
           })
         );
       }),
       takeUntil(this.destroy$)
     ).subscribe((response: PaginatedResponse<Report>) => {
       this.reports.update(existing => 
-        this.currentPage() === 1 ? response.items : [...existing, ...response.items]
+        this.currentPage() === 1 
+          ? response.items 
+          : [...existing, ...response.items]
       );
       this.totalPages.set(response.totalPages);
       this.isLoading.set(false);
@@ -105,7 +163,8 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !this.isLoading() && this.currentPage() < this.totalPages()) {
+      if (entry.isIntersecting && !this.isLoading()
+            && this.currentPage() < this.totalPages()) {
         this.currentPage.update(p => p + 1);
         this.refreshTrigger$.next();
       }
@@ -117,18 +176,6 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.observer?.disconnect();
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  public onStatusUpdate(newStatus: string): void {
-    const item = this.selectedReport();
-    if (!item) return;
-
-    this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
-      next: () => {
-        this.onStatusUpdated(item); 
-      },
-      error: (err) => console.error('Failed to update status', err)
-    });
   }
 
   protected setStatusFilter(status: string): void {
@@ -143,30 +190,10 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.resetAndReload();
   }
 
-  public getUserProfilePicture(): string {
-    const report = this.selectedReport();
-    
-    if (report && report.reporter_profile_picture) {
-      const baseUrl = environment.apiUrl.replace('http://', 'https://');
-      return `${baseUrl}/image/download/${report.reporter_profile_picture}`;
-    }
-
-    return 'assets/profile-avatar.png';
-  }
-
   private resetAndReload(): void {
     this.currentPage.set(1);
     this.reports.set([]);
     this.refreshTrigger$.next();
-  }
-
-  protected setSort(option: SortOption): void {
-    if (option === 'all') {
-      this.currentStatusFilter.set('All Statuses');
-      this.resetAndReload();
-      return;
-    }
-    this.currentSort.set(option);
   }
 
   onViewDetails(report: Report): void {
@@ -178,5 +205,26 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   onStatusUpdated(updatedReport: Report): void {
     this.resetAndReload();
     this.onCloseDetailView();
+  }
+
+  public onStatusUpdate(newStatus: string): void {
+    const item = this.selectedReport();
+    if (!item) return;
+    this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
+      next: () => this.onStatusUpdated(item),
+      error: (err) => console.error('Failed to update status', err)
+    });
+  }
+  public getUserProfilePicture(): string {
+    const report = this.selectedReport();
+    
+    if (report?.reporter_profile_picture) {
+      const baseUrl = environment.apiUrl.replace('http://', 'https://');
+      const profilePic = report.reporter_profile_picture;
+      
+      return `${baseUrl}/image/download/${profilePic}`;
+    }
+
+    return 'assets/profile-avatar.png';
   }
 }

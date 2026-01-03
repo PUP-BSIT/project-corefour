@@ -20,14 +20,14 @@ import { ToastService } from '../../../core/services/toast-service';
 
 import { Report, ReportFilters } from '../../../models/item-model';
 
-import { 
-  SearchBarComponent 
+import {
+  SearchBarComponent
 } from '../../../share-ui-blocks/search-bar/search-bar';
-import { 
-  ReportItemGrid 
+import {
+  ReportItemGrid
 } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
-import { 
-  ClaimFormModal 
+import {
+  ClaimFormModal
 } from '../../../modal/claim-form-modal/claim-form-modal';
 import { Subject } from 'rxjs/internal/Subject';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
@@ -40,10 +40,9 @@ type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'rejected';
   selector: 'app-claim-status-page',
   standalone: true,
   imports: [
-    CommonModule, 
-    RouterModule, 
-    SearchBarComponent, 
-    DatePipe, 
+    CommonModule,
+    RouterModule,
+    SearchBarComponent,
     ClaimFormModal,
     ReportItemGrid
   ],
@@ -66,14 +65,15 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   protected pageSize = signal(10);
 
   protected reports = signal<Report[]>([]);
-  protected searchQuery = signal(''); 
+  protected searchQuery = signal('');
   protected currentSort = signal<SortOption>('all');
   protected currentStatusFilter = signal<StatusFilter>('All Statuses');
   protected isLoading = signal(true);
-  
+
   protected selectedReport = signal<Report | null>(null);
 
-  protected readonly statusFilters: StatusFilter[] = ['All Statuses', 'pending', 'approved', 'rejected'];
+  protected readonly statusFilters: StatusFilter[] = [
+      'All Statuses', 'pending', 'approved', 'rejected'];
 
   protected isAdmin = computed(() => {
     const user = this.authService.currentUserValue;
@@ -105,7 +105,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
         return (a.item_name || '').localeCompare(b.item_name || '');
       }
       if (sortType === 'date') {
-        return new Date(b.date_reported).getTime() - 
+        return new Date(b.date_reported).getTime() -
                new Date(a.date_reported).getTime();
       }
       return 0;
@@ -117,8 +117,9 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
       tap(() => this.isLoading.set(true)),
       switchMap(() => {
         const filters: ReportFilters = {
-          type: 'found' as const, 
-          status: this.currentStatusFilter() === 'All Statuses' ? undefined : this.currentStatusFilter() as any,
+          type: 'found' as const,
+          status: this.currentStatusFilter() ===
+              'All Statuses' ? undefined : this.currentStatusFilter() as any,
           query: this.searchQuery(),
           page: this.currentPage(),
           size: this.pageSize()
@@ -130,8 +131,9 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
       }),
       takeUntil(this.destroy$)
     ).subscribe(response => {
-      this.reports.update(existing => 
-        this.currentPage() === 1 ? response.items : [...existing, ...response.items]
+      this.reports.update(existing =>
+        this.currentPage() === 1 ? response.items :
+            [...existing, ...response.items]
       );
       this.totalPages.set(response.totalPages);
       this.isLoading.set(false);
@@ -140,7 +142,8 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !this.isLoading() && this.currentPage() < this.totalPages()) {
+      if (entry.isIntersecting && !this.isLoading() &&
+          this.currentPage() < this.totalPages()) {
         this.currentPage.update(p => p + 1);
         this.refreshTrigger$.next();
       }

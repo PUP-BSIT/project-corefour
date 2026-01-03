@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap, timer, map, catchError, switchMap, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../auth/auth-service';
-import { 
+import {
   AbstractControl,
   AsyncValidatorFn,
   ValidationErrors
@@ -34,6 +34,16 @@ export class UserService {
     return this.http.get<User>(`${this.API_BASE_URL}/user/${userId}`);
   }
 
+  searchUsers(query: string): Observable<User[]> {
+    if (!query || query.length < 2) {
+      return of([]);
+    }
+    const params = new HttpParams().set('query', query);
+    return this.http.get<User[]>(`${this.API_BASE_URL}/users/search`,
+      { params })
+      .pipe(catchError(() => of([])));
+  }
+
   checkUniqueness(
     field: 'email' | 'phone_number' | 'name',
     value: string
@@ -41,7 +51,7 @@ export class UserService {
     const params = new HttpParams()
       .set('field', field)
       .set('value', value);
-      
+
     return this.http
       .get<UniqueCheckResponse>(
         `${this.API_BASE_URL}/check-unique`, { params }
@@ -81,7 +91,7 @@ export class UserService {
     }
 
     return this.http.put<User>(
-      `${this.API_BASE_URL}/update-user-data`, 
+      `${this.API_BASE_URL}/update-user-data`,
       formData
     ).pipe(
       tap(updatedUser => {
@@ -92,7 +102,7 @@ export class UserService {
 
   changePassword(request: ChangePasswordRequest): Observable<void> {
     return this.http.put<void>(
-      `${this.API_BASE_URL}/change-password`, 
+      `${this.API_BASE_URL}/change-password`,
       request
     );
   }

@@ -30,10 +30,6 @@
         </div>
 
         @for (item of profileDropdownItems; track item.label) {
-          @if (item.label === 'Add Account') {
-            <div class="dropdown-divider"></div>
-          }
-
           @if (item.action === 'navigate') {
             <a [routerLink]="item.route" (click)="handleDropdownAction(item)"
                 class="dropdown-item">
@@ -77,33 +73,6 @@
   </div>
 
   <div class="nav-divider-mock"></div>
-
-  <div class="nav-section tracking-nav">
-
-    <div class="section-header" (click)="toggleTracking()"
-        [attr.aria-expanded]="isTrackingOpen">
-
-      <a [routerLink]="profileRoute" class="section-title-link"
-          (click)="$event.stopPropagation()">
-        Tracking
-      </a>
-
-      <div class="toggle-icon">▼</div>
-    </div>
-
-    @if (isTrackingOpen) {
-      <div class="tracking-list-content">
-        @for (item of trackingNav; track item.label) {
-          <a [routerLink]="item.route" routerLinkActive="active"
-              class="nav-item tracking-item">
-            <img src="assets/tracking-item.png" alt="{{ item.label }} Icon"
-                class="nav-icon tracking-icon-sm">
-            <div class="nav-label">{{ item.label }}</div>
-          </a>
-        }
-      </div>
-    }
-  </div>
 
   <div class="help-link">
     <a [routerLink]="['/app/help-page']" routerLinkActive="active">
