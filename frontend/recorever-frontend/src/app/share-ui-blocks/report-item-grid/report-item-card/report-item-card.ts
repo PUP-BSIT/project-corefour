@@ -17,6 +17,7 @@ import { StatusBadge } from '../../status-badge/status-badge';
 import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { environment } from '../../../../environments/environment';
+import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 @Component({
   selector: 'app-report-item-card',
@@ -32,6 +33,7 @@ import { environment } from '../../../../environments/environment';
     StatusBadge,
     TimeAgoPipe,
     MatTooltipModule,
+    CodesModal,
   ],
   templateUrl: './report-item-card.html',
   styleUrls: ['./report-item-card.scss'],
@@ -50,6 +52,7 @@ export class ReportItemCard {
   @Output() viewCodeClicked = new EventEmitter<void>();
   @Output() unarchiveClicked = new EventEmitter<void>();
 
+  showClaimModal = false;
   currentImageIndex = 0;
 
   isRemovable = computed((): boolean => {
@@ -155,12 +158,7 @@ export class ReportItemCard {
   }
 
   public onTicketClick(): void {
-    const report = this.report();
-    if (report.claim_code || report.surrender_code) {
-      this.viewCodeClicked.emit();
-    } else {
-      this.ticketClicked.emit();
-    }
+    this.showClaimModal = true;
   }
 
   public onEdit(event: Event): void {
