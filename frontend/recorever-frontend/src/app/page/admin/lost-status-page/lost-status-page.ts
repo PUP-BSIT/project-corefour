@@ -86,7 +86,6 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     'All Statuses', 'pending', 'approved', 'matched', 'rejected'
   ];
 
-  // Dynamic location list from loaded reports
   protected locations = computed(() => {
     const locs = this.reports()
       .map(r => r.location)
