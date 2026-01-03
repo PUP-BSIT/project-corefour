@@ -8,7 +8,7 @@
 
     <div class="status-filter-wrapper">
       <label for="status-filter">Status:</label>
-      <select id="status-filter" 
+      <select id="status-filter"
               #statusSelect
               [value]="currentStatusFilter()"
               (change)="setStatusFilter(statusSelect.value)">
@@ -21,26 +21,12 @@
     </div>
   </header>
 
-  <div class="controls-bar">
-    <div class="sort-tabs">
-      <button class="tab-btn" 
-              [class.active]="currentSort() === 'all'"
-              (click)="setSort('all')">
-        All
-      </button>
-
-      <button class="tab-btn" 
-              [class.active]="currentSort() === 'az'"
-              (click)="setSort('az')">
-        A-Z ↑
-      </button>
-
-      <button class="tab-btn" 
-              [class.active]="currentSort() === 'date'"
-              (click)="setSort('date')">
-        Date ↑
-      </button>
-    </div>
+  <div class="filter-section" style="margin-bottom: 1rem;">
+    <app-filter
+      [locations]="locations()"
+      [itemType]="'found'"
+      (filterChange)="onFilterChange($event)">
+    </app-filter>
   </div>
 
   <div class="claims-list">
@@ -67,8 +53,8 @@
   </div>
 
   @if (selectedReport()) {
-    <app-claim-form-modal 
-        [claimData]="selectedReport()!" 
+    <app-claim-form-modal
+        [claimData]="selectedReport()!"
         (close)="onCloseModal()"
         (statusChange)="onStatusChanged($event)">
     </app-claim-form-modal>
