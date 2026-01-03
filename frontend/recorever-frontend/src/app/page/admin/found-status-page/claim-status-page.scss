@@ -27,25 +27,29 @@ $link-color: #3b82f6;
 
 .page-header {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 25px;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 
   @media (max-width: 768px) {
-    flex-wrap: wrap;
-    gap: 15px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
   }
 
   .page-title {
     font-size: 2.5rem;
-    font-weight: 600;
-    color: #333;
+    font-weight: 700;
+    color: #1a1a1a;
     margin: 0;
-    white-space: nowrap;
+    flex-shrink: 0;
 
     @media (max-width: 768px) {
       font-size: 2rem;
-      width: 100%;
+      text-align: center;
+      line-height: normal;
     }
   }
 
