@@ -1,7 +1,8 @@
 import { Component, Output, EventEmitter, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
-import { CommonModule, AsyncPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { Subject, switchMap, takeUntil, catchError, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
 import { Notification } from '../../../share-ui-blocks/notification/notification';
 import { AuthService } from '../../../core/auth/auth-service';
@@ -17,7 +18,6 @@ import { environment } from '../../../../environments/environment';
     CommonModule, 
     RouterModule, 
     Notification,
-    AsyncPipe,
     ConfirmationModal
   ], 
   templateUrl: './admin-side-bar.html',
@@ -31,7 +31,14 @@ export class AdminSideBar implements OnDestroy {
 
   @ViewChild('profileSection') profileSection!: ElementRef;
 
-  public currentUser$: Observable<User | null> = this.authService.currentUser$;
+  // REFACTORED: Converted to Signal to allow usage without @if wrapper in HTML
+  public currentUser = toSignal(
+    this.authService.currentUser$.pipe(
+      catchError(() => of(null))
+    ), 
+    { initialValue: null }
+  );
+
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
   protected isArchiveOpen = true;

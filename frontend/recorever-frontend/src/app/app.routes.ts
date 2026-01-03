@@ -1,11 +1,9 @@
 import { Routes } from '@angular/router';
 
-// guards imports
 import { authGuard } from './core/auth/auth-guard';
 import { publicGuard } from './core/auth/public-guard';
 import { adminGuard } from './core/auth/admin-guard';
 
-// layout imports
 import { HeaderNFooterOnly 
   } from './layout/header-nfooter-only/header-nfooter-only';
 import { HeaderOnly } from './layout/header-only/header-only';
@@ -21,6 +19,7 @@ export const AppRoutePaths = {
   USER_PROFILE: (id: number | string) => `/app/profile/${id}`,
   ABOUT_US: '/app/about-us',
   REPORT_STATUS_MANAGEMENT: '/admin/report-status',
+  HELP_PAGE: '/help-page',
 };
 
 export const routes: Routes = [
@@ -38,6 +37,11 @@ export const routes: Routes = [
         path: 'about-us',
         loadComponent: () => import('./page/public/about-us-page/about-us-page')
           .then(m => m.AboutUsPage)
+      },
+      {
+        path: 'help-page',
+        loadComponent: () => import('./page/public/help-page/help-page')
+          .then(m => m.HelpPage)
       }
     ],
   },
@@ -52,12 +56,19 @@ export const routes: Routes = [
       { path: 'register',
         loadComponent: () => import('./page/public/register-page/register-page')
           .then(m => m.RegisterPage) },
+      { path: 'forgot-password', 
+        loadComponent: () =>
+          import('./page/public/forgot-pass-page/forgot-pass-page')
+            .then(m => m.ForgotPassPage) },
+      { path: 'reset-password', 
+        loadComponent: () =>
+          import('./page/public/reset-pass-page/reset-pass-page')
+            .then(m => m.ResetPassPage) },
     ],
   },
   {
     path: 'app',
     component: UserLayout,
-    canActivate: [authGuard],
     children: [
       { path: 'lost-items',
         loadComponent: () => 
@@ -72,26 +83,35 @@ export const routes: Routes = [
         data: { itemType: 'found' }
       },
       { path: 'report-lost',
+        canActivate: [authGuard],
         loadComponent: () => 
           import('./page/user/report-lost-page/report-lost-page')
             .then(m => m.ReportLostPage)
       },
       { path: 'report-found',
+        canActivate: [authGuard],
         loadComponent: () => 
           import('./page/user/report-found-page/report-found-page')
             .then(m => m.ReportFoundPage)
       },
       { path: 'profile',
+        canActivate: [authGuard],
         loadComponent: () => import('./page/user/profile-page/profile-page')
           .then(m => m.ProfilePage)
       },
       { path: 'profile/:id',
+        canActivate: [authGuard],
         loadComponent: () => import('./page/user/profile-page/profile-page')
           .then(m => m.ProfilePage)
       },
       { path: 'about-us',
         loadComponent: () => import('./page/public/about-us-page/about-us-page')
           .then(m => m.AboutUsPage)
+      },
+      { 
+        path: 'help-page',
+        loadComponent: () => import('./page/public/help-page/help-page')
+          .then(m => m.HelpPage)
       },
       { path: '', redirectTo: 'lost-items', pathMatch: 'full' },
     ],

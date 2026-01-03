@@ -43,40 +43,50 @@ export class ItemService {
     );
   }
 
+  updateReport(
+    report: FinalReportSubmission, 
+    files: File[]
+  ): Observable<Report> {
+    const formData = new FormData();
+
+    formData.append('type', report.type);
+    formData.append('item_name', report.item_name);
+    formData.append('location', report.location);
+    formData.append('description', report.description);
+    
+    if (report.date_lost_found) {
+      formData.append('date_lost_found', report.date_lost_found);
+    }
+
+    if (files && files.length > 0) {
+      files.forEach((file: File) => {
+        formData.append('files', file, file.name);
+      });
+    }
+
+    const id = report.report_id;
+
+    return this.http.put<Report>(
+      `${this.apiUrl}/report/${id}`, 
+      formData
+    );
+  }
+
   getReports(filters: ReportFilters): Observable<PaginatedResponse<Report>> {
     let params = new HttpParams();
     const endpoint = `${this.apiUrl}/reports`;
 
-    if (filters.page) {
-      params = params.set('page', filters.page.toString());
-    }
-
-    if (filters.size) {
-      params = params.set('size', filters.size.toString());
-    }
-
-    if (filters.type) {
-      params = params.set('type', filters.type);
-    }
-
-    if (filters.status) {
-      params = params.set('status', filters.status);
-    }
-
+    if (filters.page) params = params.set('page', filters.page.toString());
+    if (filters.size) params = params.set('size', filters.size.toString());
+    if (filters.type) params = params.set('type', filters.type);
+    if (filters.status) params = params.set('status', filters.status);
+    
     if (filters.user_id) {
-      params = params.set(
-          'user_id',
-          filters.user_id.toString()
-      );
+      params = params.set('user_id', filters.user_id.toString());
     }
 
-    if (filters.query) {
-      params = params.set('query', filters.query);
-    }
-
-    if (filters.location) {
-      params = params.set('location', filters.location);
-    }
+    if (filters.query) params = params.set('query', filters.query);
+    if (filters.location) params = params.set('location', filters.location);
 
     return this.http.get<PaginatedResponse<Report>>(endpoint, { params });
   }

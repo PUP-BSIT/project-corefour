@@ -1,15 +1,16 @@
 <div class="user-side-bar">
 
-  @if (currentUser$ | async; as user) {
+  @if (currentUser()) {
     <div class="user-profile-header" #profileSection>
       <div class="profile-click-area" (click)="toggleProfileDropdown()"
         [class.dropdown-open]="isProfileDropdownOpen">
-        <img [src]="getProfileImageUrl(user.profile_picture)"
+        
+        <img [src]="getProfileImageUrl(currentUser()?.profile_picture)"
              alt="Profile Avatar"
              class="profile-avatar-img">
              
         <div class="profile-info">
-          <span class="profile-name">{{ user.name }}</span>
+          <span class="profile-name">{{ currentUser()?.name }}</span>
           <span class="profile-dropdown-arrow">▿</span>
         </div>
       </div>
@@ -21,11 +22,11 @@
       @if (isProfileDropdownOpen) {
       <div class="profile-dropdown-menu">
         <div class="dropdown-user-info">
-          <img [src]="getProfileImageUrl(user.profile_picture)"
+          <img [src]="getProfileImageUrl(currentUser()?.profile_picture)"
                alt="Profile Avatar"
                class="dropdown-avatar-img">
-          <div class="dropdown-name">{{ user.name }}</div>
-          <div class="dropdown-email">{{ user.email }}</div>
+          <div class="dropdown-name">{{ currentUser()?.name }}</div>
+          <div class="dropdown-email">{{ currentUser()?.email }}</div>
         </div>
 
         @for (item of profileDropdownItems; track item.label) {
@@ -55,12 +56,23 @@
 
   <div class="nav-section main-nav">
     @for (item of mainNav; track item.label) {
-      <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
-        <img [src]="item.iconPath" 
-              alt="{{ item.label }} Icon" 
-              class="nav-icon">
-        <div class="nav-label">{{ item.label }}</div>
-      </a>
+      @if (isProtected(item.route)) {
+        <a class="nav-item cursor-pointer"
+            [class.active]="isRouteActive(item.route)"
+            (click)="onProtectedLinkClick(item.route)">
+          <img [src]="item.iconPath" 
+               alt="{{ item.label }} Icon" 
+               class="nav-icon">
+          <div class="nav-label">{{ item.label }}</div>
+        </a>
+      } @else {
+        <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+          <img [src]="item.iconPath" 
+               alt="{{ item.label }} Icon" 
+               class="nav-icon">
+          <div class="nav-label">{{ item.label }}</div>
+        </a>
+      }
     }
   </div>
 
@@ -94,7 +106,8 @@
   </div>
 
   <div class="help-link">
-    <a [routerLink]="">Help & Support</a>
+    <a [routerLink]="['/app/help-page']" routerLinkActive="active">
+        Help & Support</a>
   </div>
 
   @if (isLogoutModalOpen) {
@@ -102,9 +115,22 @@
       title="Log Out"
       message="Are you sure you want to log out of your account?"
       confirmLabel="Log Out"
-      variant="primary"
+      variant="danger"
       (confirm)="onLogoutConfirm()"
       (cancel)="onLogoutCancel()">
+    </app-confirmation-modal>
+  }
+
+  @if (showLoginModal) {
+    <app-confirmation-modal
+      title="Log in Required"
+      message="You need to be logged in to access this feature. "
+      subMessage="Please log in to your account to continue reporting or 
+                  claiming items."
+      confirmLabel="Log In"
+      variant="primary"
+      (confirm)="onLoginModalConfirm()"
+      (cancel)="onLoginModalCancel()">
     </app-confirmation-modal>
   }
 </div>
