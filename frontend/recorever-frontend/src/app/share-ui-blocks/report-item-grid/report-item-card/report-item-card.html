@@ -1,4 +1,8 @@
-<mat-card class="modern-item-card" (click)="onCardClick()">
+<mat-card
+  class="modern-item-card"
+  [class.highlighted-item]="isHighlighted()"
+  (click)="onCardClick()">
+
   <div class="card-media">
     <div class="carousel-viewport">
       <img mat-card-image
