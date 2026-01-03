@@ -5,6 +5,7 @@ import {
   EventEmitter,
   computed,
   inject,
+  signal,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -20,6 +21,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { environment } from '../../../../environments/environment';
 import { Router } from '@angular/router';
 import { AppRoutePaths } from '../../../app.routes';
+import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 @Component({
   selector: 'app-report-item-card',
@@ -35,6 +37,7 @@ import { AppRoutePaths } from '../../../app.routes';
     StatusBadge,
     TimeAgoPipe,
     MatTooltipModule,
+    CodesModal,
   ],
   templateUrl: './report-item-card.html',
   styleUrls: ['./report-item-card.scss'],
@@ -54,6 +57,22 @@ export class ReportItemCard {
   @Output() deleteClicked = new EventEmitter<void>();
   @Output() viewCodeClicked = new EventEmitter<void>();
   @Output() unarchiveClicked = new EventEmitter<void>();
+
+  activeModalMode = signal<'ticket' | 'finder' | null>(null);
+
+  modalTitle = computed((): string => {
+    return 'Item Reference Details';
+  });
+
+  modalDescription = computed((): string => {
+    if (this.activeModalMode() === 'ticket') {
+      return 'To claim this item, please present this code to the ' +
+             'administrator. You will be asked to provide proof of ' +
+             'ownership (e.g., describing the contents or showing an ID)';
+    }
+    return 'Use this code when surrendering the item to the administrator. ' +
+           'This confirms you are the authorized finder';
+  });
 
   currentImageIndex = 0;
 
@@ -132,7 +151,7 @@ export class ReportItemCard {
 
   public getCodeButtonLabel(): string {
     const report = this.report();
-    return (report.type === 'lost' || report.claim_code)
+    return report.type === 'lost' || report.claim_code
       ? 'View Ticket ID'
       : 'View Reference Code';
   }
@@ -152,7 +171,7 @@ export class ReportItemCard {
     event.stopPropagation();
     const urls = this.photoUrls();
     this.currentImageIndex =
-        (this.currentImageIndex - 1 + urls.length) % urls.length;
+      (this.currentImageIndex - 1 + urls.length) % urls.length;
   }
 
   public onCardClick(): void {
@@ -160,16 +179,10 @@ export class ReportItemCard {
   }
 
   public onTicketClick(): void {
-    const report = this.report();
-    if (report.claim_code || report.surrender_code) {
-      this.viewCodeClicked.emit();
-    } else {
-      this.ticketClicked.emit();
-    }
+    this.activeModalMode.set('ticket');
   }
 
   public onEdit(event: Event): void {
-    event.stopPropagation();
     
     const reportData = this.report();
     const path = reportData.type === 'lost' 
@@ -187,17 +200,19 @@ export class ReportItemCard {
   }
 
   public onDelete(event: Event): void {
-    event.stopPropagation();
     this.deleteClicked.emit();
   }
 
   public onViewCode(event: Event): void {
-    event.stopPropagation();
-    this.viewCodeClicked.emit();
+    this.activeModalMode.set('finder');
   }
 
   public onUnarchive(event: Event): void {
     event.stopPropagation();
     this.unarchiveClicked.emit();
+  }
+
+  public onCloseModal(): void {
+    this.activeModalMode.set(null);
   }
 }

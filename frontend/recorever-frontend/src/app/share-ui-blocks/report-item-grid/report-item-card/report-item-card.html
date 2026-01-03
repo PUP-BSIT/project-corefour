@@ -141,3 +141,12 @@
     }
   </mat-card-actions>
 </mat-card>
+
+@if (activeModalMode()) {
+  <app-codes-modal
+      [title]="modalTitle()"
+      [code]="referenceCodeValue()"
+      [description]="modalDescription()"
+      (close)="onCloseModal()">
+  </app-codes-modal>
+}
