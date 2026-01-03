@@ -58,8 +58,6 @@ export class AdminSideBar implements OnDestroy {
   }
 
   protected profileDropdownItems: ProfileNavItem[] = [
-    { label: 'Settings', iconPath: 'assets/setting.png',
-        action: 'emit' },
     { label: 'Log out', iconPath: 'assets/log-out.png', action: 'logout' },
   ];
 
@@ -146,9 +144,6 @@ export class AdminSideBar implements OnDestroy {
         if (item.route) {
           this.router.navigate([item.route]);
         }
-        break;
-      case 'emit':
-        this.openSettingsModal.emit();
         break;
       case 'logout':
         this.isLogoutModalOpen = true;
