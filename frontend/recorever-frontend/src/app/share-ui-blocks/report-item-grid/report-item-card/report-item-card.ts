@@ -178,17 +178,14 @@ export class ReportItemCard {
   }
 
   public onEdit(event: Event): void {
-    event.stopPropagation();
     this.editClicked.emit();
   }
 
   public onDelete(event: Event): void {
-    event.stopPropagation();
     this.deleteClicked.emit();
   }
 
   public onViewCode(event: Event): void {
-    event.stopPropagation();
     this.activeModalMode.set('finder');
   }
 
