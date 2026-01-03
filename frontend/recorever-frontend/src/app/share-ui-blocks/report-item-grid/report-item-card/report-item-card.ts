@@ -52,7 +52,10 @@ export class ReportItemCard {
   @Output() viewCodeClicked = new EventEmitter<void>();
   @Output() unarchiveClicked = new EventEmitter<void>();
 
-  showClaimModal = false;
+  showReferenceModal: boolean = false;
+  modalTitle: string = '';
+  modalDescription: string = '';
+
   currentImageIndex = 0;
 
   isRemovable = computed((): boolean => {
@@ -158,7 +161,12 @@ export class ReportItemCard {
   }
 
   public onTicketClick(): void {
-    this.showClaimModal = true;
+    this.modalTitle = 'Item Reference Details';
+    this.modalDescription = 
+        'To claim this item, please present this code to the administrator. ' +
+        'You will be asked to provide proof of ownership '  +
+        '(e.g., describing the contents or showing an ID)';
+    this.showReferenceModal = true;
   }
 
   public onEdit(event: Event): void {
@@ -173,7 +181,12 @@ export class ReportItemCard {
 
   public onViewCode(event: Event): void {
     event.stopPropagation();
-    this.viewCodeClicked.emit();
+    this.modalTitle = 'Item Reference Details';
+    this.modalDescription = 
+            'Use this code when surrendering the item to the administrator. ' +
+            'This confirms you are the authorized finder';
+    this.showReferenceModal = true;
+
   }
 
   public onUnarchive(event: Event): void {

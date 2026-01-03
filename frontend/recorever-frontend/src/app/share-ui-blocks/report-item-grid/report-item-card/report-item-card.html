@@ -142,13 +142,11 @@
   </mat-card-actions>
 </mat-card>
 
-@if (showClaimModal) {
+@if (showReferenceModal) {
   <app-codes-modal
-      title="Item Reference Details"
+      [title]="modalTitle"
       [code]="referenceCodeValue()"
-      description="To claim this item, please present this code to the 
-                administrator. You will be asked to provide proof of ownership 
-                (e.g., describing the contents or showing an ID)"
-      (close)="showClaimModal = false">
+      [description]="modalDescription"
+      (close)="showReferenceModal = false">
   </app-codes-modal>
 }
