@@ -21,24 +21,12 @@
     </div>
   </header>
 
-  <div class="controls-bar">
-    <div class="sort-tabs">
-      <button class="tab-btn" 
-          [class.active]="currentSort() === 'all'"
-          (click)="setSort('all')">
-        All
-      </button>
-      <button class="tab-btn" 
-          [class.active]="currentSort() === 'az'"
-          (click)="setSort('az')">
-        A-Z ↑
-      </button>
-      <button class="tab-btn" 
-          [class.active]="currentSort() === 'date'"
-          (click)="setSort('date')">
-        Date ↑
-      </button>
-    </div>
+  <div class="filter-section">
+    <app-filter
+      [itemType]="'lost'"
+      [locations]="locationFilters"
+      (filterChange)="onFilterChange($event)">
+    </app-filter>
   </div>
 
   <div class="report-status-page__content">
