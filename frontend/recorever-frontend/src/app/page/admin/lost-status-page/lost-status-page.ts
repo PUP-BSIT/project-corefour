@@ -86,9 +86,13 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     'All Statuses', 'pending', 'approved', 'matched', 'rejected'
   ];
 
-  public readonly locationFilters: string[] = [
-    ...Object.values(StandardLocations) as string[],
-  ];
+  // Dynamic location list from loaded reports
+  protected locations = computed(() => {
+    const locs = this.reports()
+      .map(r => r.location)
+      .filter(l => !!l);
+    return [...new Set(locs)] as string[];
+  });
 
   protected sortedReports = computed(() => {
     let data = [...this.reports()];
@@ -103,8 +107,9 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (locationFilter) {
-      data = data.filter(r => 
-        r.location?.toLowerCase().includes(locationFilter.toLowerCase())
+      const term = locationFilter.toLowerCase();
+      data = data.filter(r =>
+        (r.location || '').toLowerCase().includes(term)
       );
     }
 
