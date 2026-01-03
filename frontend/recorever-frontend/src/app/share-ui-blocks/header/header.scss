@@ -82,6 +82,20 @@
       }
     }
   }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+
+    .mobile-notification-wrapper {
+      display: none;
+
+      @media (max-width: 768px) {
+        display: block;
+        margin-right: 10px;
+      }
+    }
+  }
 }
 
 @media (max-width: 900px) {
