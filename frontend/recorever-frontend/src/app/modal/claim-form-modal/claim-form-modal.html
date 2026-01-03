@@ -1,142 +1,229 @@
-<div class="modal-overlay" (click)="onClose()">
-  <div class="modal-container" 
+<div class="modal-overlay"
+    (click)="onClose()">
+  <div class="modal-container"
       (click)="$event.stopPropagation(); closeDropdown()">
-    
+
+    <button class="close-btn" (click)="onClose()">
+      <mat-icon>close</mat-icon>
+    </button>
+
     @if (isLoading()) {
-      <div class="loading-state">Loading details...</div>
+      <div class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Loading details...</span>
+      </div>
     } @else {
-      <div class="left-panel">
-        <div class="header-mini">
-          <div class="avatar">
-            {{ reportOwnerName().charAt(0).toUpperCase() }}
-          </div>
-          <div class="meta">
-            <div class="reporter-name">{{ reportOwnerName() }}</div>
-            <div class="item-date">
-              {{ displayDate | date:'mediumDate' }}
+      <div class="content-wrapper">
+
+        <div class="left-panel">
+
+          <div class="panel-scroll-content">
+
+            <div class="modal-header">
+              <div class="user-info">
+                <div class="avatar-circle">
+                  @if (report()?.reporter_profile_picture) {
+                    <img [src]="report()?.reporter_profile_picture"
+                        alt="Avatar" class="avatar-img">
+                  } @else {
+                    {{ reportOwnerName().charAt(0).toUpperCase() }}
+                  }
+                </div>
+                <div class="user-details">
+                  <span class="username">{{ reportOwnerName() }}</span>
+                  <span class="timestamp">{{
+                      displayDate | date:'mediumDate' }}</span>
+                </div>
+              </div>
+              <app-status-badge [status]="displayStatus()"></app-status-badge>
             </div>
-          </div>
-        </div>
 
-        <div class="image-carousel">
-          <button class="nav-btn prev" (click)="prevImage()">
-             <img src="assets/Arrow-left.png" alt="Prev">
-          </button>
-          <div class="image-wrapper">
-             <img 
-                 [src]="images()[activeImageIndex()]" 
-                 alt="Item Image" 
-                 class="main-image">
-          </div>
-          <button class="nav-btn next" (click)="nextImage()">
-            <img src="assets/arrow-right.png" alt="Next">
-          </button>
-        </div>
+            <div class="image-section">
+              <div class="carousel-container">
+                <img [src]="currentImageUrl()" alt="Item Image"
+                    class="modal-image">
 
-        <div class="item-details">
-          <h2 class="title">{{ report()?.item_name }}</h2>
-          <div class="location">
-            <strong>Location:</strong> {{ report()?.location }}
-          </div>
-          <p class="description">
-            {{ report()?.description }}
-          </p>
-        </div>
+                @if (photoUrls().length > 1) {
+                  <button
+                      mat-icon-button class="carousel-btn carousel-btn--prev"
+                      (click)="prevImage($event)">
+                    <mat-icon>chevron_left</mat-icon>
+                  </button>
+                  <button
+                      mat-icon-button class="carousel-btn carousel-btn--next"
+                      (click)="nextImage($event)">
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
 
-        <div class="status-section">
-          <div class="status-dropdown-wrapper">
-            <button 
-                  class="status-btn" 
-                  [ngClass]="(report()?.status || 'pending').toLowerCase()"
-                  (click)="toggleDropdown($event)">
-              {{ report()?.status || 'Pending' }}
-              <span class="arrow">▼</span>
-            </button>
-            
-            @if (isDropdownOpen()) {
-              <div 
-                    class="dropdown-content"
-                    (click)="$event.stopPropagation()">
-                @for (option of STATUS_OPTIONS; track option.value) {
-                  <div
-                        [class.disabled-option]="isStatusDisabled(option.value)"
-                        (click)="onStatusOptionClick(option.value)">
-                    {{ option.label }}
+                  <div class="carousel-indicators">
+                    @for (url of photoUrls(); track $index) {
+                      <span
+                          class="indicator"
+                          [class.indicator--active]="activeImageIndex() ===
+                          $index"></span>
+                    }
                   </div>
                 }
               </div>
-            }
-          </div>
-        </div>
-      </div>
+            </div>
 
-      <div class="right-panel" [formGroup]="claimForm">
-        
-        <div class="section claimant-details-section">
-          <h3>Claimant Details:</h3>
-          
-          <div class="input-group">
-            <label>Claimant Name <span style="color:red">*</span></label>
-            <input 
-              type="text" 
-              class="input-field" 
-              [class.error]="claimForm.get('claimantName')?.invalid && claimForm.get('claimantName')?.touched"
-              formControlName="claimantName"
-              placeholder="Enter full name">
-              
-            @if (claimForm.get('claimantName')?.invalid && claimForm.get('claimantName')?.touched) {
-              <div class="error-msg">Name is required</div>
-            }
-          </div>
-          
-          <div class="input-group">
-            <label>Claim Date</label>
-            <input 
-              type="text" 
-              class="input-field readonly" 
-              formControlName="claimDate"
-              readonly>
-          </div>
-        </div>
+            <div class="details-section">
+              <h2 class="item-title">{{ report()?.item_name }}</h2>
 
-        <div class="section contact-details-section">
-          <h3>Contact Details (Optional):</h3>
-          
-          <div class="input-group">
-            <label>Contact Email</label>
-            <input 
-              type="email" 
-              class="input-field" 
-              formControlName="contactEmail"
-              placeholder="Email address">
-          </div>
-          
-          <div class="input-group">
-            <label>Contact Phone</label>
-            <input 
-              type="tel" 
-              class="input-field" 
-              formControlName="contactPhone"
-              placeholder="Phone number">
-          </div>
-        </div>
+              <div class="detail-row">
+                <mat-icon>tag</mat-icon>
+                <span class="detail-label">Ref Code:</span>
+                <span class="detail-value">{{ referenceCodeValue() }}</span>
+              </div>
 
-        <div class="section remarks-section">
-          <h3>Remarks:</h3>
-          <textarea 
-              class="input-field textarea" 
-              formControlName="remarks"
-              placeholder="Admin remarks...">
-          </textarea>
+              <div class="detail-row">
+                <mat-icon>location_on</mat-icon>
+                <span class="detail-label">Location:</span>
+                <span class="detail-value">{{ report()?.location }}</span>
+              </div>
+
+              <div class="detail-row">
+                <mat-icon>calendar_today</mat-icon>
+                <span class="detail-label">Date Reported:</span>
+                <span class="detail-value">{{
+                    report()?.date_reported | date:'mediumDate' }}</span>
+              </div>
+
+              <div class="description-section">
+                <h3>Description</h3>
+                <p>{{ report()?.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <div class="status-dropdown-wrapper">
+              <button
+                  class="status-btn"
+                  [ngClass]="(report()?.status || 'pending').toLowerCase()"
+                  (click)="toggleDropdown($event)">
+                {{ report()?.status || 'Pending' }}
+                <span class="arrow">▼</span>
+              </button>
+
+              @if (isDropdownOpen()) {
+                <div class="dropdown-content"
+                    (click)="$event.stopPropagation()">
+                  @for (option of STATUS_OPTIONS; track option.value) {
+                    @if (option.value !==
+                        (report()?.status || 'pending').toLowerCase()) {
+                      <div
+                          [class.disabled-option]="isStatusDisabled(option.value)"
+                          [matTooltip]="getOptionTooltip(option.value)"
+                          matTooltipPosition="left"
+                          (click)="onStatusOptionClick(option.value)">
+                        {{ option.label }}
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
         </div>
 
-        <div class="action-buttons">
-          <button 
-              class="save-btn" 
-              [disabled]="isSaving()" 
-              (click)="saveItemDetails()">
-            {{ isSaving() ? 'Saving...' : 'Submit' }}
-          </button>
+        <div class="right-panel" [formGroup]="claimForm">
+          <h2 class="form-title">Claim Processing</h2>
+
+          <div class="form-section">
+            <h3 class="section-label">Claimant Information</h3>
+
+            <div class="row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Claimant Name</mat-label>
+                <input matInput
+                       formControlName="claimantName"
+                       placeholder="Enter full name or search existing user"
+                       [matAutocomplete]="auto">
+                <mat-autocomplete #auto="matAutocomplete"
+                                  [displayWith]="displayUserFn"
+                                  (optionSelected)="onUserSelected($event)">
+                  @for (user of filteredUsers(); track user.user_id) {
+                    <mat-option [value]="user">
+                      <div class="user-option">
+                        <div class="option-avatar">
+                          @if (getUserAvatar(user)) {
+                            <img [src]="getUserAvatar(user)" alt="">
+                          } @else {
+                            <span class="initial">{{ user.name.charAt(0) }}
+                            </span>
+                          }
+                        </div>
+                        <div class="option-info">
+                          <span class="name">{{ user.name }}</span>
+                          <span class="email">{{ user.email }}</span>
+                        </div>
+                      </div>
+                    </mat-option>
+                  }
+                </mat-autocomplete>
+
+                @if (claimForm.get('claimantName')?.hasError('required')) {
+                  <mat-error>Name is required</mat-error>
+                }
+                @if (isSearchingUsers()) {
+                  <mat-icon matSuffix class="spinning-loader">sync</mat-icon>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Claim Date</mat-label>
+                <input matInput formControlName="claimDate" readonly>
+                <mat-icon matSuffix>calendar_today</mat-icon>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-label">Contact Details
+                <span class="optional">(Optional)</span></h3>
+
+            <div class="row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Email</mat-label>
+                <input matInput formControlName="contactEmail"
+                    placeholder="example@email.com">
+                @if (claimForm.get('contactEmail')?.hasError('email')) {
+                  <mat-error>Invalid email</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Phone</mat-label>
+                <input matInput formControlName="contactPhone"
+                    placeholder="0912...">
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-label">Administration</h3>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Remarks / Notes</mat-label>
+              <textarea matInput formControlName="remarks" rows="3"
+                  placeholder="Internal notes..."></textarea>
+            </mat-form-field>
+          </div>
+
+          <div class="action-buttons">
+            <button mat-stroked-button (click)="onClose()">Cancel</button>
+            <button mat-raised-button color="primary"
+                    [disabled]="isSaving() || claimForm.invalid"
+                    (click)="saveItemDetails()">
+              @if (isSaving()) {
+                <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+              }
+              {{ isSaving() ? 'Saving...' : 'Submit Claim' }}
+            </button>
+          </div>
         </div>
       </div>
     }
