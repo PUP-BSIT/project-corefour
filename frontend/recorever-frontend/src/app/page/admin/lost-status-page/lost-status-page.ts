@@ -19,6 +19,7 @@ import { tap, catchError, of, switchMap, takeUntil, Subject, BehaviorSubject } f
 import { ItemDetailModal } from "../../../modal/item-detail-modal/item-detail-modal";
 import { environment } from '../../../../environments/environment';
 import { AdminService } from '../../../core/services/admin-service';
+import { ToastService } from '../../../core/services/toast-service';
 
 type SortOption = 'all' | 'az' | 'date';
 type LostReportStatusFilter = 'All Statuses' | 'pending' | 'approved' | 'matched' | 'rejected';
@@ -37,6 +38,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
   private adminService = inject(AdminService);
+  private toastService = inject(ToastService);
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
@@ -79,7 +81,8 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
       switchMap(() => {
         const filters: ReportFilters = {
           type: 'lost' as const,
-          status: this.currentStatusFilter() === 'All Statuses' ? undefined : (this.currentStatusFilter() as any),
+          status: this.currentStatusFilter() ===
+              'All Statuses' ? undefined : (this.currentStatusFilter() as any),
           query: this.currentSearchQuery() || undefined,
           page: this.currentPage(),
           size: this.pageSize()
@@ -88,14 +91,16 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
         return this.itemService.getReports(filters).pipe(
           catchError(err => {
             this.isError.set(true);
-            return of({ items: [], totalPages: 1, totalItems: 0, currentPage: 1 });
+            return of({ items: [], totalPages: 1,
+                totalItems: 0, currentPage: 1 });
           })
         );
       }),
       takeUntil(this.destroy$)
     ).subscribe((response: PaginatedResponse<Report>) => {
-      this.reports.update(existing => 
-        this.currentPage() === 1 ? response.items : [...existing, ...response.items]
+      this.reports.update(existing =>
+        this.currentPage() === 1 ? response.items :
+            [...existing, ...response.items]
       );
       this.totalPages.set(response.totalPages);
       this.isLoading.set(false);
@@ -105,9 +110,10 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !this.isLoading() && this.currentPage() < this.totalPages()) {
-        this.currentPage.update(p => p + 1);
-        this.refreshTrigger$.next();
+      if (entry.isIntersecting && !this.isLoading() &&
+          this.currentPage() < this.totalPages()) {
+            this.currentPage.update(p => p + 1);
+            this.refreshTrigger$.next();
       }
     }, { rootMargin: '150px' });
     this.observer.observe(this.scrollAnchor.nativeElement);
@@ -125,9 +131,25 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
     this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
       next: () => {
-        this.onStatusUpdated(item); 
+        this.onStatusUpdated(item);
+
+        if (newStatus === 'matched') {
+          this.toastService.showSuccess(
+            `Item marked as ${newStatus} successfully.`,
+            'View Archive',
+            '/admin/archive/resolved',
+            { highlightId: item.report_id }
+          );
+        } else {
+          this.toastService.showSuccess(`Item marked as ${newStatus}
+              successfully.`);
+        }
       },
-      error: (err) => console.error('Failed to update status', err)
+      error: (err) => {
+        console.error('Failed to update status', err);
+        this.toastService.showError('Failed to update status.' +
+           'Please try again.');
+      }
     });
   }
 
@@ -145,7 +167,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   public getUserProfilePicture(): string {
     const report = this.selectedReport();
-    
+
     if (report && report.reporter_profile_picture) {
       const baseUrl = environment.apiUrl.replace('http://', 'https://');
       return `${baseUrl}/image/download/${report.reporter_profile_picture}`;

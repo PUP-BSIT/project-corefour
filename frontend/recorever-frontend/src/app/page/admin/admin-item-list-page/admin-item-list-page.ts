@@ -8,7 +8,7 @@ import {
   OnDestroy
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { ActivatedRoute, Data } from '@angular/router';
+import { ActivatedRoute, Data, Params } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, catchError, of, tap, BehaviorSubject, takeUntil, Subject, combineLatest, finalize } from 'rxjs';
@@ -84,6 +84,7 @@ export class AdminItemListPage implements OnInit, OnDestroy {
   public itemType = signal<ItemType>('lost');
   public isArchiveView = signal<boolean>(false);
   public pageTitle = signal<string>('Admin Item List');
+  public highlightId = signal<number | null>(null);
 
   @HostBinding('class.theme-lost') get isLost(): boolean {
     return this.itemType() === 'lost';
@@ -140,6 +141,12 @@ export class AdminItemListPage implements OnInit, OnDestroy {
     }
 
     reports.sort((a, b) => {
+      const hId = this.highlightId();
+      if (hId) {
+        if (a.report_id === hId) return -1;
+        if (b.report_id === hId) return 1;
+      }
+
       const dateA = new Date(a.date_reported).getTime();
       const dateB = new Date(b.date_reported).getTime();
       return this.currentSort() === 'newest' ? dateB - dateA : dateA - dateB;
@@ -165,6 +172,13 @@ export class AdminItemListPage implements OnInit, OnDestroy {
   });
 
   public ngOnInit(): void {
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params: Params) => {
+        const hId = params['highlightId'];
+        this.highlightId.set(hId ? Number(hId) : null);
+      });
+
     combineLatest([
       this.route.data,
       this.refreshTrigger$
