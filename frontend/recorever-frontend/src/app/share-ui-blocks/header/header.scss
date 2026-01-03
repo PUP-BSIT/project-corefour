@@ -102,13 +102,18 @@
   .app-header {
     height: auto;
     min-height: 50px;
-    flex-wrap: wrap;
+
+    .auth-buttons{
+      gap: 0px;
+    }
 
     .logo-container {
       .branding {
-        .tagline {
+        .tagline, .app-name {
           display: none;
         }
+      .app-logo {
+        height: 55px;}
       }
     }
   }
