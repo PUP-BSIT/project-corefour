@@ -6,22 +6,13 @@
     </div>
 
     <div class="footer-section">
-      <h3 class="section-title">Site</h3>
-      <ul class="link-list">
-        @for (link of siteLinks; track link.label) {
-        <li class="link-item">
-          <a [routerLink]="link.url">{{ link.label }}</a>
-        </li>
-        }
-      </ul>
-    </div>
-
-    <div class="footer-section">
       <h3 class="section-title">Help</h3>
       <ul class="link-list">
         @for (link of helpLinks; track link.label) {
         <li class="link-item">
-          <a [routerLink]="link.url">{{ link.label }}</a>
+          <a [routerLink]="link.url" [fragment]="link.fragment">
+            {{ link.label }}
+          </a>
         </li>
         }
       </ul>
@@ -32,9 +23,15 @@
       <ul class="link-list">
         @for (link of mainLinks; track link.label) {
         <li class="link-item">
-          <a [href]="link.url" target="_blank" rel="noopener noreferrer">
-            {{ link.label }}
-          </a>
+          @if (link.url.startsWith('http')) {
+            <a [href]="link.url" target="_blank" rel="noopener noreferrer">
+              {{ link.label }}
+            </a>
+          } @else {
+            <a [routerLink]="link.url">
+              {{ link.label }}
+            </a>
+          }
         </li>
         }
       </ul>
@@ -44,7 +41,6 @@
       <h3 class="section-title">Contact</h3>
       <p class="contact-info">Tel: +63 9654089663</p>
       <p class="contact-info">Email: ditcorefour@gmail.com</p>
-
     </div>
   </div>
 </footer>

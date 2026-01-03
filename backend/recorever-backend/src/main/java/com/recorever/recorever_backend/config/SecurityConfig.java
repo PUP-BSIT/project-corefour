@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -14,6 +16,11 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtFilter;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,9 +38,15 @@ public class SecurityConfig {
                     "/api/register-user",
                     "/api/refresh-token",
                     "/api/image/download/**",
+                    "/api/forgot-password",
+                    "/api/reset-password-public",
                     "/error"
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN") 
+
+                // Allow public access to view reports and locations
+                .requestMatchers(HttpMethod.GET, "/api/reports").permitAll() 
+                .requestMatchers(HttpMethod.GET, "/api/reports/top-locations").permitAll()
 
                 // Require authentication for uploading and managing images
                 .requestMatchers(HttpMethod.POST, 

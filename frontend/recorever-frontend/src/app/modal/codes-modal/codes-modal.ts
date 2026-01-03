@@ -20,15 +20,22 @@ export class CodesModal {
 
   title = input.required<string>();
   code = input.required<string | number>();
+  description = input<string>(); 
   subtext = input<string | number>();
+  showViewReportButton = input<boolean>(false);
 
   copyLabel = 'Copy';
   isCopied = false;
 
   @Output() close = new EventEmitter<void>();
+  @Output() viewReport = new EventEmitter<void>();
 
   onDone(): void {
     this.close.emit();
+  }
+
+  onViewReport(): void {
+    this.viewReport.emit();
   }
 
   copyToClipboard(event?: Event): void {
@@ -41,7 +48,7 @@ export class CodesModal {
 
     navigator.clipboard.writeText(textToCopy)
       .then(() => this.showCopiedState())
-      .catch(err => {
+      .catch((err) => {
         console.error('Copy failed', err);
       });
   }

@@ -1,7 +1,8 @@
-import { Component, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
-import { CommonModule, AsyncPipe } from '@angular/common';
+import { Component, Output, EventEmitter, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { Subject, switchMap, takeUntil, catchError, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NavItem, ProfileNavItem, User } from '../../../models/user-model';
 import { Notification } from '../../../share-ui-blocks/notification/notification';
 import { AuthService } from '../../../core/auth/auth-service';
@@ -17,7 +18,6 @@ import { environment } from '../../../../environments/environment';
     CommonModule, 
     RouterModule, 
     Notification,
-    AsyncPipe,
     ConfirmationModal
   ], 
   templateUrl: './admin-side-bar.html',
@@ -29,7 +29,16 @@ export class AdminSideBar implements OnDestroy {
 
   @Output() openSettingsModal = new EventEmitter<void>();
 
-  public currentUser$: Observable<User | null> = this.authService.currentUser$;
+  @ViewChild('profileSection') profileSection!: ElementRef;
+
+  // REFACTORED: Converted to Signal to allow usage without @if wrapper in HTML
+  public currentUser = toSignal(
+    this.authService.currentUser$.pipe(
+      catchError(() => of(null))
+    ), 
+    { initialValue: null }
+  );
+
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
   protected isArchiveOpen = true;
@@ -42,11 +51,10 @@ export class AdminSideBar implements OnDestroy {
       return 'assets/profile-avatar.png';
     }
     if (path.startsWith('http')) {
-      return path.replace('http://', 'https://');
+      return path;
     }
 
-    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
-    return `${secureBaseUrl}/image/download/${path}`;
+    return `${environment.apiUrl}/image/download/${path}`;
   }
 
   protected profileDropdownItems: ProfileNavItem[] = [
@@ -62,7 +70,7 @@ export class AdminSideBar implements OnDestroy {
       route: "/admin/dashboard",
     },
     {
-      label: "Lost Status Management",
+      label: "Manage Lost Item",
       iconPath: "/assets/report-status.png",
       route: AppRoutePaths.REPORT_STATUS_MANAGEMENT,
     },
@@ -109,6 +117,17 @@ export class AdminSideBar implements OnDestroy {
           this.isLogoutModalOpen = false;
         }
       });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.isProfileDropdownOpen && 
+      this.profileSection && 
+      !this.profileSection.nativeElement.contains(event.target as Node)
+    ) {
+      this.isProfileDropdownOpen = false;
+    }
   }
 
   public toggleProfileDropdown(): void {

@@ -77,6 +77,7 @@ export type ReportSubmissionPayload = {
 };
 
 export type FinalReportSubmission = {
+  report_id?: number;
   type: 'lost' | 'found';
   status: 'pending';
   item_name: string;

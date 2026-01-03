@@ -17,6 +17,12 @@
     }
   </mat-autocomplete>
 
+  @if (searchControl.value) {
+    <button class="clear-button" type="button" (click)="clearSearch()">
+      <img src="assets/remove.png" alt="Clear">
+    </button>
+  }
+
   <button class="search-button" type="button" (click)="onSearch()">
     <img src="assets/search-icon.png" alt="Search">
   </button>

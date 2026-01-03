@@ -2,6 +2,13 @@ $primary-purple: #5d50d0;
 $text-main: #1c1c1e;
 $text-secondary: #8e8e93;
 
+// Status Variables
+$verified-color: #4CAF50;
+$claimed-color: #000000;
+$pending-color: #e3cf14;
+$matched-color: #1976D2;
+$rejected-color: #D32F2F;
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -283,11 +290,44 @@ $text-secondary: #8e8e93;
   .action-btn {
     flex: 1;
     padding: 8px;
-    font-weight: 600;
+    font-weight: 450;
     font-size: 14px;
     line-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    .dropdown-arrow {
+      display: inline-block !important; // Force block-level to allow transforms
+      font-size: 10px;
+      margin-left: 6px;
+      transition: transform 0.3s ease;
+      
+      // Base State: Initial position
+      transform: rotate(0deg); 
+
+      &.open {
+        // Rotated State: Add 180 degrees
+        transform: rotate(180deg) !important;
+      }
+    }
+
+    &.status-btn--pending { background-color: $pending-color; color: white; }
+    &.status-btn--approved
+      { background-color: $verified-color; color: white; }
+    &.status-btn--matched { background-color: $matched-color; color: white; }
+    &.status-btn--rejected
+      { background-color: $rejected-color; color: white; }
+    &.status-btn--claimed { background-color: $claimed-color; color: white; }
   }
 }
+
+.active-status-item {
+  background-color: rgba(0, 0, 0, 0.04);
+  font-weight: 600;
+}
+
 
 .delete-option {
   .text-danger {

@@ -1,16 +1,21 @@
 <div class="report-page-container">
-  <h1 class="page-title">Report Found Item</h1>
+  <h1 class="page-title">{{ pageTitle() }}</h1>
 
-  <app-item-report-form [formType]="'found'"
+  <app-item-report-form 
+      [formType]="'found'"
+      [initialData]="initialData()"
+      [isEditMode]="isEditMode()"
       (formSubmitted)="handleSubmission($event)"
       (formCancelled)="handleCancel()" />
 
   @if (showReferenceModal()) {
     <app-codes-modal
-        title="Found Item Submitted"
-        [code]="referenceCode()"
-        [subtext]="submissionDate()"
-        (close)="onModalClose()">
+      [title]="'Found Item Submitted'"
+      [code]="referenceCode()"
+      [subtext]="submissionDate()"
+      [showViewReportButton]="true"
+      (close)="onModalClose()"
+      (viewReport)="onViewReport()">
     </app-codes-modal>
   }
 </div>
