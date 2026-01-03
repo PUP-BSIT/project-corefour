@@ -132,7 +132,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
         const filterDateStr = this.datePipe.transform(dateFilter, 'yyyy-MM-dd');
         reports = reports.filter(report => {
             const reportDateStr =
-                this.datePipe.transform(report.date_reported, 'yyyy-MM-dd');
+                this.datePipe.transform(report.date_lost_found, 'yyyy-MM-dd');
             return reportDateStr === filterDateStr;
         });
     }

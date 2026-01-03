@@ -98,7 +98,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
     if (dateFilter) {
       const filterDateStr = dateFilter.toDateString();
-      data = data.filter(r => new Date(r.date_reported || '')
+      data = data.filter(r => new Date(r.date_lost_found || '')
           .toDateString() === filterDateStr);
     }
 
