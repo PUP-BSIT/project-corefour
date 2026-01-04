@@ -8,6 +8,7 @@ import {
   signal,
   computed
 } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
@@ -26,7 +27,7 @@ import {
   map,
   startWith
 } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
+import { Observable, of, combineLatest } from 'rxjs';
 
 export type FilterState = {
   sort: 'newest' | 'oldest';
@@ -65,6 +66,8 @@ export class Filter implements OnInit {
   protected isFilterVisible = signal<boolean>(false);
   protected filteredLocations$: Observable<string[]> = of([]);
 
+  private locations$ = toObservable(this.locations);
+
   protected dateLabel = computed((): string => {
     if (this.genericLabels()) {
       return 'Date';
@@ -91,9 +94,16 @@ export class Filter implements OnInit {
     const locControl = this.filterForm.get('location');
 
     if (locControl) {
-      this.filteredLocations$ = locControl.valueChanges.pipe(
-        startWith(''),
-        map(value => this.filterLocations(value || ''))
+      this.filteredLocations$ = combineLatest([
+        locControl.valueChanges.pipe(startWith(locControl.value || '')),
+        this.locations$
+      ]).pipe(
+        map(([value, locations]) => {
+          const filterValue = (value || '').toLowerCase();
+          return locations
+            .filter(option => option.toLowerCase().includes(filterValue))
+            .slice(0, 5);
+        })
       );
     }
 

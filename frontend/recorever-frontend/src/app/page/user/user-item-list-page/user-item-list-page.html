@@ -30,7 +30,7 @@
   </header>
 
   <app-filter
-    [locations]="locationFilters"
+    [locations]="locations()"
     [itemType]="itemType()"
     (filterChange)="onFilterChange($event)">
   </app-filter>
