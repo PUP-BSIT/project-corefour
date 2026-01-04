@@ -26,15 +26,32 @@ public class NotificationController {
     public SseEmitter streamNotifications(Authentication authentication) {
         User authenticatedUser = (User) authentication.getPrincipal();
         int userId = authenticatedUser.getUser_id();
+        String role = authenticatedUser.getRole();
 
-        String role = authenticatedUser.getRole(); 
+        SseEmitter emitter = new SseEmitter(0L);
 
-        SseEmitter emitter = new SseEmitter(1800000L);
         service.addEmitter(userId, role, emitter);
 
         emitter.onCompletion(() -> service.removeEmitter(userId));
         emitter.onTimeout(() -> service.removeEmitter(userId));
         emitter.onError((e) -> service.removeEmitter(userId));
+
+        new Thread(() -> {
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("connected")
+                        .data("ok"));
+
+                while (true) {
+                    Thread.sleep(15000);
+                    emitter.send(SseEmitter.event()
+                            .name("ping")
+                            .data(""));
+                }
+            } catch (Exception e) {
+                emitter.complete();
+            }
+        }).start();
 
         return emitter;
     }
