@@ -31,10 +31,32 @@
   }
 }
 
+// STRICTLY HIDE ON DESKTOP
+.mobile-toggle-btn {
+  display: none !important;
+}
+
+// Mobile Breakpoint (Matches your existing 768px)
 @media (max-width: 768px) {
+
+  // SHOW ONLY ON MOBILE
+  .mobile-toggle-btn {
+    display: flex !important;
+    width: 100%;
+    margin-bottom: 12px;
+    justify-content: center;
+    align-items: center;
+    height: 48px;
+  }
+
   .filter-bar-container {
     flex-direction: column;
     align-items: stretch;
+
+    // Hide the form container when the toggle is off
+    &.mobile-hidden {
+      display: none;
+    }
 
     .all-btn,
     .filter-field,

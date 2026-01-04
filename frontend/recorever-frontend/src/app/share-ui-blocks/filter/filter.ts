@@ -62,6 +62,7 @@ export class Filter implements OnInit {
 
   protected filterForm: FormGroup;
   protected isDefaultState = signal<boolean>(true);
+  protected isFilterVisible = signal<boolean>(false);
   protected filteredLocations$: Observable<string[]> = of([]);
 
   protected dateLabel = computed((): string => {
@@ -115,6 +116,10 @@ export class Filter implements OnInit {
       date: null,
       location: ''
     });
+  }
+
+  protected toggleFilter(): void {
+    this.isFilterVisible.update(value => !value);
   }
 
   private filterLocations(value: string): string[] {
