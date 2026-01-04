@@ -4,6 +4,7 @@ import { RouterModule, Router, RouteReuseStrategy } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Notification } from '../notification/notification';
+import { AuthService } from '../../core/auth/auth-service';
 
 @Component({
   selector: 'app-header',
@@ -25,11 +26,18 @@ export class Header {
 
   @Output() menuToggled = new EventEmitter<void>();
 
+  isLoggedIn = false;
+
   constructor(
+    private authService: AuthService,
     private router: Router,
     private routeReuseStrategy: RouteReuseStrategy,
     private scroller: ViewportScroller
   ) {}
+
+  ngOnInit(): void {
+    this.isLoggedIn = this.authService.isLoggedIn();
+  }
 
   public toggleMenu(): void {
     this.menuToggled.emit();
