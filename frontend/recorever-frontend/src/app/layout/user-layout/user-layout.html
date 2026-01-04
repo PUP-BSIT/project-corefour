@@ -10,7 +10,7 @@
     }
 
     <aside class="sidebar-area" [class.mobile-open]="isSidebarOpen">
-      <app-user-side-bar />
+      <app-user-side-bar (closeSidebar)="closeSidebar()" />
     </aside>
 
     <main class="content-area">

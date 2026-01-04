@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -17,12 +17,12 @@ import { environment } from '../../../../environments/environment';
   selector: 'app-user-side-bar',
   standalone: true,
   imports: [
-    CommonModule, 
-    RouterModule, 
+    CommonModule,
+    RouterModule,
     Notification,
     ConfirmationModal,
     MatDialogModule
-  ], 
+  ],
   templateUrl: './user-side-bar.html',
   styleUrl: './user-side-bar.scss',
 })
@@ -31,20 +31,22 @@ export class UserSideBar implements OnDestroy {
   private router = inject(Router);
   private dialog = inject(MatDialog);
 
+  @Output() closeSidebar = new EventEmitter<void>();
+
   @ViewChild('profileSection') profileSection!: ElementRef;
 
   public currentUser = toSignal<User | null>(
     this.authService.currentUser$.pipe(
       catchError(() => of(null))
-    ), 
+    ),
     { initialValue: null }
   );
 
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
-  
+
   protected showLoginModal = false;
-  
+
   private protectedRoutes = [
     AppRoutePaths.REPORT_LOST,
     AppRoutePaths.REPORT_FOUND
@@ -93,11 +95,12 @@ export class UserSideBar implements OnDestroy {
     this.logoutTrigger$
       .pipe(
         switchMap(() => this.authService.logout()),
-        takeUntil(this.destroy$) 
+        takeUntil(this.destroy$)
       )
       .subscribe({
         next: (_response: LogoutResponse) => {
           this.isLogoutModalOpen = false;
+          this.closeSidebar.emit();
         },
         error: (_err: Error) => {
           this.isLogoutModalOpen = false;
@@ -108,8 +111,8 @@ export class UserSideBar implements OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (
-      this.isProfileDropdownOpen && 
-      this.profileSection && 
+      this.isProfileDropdownOpen &&
+      this.profileSection &&
       !this.profileSection.nativeElement.contains(event.target as Node)
     ) {
       this.isProfileDropdownOpen = false;
@@ -127,11 +130,13 @@ export class UserSideBar implements OnDestroy {
       case 'navigate':
         if (item.route) {
           this.router.navigate([item.route]);
+          this.closeSidebar.emit();
         }
         break;
       case 'openSettings':
         this.dialog.open(SettingsModal, {
         });
+        this.closeSidebar.emit();
         break;
       case 'logout':
         this.isLogoutModalOpen = true;
@@ -144,27 +149,32 @@ export class UserSideBar implements OnDestroy {
   }
 
   public isRouteActive(route: string): boolean {
-    return this.router.isActive(route, { 
-      paths: 'exact', 
-      queryParams: 'ignored', 
-      fragment: 'ignored', 
-      matrixParams: 'ignored' 
+    return this.router.isActive(route, {
+      paths: 'exact',
+      queryParams: 'ignored',
+      fragment: 'ignored',
+      matrixParams: 'ignored'
     });
   }
 
   public onProtectedLinkClick(route: string): void {
     if (this.currentUser()) {
-      // User is logged in, navigate
+
       this.router.navigate([route]);
+      this.closeSidebar.emit();
     } else {
-      // User is NOT logged in, show modal
       this.showLoginModal = true;
     }
+  }
+
+  public onNavClick(): void {
+    this.closeSidebar.emit();
   }
 
   public onLoginModalConfirm(): void {
     this.showLoginModal = false;
     this.router.navigate(['/login']);
+    this.closeSidebar.emit();
   }
 
   public onLoginModalCancel(): void {

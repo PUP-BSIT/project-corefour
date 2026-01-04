@@ -4,17 +4,17 @@
     <div class="user-profile-header" #profileSection>
       <div class="profile-click-area" (click)="toggleProfileDropdown()"
         [class.dropdown-open]="isProfileDropdownOpen">
-        
+
         <img [src]="getProfileImageUrl(currentUser()?.profile_picture)"
              alt="Profile Avatar"
              class="profile-avatar-img">
-             
+
         <div class="profile-info">
           <span class="profile-name">{{ currentUser()?.name }}</span>
           <span class="profile-dropdown-arrow">▿</span>
         </div>
       </div>
-      
+
       <div class="notification-click-area">
         <app-notification></app-notification>
       </div>
@@ -56,15 +56,18 @@
         <a class="nav-item cursor-pointer"
             [class.active]="isRouteActive(item.route)"
             (click)="onProtectedLinkClick(item.route)">
-          <img [src]="item.iconPath" 
-               alt="{{ item.label }} Icon" 
+          <img [src]="item.iconPath"
+               alt="{{ item.label }} Icon"
                class="nav-icon">
           <div class="nav-label">{{ item.label }}</div>
         </a>
       } @else {
-        <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
-          <img [src]="item.iconPath" 
-               alt="{{ item.label }} Icon" 
+        <a [routerLink]="item.route"
+           routerLinkActive="active"
+           class="nav-item"
+           (click)="onNavClick()">
+          <img [src]="item.iconPath"
+               alt="{{ item.label }} Icon"
                class="nav-icon">
           <div class="nav-label">{{ item.label }}</div>
         </a>
@@ -75,7 +78,9 @@
   <div class="nav-divider-mock"></div>
 
   <div class="help-link">
-    <a [routerLink]="['/app/help-page']" routerLinkActive="active">
+    <a [routerLink]="['/app/help-page']"
+       routerLinkActive="active"
+       (click)="onNavClick()">
         Help & Support</a>
   </div>
 
@@ -94,7 +99,7 @@
     <app-confirmation-modal
       title="Log in Required"
       message="You need to be logged in to access this feature. "
-      subMessage="Please log in to your account to continue reporting or 
+      subMessage="Please log in to your account to continue reporting or
                   claiming items."
       confirmLabel="Log In"
       variant="primary"
