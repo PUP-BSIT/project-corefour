@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   Report,
@@ -15,6 +15,7 @@ import {
 export class ItemService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
+  private cachedLocations: string[] | null = null;
 
   submitFullReport(
       report: FinalReportSubmission,
@@ -112,6 +113,12 @@ export class ItemService {
   }
 
   getTopLocations(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/reports/top-locations`); 
+    if (this.cachedLocations) {
+      return of(this.cachedLocations); 
+    }
+
+    return this.http.get<string[]>(`${this.apiUrl}/reports/top-locations`).pipe(
+      tap(locations => this.cachedLocations = locations)
+    );
   }
 }
