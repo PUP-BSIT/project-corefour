@@ -72,7 +72,7 @@
             <div class="carousel-indicators">
               @for (url of photoUrls(); track $index) {
                 <span class="indicator"
-                      [class.indicator--active]="currentImageIndex === $index">
+                    [class.indicator--active]="currentImageIndex() === $index">
                 </span>
               }
             </div>
