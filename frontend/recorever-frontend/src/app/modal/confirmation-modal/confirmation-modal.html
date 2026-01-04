@@ -1,28 +1,28 @@
 <div class="modal-overlay" (click)="onCancel()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
     <h2 class="modal-title">{{ title }}</h2>
-    
-    <div class="modal-message">
+
+    <div class="modal-subtext">
       {{ message }}
-      
+
       @if (subMessage) {
         <div class="sub-message">
           {{ subMessage }}
         </div>
       }
     </div>
-    
+
     <div class="button-group">
-      <button type="button" 
+      <button type="button"
               class="btn"
-              [ngClass]="variant === 'danger' ? 'btn-danger' : 'btn-primary'" 
+              [ngClass]="variant === 'danger' ? 'btn-danger' : 'btn-primary'"
               (click)="onConfirm()">
         {{ confirmLabel }}
       </button>
-      
-      <button type="button" 
-              class="btn btn-cancel" 
+
+      <button type="button"
+              class="btn btn-outline"
               (click)="onCancel()">
         {{ cancelLabel }}
       </button>
