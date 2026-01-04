@@ -248,6 +248,6 @@ public class ReportService {
   }
 
   public List<String> getTopLocations() {
-    return repo.getTopLocations(5);
+      return repo.getTopLocations();
   }
 }
