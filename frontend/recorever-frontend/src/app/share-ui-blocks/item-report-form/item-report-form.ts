@@ -28,6 +28,7 @@ import {
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIcon } from "@angular/material/icon";
 import { ToastService } from '../../core/services/toast-service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-item-report-form',
@@ -146,10 +147,26 @@ export class ItemReportForm implements OnInit {
         description: this.initialData.description
       });
 
-      if (this.initialData.photoUrls) {
+      if (this.initialData.photoUrls || this.initialData.images) {
         this.photoUrlsFormArray.clear();
-        this.initialData.photoUrls.forEach((url: string) => {
-          this.photoUrlsFormArray.push(this.fb.control(url));
+        
+        const existingImages = this.initialData.images 
+          ? this.initialData.images.map(img => img.imageUrl)
+          : this.initialData.photoUrls || [];
+
+        existingImages.forEach((url: string) => {
+          let displayUrl = url;
+
+          if (url && !url.startsWith('http')) {
+            const secureBaseUrl = environment
+                .apiUrl.replace('http://', 'https://');
+            displayUrl = `${secureBaseUrl}/image/download/${url}`;
+          } 
+          else if (url && url.startsWith('http://')) {
+            displayUrl = url.replace('http://', 'https://');
+          }
+          
+          this.photoUrlsFormArray.push(this.fb.control(displayUrl));
         });
       }
     }
@@ -219,6 +236,15 @@ export class ItemReportForm implements OnInit {
         return d.toISOString().slice(0, 19).replace('T', ' ');
       };
 
+      const cleanedPhotoUrls = this.photoUrlsFormArray.value
+        .filter((url): url is string => !!url)
+        .map(url => {
+          if (url.includes('/image/download/')) {
+            return url.split('/image/download/')[1];
+          }
+          return url;
+        });
+
       const basePayload: ReportSubmissionPayload = {
         type: this.formType,
         item_name: this.reportForm.controls.item_name.value!,
@@ -233,9 +259,7 @@ export class ItemReportForm implements OnInit {
         date_lost_found:
           formatDateForMySQL(this.reportForm.controls.date_lost_found.value!), 
         date_reported: formatDateForMySQL(new Date()), 
-        photoUrls:
-          this.photoUrlsFormArray
-            .value.filter((url): url is string => url !== null),
+        photoUrls: cleanedPhotoUrls,
         files: this.selectedFiles,
       };
 
