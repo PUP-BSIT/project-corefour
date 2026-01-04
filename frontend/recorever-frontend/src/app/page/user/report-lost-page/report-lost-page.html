@@ -8,6 +8,12 @@
       (formSubmitted)="handleSubmission($event)"
       (formCancelled)="handleCancel()" />
 
+  @if (showSuccessModal()) {
+    <app-success-lost-modal 
+        (viewReport)="onViewReport()" 
+        (close)="onSearchItems()" />
+  }
+
   @if (submissionError()) {
     <p class="error-message text-danger">{{ submissionError() }}</p>
   }
