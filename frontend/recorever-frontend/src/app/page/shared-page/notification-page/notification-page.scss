@@ -1,0 +1,125 @@
+.page-container {
+  padding: 2rem 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.notification-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.page-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .count {
+    background: #f3f4f6;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+}
+
+.notification-row {
+  display: flex;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+
+  &:hover {
+    background-color: #f9fafb;
+  }
+
+  &.unread {
+    background-color: #f0f7ff;
+    .status-indicator {
+      background-color: #2563eb;
+    }
+    .message {
+      font-weight: 600;
+      color: #111827;
+    }
+  }
+
+  .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+
+  .content {
+    flex: 1;
+    .message {
+      margin: 0 0 0.25rem 0;
+      font-size: 1rem;
+      color: #4b5563;
+      line-height: 1.5;
+    }
+    .date {
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+  }
+}
+
+.empty-state {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #9ca3af;
+  p { font-size: 1.125rem; }
+}
+
+.page-footer {
+  padding: 1.5rem;
+  text-align: center;
+
+  .load-more {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    width: 100%;
+    max-width: 300px;
+
+    &:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .page-container { padding: 0; }
+  .notification-card { border-radius: 0; border: none; }
+  .notification-row { padding: 1.25rem 1rem; }
+  .page-header { padding: 1.5rem 1rem; }
+}

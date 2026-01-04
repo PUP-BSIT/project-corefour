@@ -124,18 +124,23 @@ export class AuthService {
 
   logout(): Observable<LogoutResponse> {
     return this.http.post<LogoutResponse>(
-      `${this.API_BASE_URL}/logout`, 
-      {}, 
+      `${this.API_BASE_URL}/logout`,
+      {},
       { withCredentials: true }
     ).pipe(
-      tap((_response) => {
+      tap(() => {
         this.handleClientLogout();
       }),
       catchError((err) => {
-        console.error('Server logout failed', err);
+        console.error(
+          'Server logout failed, but clearing local state anyway',
+          err
+        );
         this.handleClientLogout();
-        return of({ success: false,
-                    message: 'Local logout forced' } as LogoutResponse);
+        return of({
+          success: false,
+          message: 'Local logout forced'
+        } as LogoutResponse);
       })
     );
   }

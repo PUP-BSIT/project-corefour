@@ -33,7 +33,6 @@ import { ClaimService } from '../../../core/services/claim-service';
 import type {
   PaginatedResponse, Report, ReportFilters
 } from '../../../models/item-model';
-import { StandardLocations } from '../../../models/item-model';
 
 // Modals
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
@@ -109,9 +108,12 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public currentDateFilter = signal<Date | null>(null);
   public currentLocationFilter = signal<string>('');
 
-  public readonly locationFilters: string[] = [
-    ...Object.values(StandardLocations) as string[],
-  ];
+  protected locations = computed(() => {
+    const locs = this.allReports()
+      .map(r => r.location)
+      .filter(l => !!l);
+    return [...new Set(locs)] as string[];
+  });
 
   public allReports = signal<Report[]>([]);
   public isLoading = signal<boolean>(true);
@@ -132,7 +134,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
         const filterDateStr = this.datePipe.transform(dateFilter, 'yyyy-MM-dd');
         reports = reports.filter(report => {
             const reportDateStr =
-                this.datePipe.transform(report.date_reported, 'yyyy-MM-dd');
+                this.datePipe.transform(report.date_lost_found, 'yyyy-MM-dd');
             return reportDateStr === filterDateStr;
         });
     }

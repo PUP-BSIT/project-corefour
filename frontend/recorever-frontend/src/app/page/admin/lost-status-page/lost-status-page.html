@@ -21,24 +21,12 @@
     </div>
   </header>
 
-  <div class="controls-bar">
-    <div class="sort-tabs">
-      <button class="tab-btn"
-          [class.active]="currentSort() === 'all'"
-          (click)="setSort('all')">
-        All
-      </button>
-      <button class="tab-btn"
-          [class.active]="currentSort() === 'az'"
-          (click)="setSort('az')">
-        A-Z ↑
-      </button>
-      <button class="tab-btn"
-          [class.active]="currentSort() === 'date'"
-          (click)="setSort('date')">
-        Date ↑
-      </button>
-    </div>
+  <div class="filter-section">
+    <app-filter
+      [itemType]="'lost'"
+      [locations]="locations()"
+      (filterChange)="onFilterChange($event)">
+    </app-filter>
   </div>
 
   <div class="report-status-page__content">
@@ -58,12 +46,14 @@
         </div>
       } @else if (isError()) {
         <div class="status-message error">
-            Error fetching reports. Please try again.</div>
+          Error fetching reports. Please try again.
+        </div>
       } @else if (reports().length === 0) {
         <div class="status-message">No reports found.</div>
       } @else if (currentPage() >= totalPages()) {
         <div class="status-message end-message">
-            No more reports to display.</div>
+          No more reports to display.
+        </div>
       }
     </div>
   </div>
