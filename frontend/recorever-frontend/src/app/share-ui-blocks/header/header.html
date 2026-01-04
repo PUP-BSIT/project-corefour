@@ -40,7 +40,7 @@
   </div>
   }
 
-  @if (!showButtons) {
+  @if (isLoggedIn) {
     <div class="user-info">
       <div class="mobile-notification-wrapper">
         <app-notification></app-notification>
