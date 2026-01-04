@@ -45,6 +45,10 @@
           font-size: 1.1rem;
           line-height: 1.1;
           color: #333;
+
+          &.hidden {
+            display: none;
+          }
         }
 
         .tagline {
@@ -102,18 +106,29 @@
   .app-header {
     height: auto;
     min-height: 50px;
-
-    .auth-buttons{
-      gap: 0px;
-    }
+    flex-wrap: wrap;
 
     .logo-container {
       .branding {
-        .tagline, .app-name {
+        .tagline {
           display: none;
         }
-      .app-logo {
-        height: 55px;}
+      }
+    }
+
+    &.mobile-auth-header {
+      position: relative;
+
+      .logo-container {
+        .branding {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+
+          .app-logo {
+            display: none;
+          }
+        }
       }
     }
   }

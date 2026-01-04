@@ -1,8 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, ViewportScroller } from '@angular/common';
-import { RouterModule, Router, RouteReuseStrategy } from '@angular/router';
+import { RouterModule, Router, RouteReuseStrategy, NavigationEnd, Event as RouterEvent } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { Observable } from 'rxjs';
+import { filter, map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-header',
@@ -18,11 +20,20 @@ export class Header {
 
   @Output() menuToggled = new EventEmitter<void>();
 
+  public isHomepage$: Observable<boolean>;
+
   constructor(
     private router: Router,
     private routeReuseStrategy: RouteReuseStrategy,
     private scroller: ViewportScroller
-  ) {}
+  ) {
+    this.isHomepage$ = this.router.events.pipe(
+      filter((event: RouterEvent):
+          event is NavigationEnd => event instanceof NavigationEnd),
+      map((event: NavigationEnd) => event.urlAfterRedirects === '/'),
+      startWith(this.router.url === '/')
+    );
+  }
 
   public toggleMenu(): void {
     this.menuToggled.emit();
