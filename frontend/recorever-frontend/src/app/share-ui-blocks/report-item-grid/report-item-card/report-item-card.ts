@@ -74,7 +74,7 @@ export class ReportItemCard {
            'This confirms you are the authorized finder';
   });
 
-  currentImageIndex = 0;
+  protected currentImageIndex = signal<number>(0);
 
   isRemovable = computed((): boolean => {
     return this.report().type === 'lost';
@@ -114,7 +114,7 @@ export class ReportItemCard {
       return 'assets/temp-photo-item.png';
     }
 
-    const url = urls[this.currentImageIndex];
+    const url = urls[this.currentImageIndex()];
 
     if (url && url.startsWith('http')) {
       return url.replace('http://', 'https://');
@@ -164,14 +164,14 @@ export class ReportItemCard {
   public nextImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
-    this.currentImageIndex = (this.currentImageIndex + 1) % urls.length;
+    this.currentImageIndex.update(index => (index + 1) % urls.length);
   }
 
   public previousImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
-    this.currentImageIndex =
-      (this.currentImageIndex - 1 + urls.length) % urls.length;
+    this.currentImageIndex
+      .update(index => (index - 1 + urls.length) % urls.length);
   }
 
   public onCardClick(): void {
