@@ -6,12 +6,13 @@
     </div>
   </header>
 
-  <app-filter
-    [locations]="locationFilters"
-    [itemType]="itemType()"
-    [genericLabels]="true"
-    (filterChange)="onFilterChange($event)">
-  </app-filter>
+  <div class="filter-section">
+    <app-filter
+      [locations]="locationFilters()"
+      [itemType]="itemType()"
+      (filterChange)="onFilterChange($event)">
+    </app-filter>
+  </div>
 
   <div class="content-section">
     @if (filteredReports().length > 0) {
@@ -39,11 +40,11 @@
         </div>
       } @else if (error()) {
         <div class="content-message content-message--error">{{ error() }}</div>
-      } @else if (filteredReports().length === 0) {
+      } @else if (filteredReports().length === 0 && !isLoading()) {
         <div class="content-message">
           No {{ isArchiveView() ? 'archived' : '' }} items found.
         </div>
-      } @else if (currentPage() >= totalPages()) {
+      } @else if (currentPage() >= totalPages() && !isLoading()) {
         <div class="content-message end-of-list">
           No more items to display.
         </div>
