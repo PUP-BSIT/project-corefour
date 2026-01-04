@@ -1,11 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
   selector: 'app-success-lost-modal',
+  standalone: true,
   imports: [],
   templateUrl: './success-lost-modal.html',
-  styleUrl: './success-lost-modal.scss',
+  styleUrls: ['./success-lost-modal.scss']
 })
 export class SuccessLostModal {
+  @Output() close = new EventEmitter<void>();
+  @Output() viewReport = new EventEmitter<void>();
 
+  onSearchItems(): void {
+    this.close.emit();
+  }
+
+  onViewReportClick(): void {
+    this.viewReport.emit();
+  }
 }
