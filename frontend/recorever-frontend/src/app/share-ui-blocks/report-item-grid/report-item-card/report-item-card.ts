@@ -7,7 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
@@ -20,7 +20,6 @@ import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { environment } from '../../../../environments/environment';
 import { Router } from '@angular/router';
-import { AppRoutePaths } from '../../../app.routes';
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 @Component({
@@ -28,7 +27,6 @@ import { CodesModal } from '../../../modal/codes-modal/codes-modal';
   standalone: true,
   imports: [
     CommonModule,
-    DatePipe,
     MatCardModule,
     MatButtonModule,
     MatMenuModule,
