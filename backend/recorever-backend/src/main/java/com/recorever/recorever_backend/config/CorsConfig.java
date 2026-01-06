@@ -12,17 +12,22 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public CorsFilter corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
+	@Bean
+	public CorsFilter corsFilter() {
+		UrlBasedCorsConfigurationSource source = 
+						new UrlBasedCorsConfigurationSource();
+		CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://localhost:4200", "https://recorever.site")); 
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
-        config.setAllowCredentials(true);
-        source.registerCorsConfiguration("/api/**", config);
-        
-        return new CorsFilter(source);
-    }
+		config.setAllowedOrigins(List.of("http://localhost:4200",
+				"https://recorever.site",
+				"https://dev.recorever.site")); 
+		config.setAllowedMethods(Arrays
+					.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		config.setAllowedHeaders(Arrays
+					.asList("Authorization", "Content-Type", "Accept"));
+		config.setAllowCredentials(true);
+		source.registerCorsConfiguration("/api/**", config);
+		
+		return new CorsFilter(source);
+	}
 }
