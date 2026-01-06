@@ -24,7 +24,11 @@ import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ToastService } from '../../../core/services/toast-service';
 
-import { Report, ReportFilters } from '../../../models/item-model';
+import {
+  Report,
+  ReportFilters,
+  PaginatedResponse
+} from '../../../models/item-model';
 
 import {
   SearchBarComponent
@@ -64,6 +68,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
+  private reportCache = new Map<string, PaginatedResponse<Report>>();
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
@@ -143,7 +148,14 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
           size: this.pageSize()
         };
 
+        const cacheKey = JSON.stringify(filters);
+
+        if (this.reportCache.has(cacheKey)) {
+          return of(this.reportCache.get(cacheKey)!);
+        }
+
         return this.itemService.getReports(filters).pipe(
+          tap((response) => this.reportCache.set(cacheKey, response)),
           catchError(() => of({ items: [], totalPages: 1, totalItems: 0 }))
         );
       }),
@@ -207,6 +219,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected onStatusChanged(newStatus: string): void {
+    this.reportCache.clear();
     this.resetPagination();
     this.onCloseModal();
 

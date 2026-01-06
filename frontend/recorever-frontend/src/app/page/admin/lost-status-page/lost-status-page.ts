@@ -61,6 +61,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private adminService = inject(AdminService);
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
+  private reportCache = new Map<string, PaginatedResponse<Report>>();
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
@@ -141,7 +142,14 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
           size: this.pageSize()
         };
 
+        const cacheKey = JSON.stringify(filters);
+
+        if (this.reportCache.has(cacheKey)) {
+          return of(this.reportCache.get(cacheKey)!);
+        }
+
         return this.itemService.getReports(filters).pipe(
+          tap((response) => this.reportCache.set(cacheKey, response)),
           catchError(() => {
             this.isError.set(true);
             return of({
@@ -207,6 +215,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.selectedReport.set(null);
   }
   onStatusUpdated(updatedReport: Report): void {
+    this.reportCache.clear();
     this.resetAndReload();
     this.onCloseDetailView();
   }
