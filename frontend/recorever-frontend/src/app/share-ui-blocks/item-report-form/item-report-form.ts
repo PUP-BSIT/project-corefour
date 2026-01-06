@@ -15,19 +15,20 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { BehaviorSubject, map, Observable, startWith } from 'rxjs';
 import {
     Report,
     ItemReportForm as ItemFormType,
-    StandardLocations,
     ReportSubmissionPayload,
     ReportSubmissionWithFiles,
-    FilePreview
+    FilePreview,
+    StandardLocations
 } from '../../models/item-model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIcon } from "@angular/material/icon";
 import { ToastService } from '../../core/services/toast-service';
+import { ItemService } from '../../core/services/item-service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-item-report-form',
@@ -59,8 +60,10 @@ export class ItemReportForm implements OnInit {
   protected selectedFiles: File[] = [];
   protected selectedFilesPreview: FilePreview[] = [];
   protected reportForm: ItemFormType;
-  protected locationOptions = Object.values(StandardLocations);
+  protected locationOptions: string[] = [];
   protected filteredLocations!: Observable<string[]>;
+  protected allLocations: string[] = [];
+  private locationsSubject = new BehaviorSubject<string[]>([])
   protected maxDate = new Date();
   protected isSubmitting = false;
   protected loadingMessage = 'Submitting...';
@@ -68,6 +71,7 @@ export class ItemReportForm implements OnInit {
 
   private fb = inject(FormBuilder);
   private toastService = inject(ToastService);
+  private itemService = inject(ItemService);
 
   // Getters
   public get locationLabel(): string {
@@ -127,11 +131,17 @@ export class ItemReportForm implements OnInit {
   }
 
   ngOnInit(): void {
-    this.filteredLocations =
-        this.reportForm.controls.location.valueChanges.pipe(
-      startWith(''),
-      map((value: string | null) => this.filterLocations(value || ''))
-    );
+    this.itemService.getTopLocations().subscribe({
+      next: (locations) => {
+        const standard = Object.values(StandardLocations);
+        this.allLocations = [...new Set([...locations, ...standard])];
+        this.setupFiltering();
+      },
+      error: () => {
+        this.allLocations = Object.values(StandardLocations);
+        this.setupFiltering();
+      }
+    })
 
     if (this.initialData) {
       const rawDate = this.initialData.date_lost_found
@@ -146,18 +156,45 @@ export class ItemReportForm implements OnInit {
         description: this.initialData.description
       });
 
-      if (this.initialData.photoUrls) {
+      if (this.initialData.photoUrls || this.initialData.images) {
         this.photoUrlsFormArray.clear();
-        this.initialData.photoUrls.forEach((url: string) => {
-          this.photoUrlsFormArray.push(this.fb.control(url));
+        
+        const existingImages = this.initialData.images 
+          ? this.initialData.images.map(img => img.imageUrl)
+          : this.initialData.photoUrls || [];
+
+        existingImages.forEach((url: string) => {
+          let displayUrl = url;
+
+          if (url && !url.startsWith('http')) {
+            const secureBaseUrl = environment
+                .apiUrl.replace('http://', 'https://');
+            displayUrl = `${secureBaseUrl}/image/download/${url}`;
+          } 
+          else if (url && url.startsWith('http://')) {
+            displayUrl = url.replace('http://', 'https://');
+          }
+          
+          this.photoUrlsFormArray.push(this.fb.control(displayUrl));
         });
       }
     }
   }
 
+  private setupFiltering(): void {
+    this.filteredLocations = this.reportForm.controls.location.valueChanges.pipe(
+      startWith(''),
+      map(value => this.filterLocations(value || ''))
+    );
+  }
+
   private filterLocations(value: string): string[] {
-    const filterValue = value.toLowerCase();
-    return this.locationOptions.filter((option: string) =>
+    const filterValue = value.trim().toLowerCase();
+    if (!filterValue) {
+      return this.allLocations.slice(0, 5);
+    }
+
+    return this.allLocations.filter(option => 
       option.toLowerCase().includes(filterValue)
     );
   }
@@ -180,12 +217,14 @@ export class ItemReportForm implements OnInit {
         }
 
         if (file.size > maxSizeInBytes) {
-          this.toastService.showError(`File ${file.name} is too large. Max size is 10MB.`);
+          this.toastService
+              .showError(`File ${file.name} is too large. Max size is 10MB.`);
           continue;
         }
 
         if (!file.type.match('image/(jpeg|png)')) {
-          this.toastService.showError("Only JPEG and PNG images are supported.");
+          this.toastService
+              .showError("Only JPEG and PNG images are supported.");
           continue;
         }
 
@@ -219,6 +258,15 @@ export class ItemReportForm implements OnInit {
         return d.toISOString().slice(0, 19).replace('T', ' ');
       };
 
+      const cleanedPhotoUrls = this.photoUrlsFormArray.value
+        .filter((url): url is string => !!url)
+        .map(url => {
+          if (url.includes('/image/download/')) {
+            return url.split('/image/download/')[1];
+          }
+          return url;
+        });
+
       const basePayload: ReportSubmissionPayload = {
         type: this.formType,
         item_name: this.reportForm.controls.item_name.value!,
@@ -233,9 +281,7 @@ export class ItemReportForm implements OnInit {
         date_lost_found:
           formatDateForMySQL(this.reportForm.controls.date_lost_found.value!), 
         date_reported: formatDateForMySQL(new Date()), 
-        photoUrls:
-          this.photoUrlsFormArray
-            .value.filter((url): url is string => url !== null),
+        photoUrls: cleanedPhotoUrls,
         files: this.selectedFiles,
       };
 

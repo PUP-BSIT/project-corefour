@@ -322,15 +322,14 @@ public class ReportRepository {
     return jdbcTemplate.queryForList(sql, days);
   }
 
-  public List<String> getTopLocations(int limit) {
+  public List<String> getTopLocations() {
       String sql = """
           SELECT location 
           FROM reports 
           WHERE is_deleted = 0 AND location IS NOT NULL AND location != ''
           GROUP BY location 
           ORDER BY COUNT(*) DESC 
-          LIMIT ?
           """;
-      return jdbcTemplate.queryForList(sql, String.class, limit);
+      return jdbcTemplate.queryForList(sql, String.class);
     }
 }

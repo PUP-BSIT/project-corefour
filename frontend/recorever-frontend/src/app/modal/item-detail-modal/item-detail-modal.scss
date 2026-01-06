@@ -155,9 +155,19 @@ $rejected-color: #D32F2F;
       transform: translateY(-50%);
       background: rgba(255, 255, 255, 0.9);
       color: $text-main;
-      z-index: 2;
+      z-index: 10;
       width: 32px;
       height: 32px;
+      display: flex;
+      align-items: center;
+
+      &--prev {
+        left: 12px; 
+      }
+
+      &--next {
+        right: 12px;
+      }
 
       &:hover {
         background: rgba(255, 255, 255, 1);

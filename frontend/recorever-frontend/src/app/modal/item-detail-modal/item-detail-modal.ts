@@ -52,7 +52,7 @@ export class ItemDetailModal {
   protected readonly availableStatuses: string[] = 
     ['pending', 'approved', 'rejected', 'matched'];
 
-  currentImageIndex = 0;
+  protected currentImageIndex = signal<number>(0);
 
   photoUrls = computed((): string[] => {
     const report = this.item();
@@ -77,7 +77,7 @@ export class ItemDetailModal {
       return 'assets/temp-photo-item.png';
     }
 
-    const url = urls[this.currentImageIndex];
+    const url = urls[this.currentImageIndex()];
 
     if (url && url.startsWith('http')) {
       return url.replace('http://', 'https://');
@@ -131,14 +131,14 @@ export class ItemDetailModal {
   nextImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
-    this.currentImageIndex = (this.currentImageIndex + 1) % urls.length;
+    this.currentImageIndex.update(index => (index + 1) % urls.length);
   }
 
   previousImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
-    this.currentImageIndex = (this.currentImageIndex - 1 + urls.length)
-        % urls.length;
+    this.currentImageIndex
+        .update(index => (index - 1 + urls.length) % urls.length);
   }
 
   onClose(): void {

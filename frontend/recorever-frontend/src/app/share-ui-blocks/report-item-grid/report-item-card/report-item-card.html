@@ -22,9 +22,10 @@
         </button>
 
         <div class="carousel-indicators">
-          @for (url of photoUrls(); track $index) {
+          @for (url of photoUrls(); track url; let i = $index) {
             <span class="indicator"
-                  [class.indicator--active]="currentImageIndex === $index">
+                  [class.indicator--active]="currentImageIndex() === i"
+                  (click)="$event.stopPropagation(); currentImageIndex.set(i)">
             </span>
           }
         </div>

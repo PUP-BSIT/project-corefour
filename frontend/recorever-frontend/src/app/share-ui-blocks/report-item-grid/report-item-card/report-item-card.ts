@@ -7,7 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
@@ -20,7 +20,6 @@ import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { environment } from '../../../../environments/environment';
 import { Router } from '@angular/router';
-import { AppRoutePaths } from '../../../app.routes';
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 
 @Component({
@@ -28,7 +27,6 @@ import { CodesModal } from '../../../modal/codes-modal/codes-modal';
   standalone: true,
   imports: [
     CommonModule,
-    DatePipe,
     MatCardModule,
     MatButtonModule,
     MatMenuModule,
@@ -74,7 +72,7 @@ export class ReportItemCard {
            'This confirms you are the authorized finder';
   });
 
-  currentImageIndex = 0;
+  protected currentImageIndex = signal<number>(0);
 
   isRemovable = computed((): boolean => {
     return this.report().type === 'lost';
@@ -114,7 +112,7 @@ export class ReportItemCard {
       return 'assets/temp-photo-item.png';
     }
 
-    const url = urls[this.currentImageIndex];
+    const url = urls[this.currentImageIndex()];
 
     if (url && url.startsWith('http')) {
       return url.replace('http://', 'https://');
@@ -164,14 +162,14 @@ export class ReportItemCard {
   public nextImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
-    this.currentImageIndex = (this.currentImageIndex + 1) % urls.length;
+    this.currentImageIndex.update(index => (index + 1) % urls.length);
   }
 
   public previousImage(event: Event): void {
     event.stopPropagation();
     const urls = this.photoUrls();
-    this.currentImageIndex =
-      (this.currentImageIndex - 1 + urls.length) % urls.length;
+    this.currentImageIndex
+      .update(index => (index - 1 + urls.length) % urls.length);
   }
 
   public onCardClick(): void {

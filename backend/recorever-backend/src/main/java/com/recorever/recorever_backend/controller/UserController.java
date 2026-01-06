@@ -304,7 +304,7 @@ public class UserController {
 
         if (user == null || user.getRefresh_token_expiry()
                 .isBefore(LocalDateTime.now())) {
-            clearCookie(response, "refreshToken");
+            clearCookie(response, "refreshToken", "/api/refresh-token");
             return ResponseEntity.status(401).body(Map.of("error_message",
                                     "Invalid or expired refresh token"));
         }
@@ -338,21 +338,25 @@ public class UserController {
         return ResponseEntity.ok(userDto);
     }
 
-    private void clearCookie(HttpServletResponse response, String cookieName) {
+    private void clearCookie(HttpServletResponse response, String cookieName, String path) {
         ResponseCookie clearedCookie = ResponseCookie.from(cookieName, "")
             .httpOnly(true)
             .secure(true)
-            .path("/")
+            .path(path)
             .maxAge(0)
+            .sameSite("None")
             .build();
         response.addHeader(HttpHeaders.SET_COOKIE, clearedCookie.toString());
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
-        clearCookie(response, "accessToken");
-        clearCookie(response, "refreshToken");
-        return ResponseEntity.ok(Map.of("success", true, "message",
-                                        "Logged out successfully."));
+        clearCookie(response, "accessToken", "/");
+        clearCookie(response, "refreshToken", "/api/refresh-token");
+       
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "Logged out successfully."
+        ));
     }
 }
