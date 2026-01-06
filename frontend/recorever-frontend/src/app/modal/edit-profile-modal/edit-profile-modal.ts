@@ -52,6 +52,9 @@ export class EditProfileModal implements OnInit, OnChanges, OnDestroy {
   localError: string | null = null;
   private sub: Subscription | null = null;
 
+  private readonly emailPattern = 
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
   constructor() {
     this.editForm = this.fb.group({
       name: [''],
@@ -108,22 +111,33 @@ export class EditProfileModal implements OnInit, OnChanges, OnDestroy {
       name: [
         this.user.name, 
         {
-          validators: [Validators.required],
-          asyncValidators: [this.userService.uniqueValidator('name', this.user.name)],
+          validators: [Validators.required, Validators.maxLength(30)],
+          asyncValidators: [this.userService.uniqueValidator('name', 
+                this.user.name)],
+          updateOn: 'change'
         }
       ],
       phone_number: [
         this.user.phone_number, 
         {
           validators: [Validators.required, this.phPhoneNumberValidator()],
-          asyncValidators: [this.userService.uniqueValidator('phone_number', this.user.phone_number)],
+          asyncValidators: [this.userService.uniqueValidator('phone_number', 
+                this.user.phone_number)],
+          updateOn: 'change'
         }
       ],
       email: [
         this.user.email, 
         {
-          validators: [Validators.required, Validators.email],
-          asyncValidators: [this.userService.uniqueValidator('email', this.user.email)],
+          validators: [
+            Validators.required, 
+            Validators.email, 
+            Validators.maxLength(40), 
+            Validators.pattern(this.emailPattern)
+          ],
+          asyncValidators: [this.userService.uniqueValidator(
+                'email', this.user.email)],
+          updateOn: 'change'
         }
       ]
     });
@@ -137,11 +151,12 @@ export class EditProfileModal implements OnInit, OnChanges, OnDestroy {
       }
     });
 
-  if (this.user.profile_picture) {
-    this.previewImage = `${environment.apiUrl}/image/download/${this.user.profile_picture}`;
-  } else {
-    this.previewImage = null;
-  }
+    if (this.user.profile_picture) {
+      this.previewImage = `${environment.apiUrl}/image/download/
+            ${this.user.profile_picture}`;
+    } else {
+      this.previewImage = null;
+    }
     
     this.selectedFile = null;
     this.localError = null;
