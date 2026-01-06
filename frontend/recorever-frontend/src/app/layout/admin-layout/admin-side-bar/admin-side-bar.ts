@@ -15,11 +15,11 @@ import { environment } from '../../../../environments/environment';
   selector: 'app-admin-side-bar',
   standalone: true,
   imports: [
-    CommonModule, 
-    RouterModule, 
+    CommonModule,
+    RouterModule,
     Notification,
     ConfirmationModal
-  ], 
+  ],
   templateUrl: './admin-side-bar.html',
   styleUrls: ['./admin-side-bar.scss'],
 })
@@ -28,21 +28,21 @@ export class AdminSideBar implements OnDestroy {
   private router = inject(Router);
 
   @Output() openSettingsModal = new EventEmitter<void>();
+  @Output() closeSidebar = new EventEmitter<void>();
 
   @ViewChild('profileSection') profileSection!: ElementRef;
 
-  // REFACTORED: Converted to Signal to allow usage without @if wrapper in HTML
   public currentUser = toSignal(
     this.authService.currentUser$.pipe(
       catchError(() => of(null))
-    ), 
+    ),
     { initialValue: null }
   );
 
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
   protected isArchiveOpen = true;
-  
+
   private logoutTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
@@ -82,7 +82,7 @@ export class AdminSideBar implements OnDestroy {
   protected archiveSection: NavItem = {
       label: "Archive Items",
       iconPath: "/assets/archive-folder.png",
-      route: "/admin/archive", 
+      route: "/admin/archive",
   }
 
   protected archiveNav: NavItem[] = [
@@ -104,12 +104,13 @@ export class AdminSideBar implements OnDestroy {
     this.logoutTrigger$
       .pipe(
         switchMap(() => this.authService.logout()),
-        takeUntil(this.destroy$) 
+        takeUntil(this.destroy$)
       )
       .subscribe({
         next: (_response: LogoutResponse) => {
           this.isLogoutModalOpen = false;
-          this.router.navigate(['/login']); 
+          this.router.navigate(['/login']);
+          this.closeSidebar.emit();
         },
         error: (_err) => {
           this.isLogoutModalOpen = false;
@@ -120,8 +121,8 @@ export class AdminSideBar implements OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (
-      this.isProfileDropdownOpen && 
-      this.profileSection && 
+      this.isProfileDropdownOpen &&
+      this.profileSection &&
       !this.profileSection.nativeElement.contains(event.target as Node)
     ) {
       this.isProfileDropdownOpen = false;
@@ -143,12 +144,17 @@ export class AdminSideBar implements OnDestroy {
       case 'navigate':
         if (item.route) {
           this.router.navigate([item.route]);
+          this.closeSidebar.emit();
         }
         break;
       case 'logout':
         this.isLogoutModalOpen = true;
         break;
     }
+  }
+
+  public onNavClick(): void {
+    this.closeSidebar.emit();
   }
 
   protected onLogoutConfirm(): void {

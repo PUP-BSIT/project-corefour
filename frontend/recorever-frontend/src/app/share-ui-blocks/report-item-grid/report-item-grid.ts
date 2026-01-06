@@ -17,6 +17,8 @@ export class ReportItemGrid {
   isArchiveView = input<boolean>(false);
   isAdmin = input<boolean>(false);
 
+  highlightId = input<number | null>(null);
+
   @Output() cardClicked = new EventEmitter<Report>();
   @Output() cardTicketClicked = new EventEmitter<Report>();
   @Output() cardEditClicked = new EventEmitter<Report>();

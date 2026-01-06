@@ -1,4 +1,4 @@
-<header class="app-header">
+<header class="app-header" [class.mobile-auth-header]="showMenuButton">
   <div class="logo-container">
     @if (showMenuButton) {
       <button
@@ -18,7 +18,7 @@
       (keydown.enter)="onLogoClick()">
       <img src="../../../assets/temp_logo.png" class="app-logo" alt="Logo">
       <div class="text-stack">
-        <div class="app-name">
+        <div class="app-name" [ngClass]="{ 'hidden': (isHomepage$ | async) }">
           ReCorever
         </div>
         <div class="tagline">

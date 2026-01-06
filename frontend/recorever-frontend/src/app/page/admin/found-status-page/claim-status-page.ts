@@ -11,7 +11,7 @@ import {
   OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Params, ActivatedRoute } from '@angular/router';
 import {
   catchError,
   switchMap,
@@ -24,7 +24,7 @@ import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ToastService } from '../../../core/services/toast-service';
 
-import { Report, ReportFilters } from '../../../models/item-model';
+import { Report, ReportFilters, ReportStatus } from '../../../models/item-model';
 
 import {
   SearchBarComponent
@@ -61,28 +61,31 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
 
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
+
   protected currentPage = signal(1);
   protected totalPages = signal(1);
   protected pageSize = signal(10);
+  protected searchQuery = signal('');
+  protected isLoading = signal(true);
 
   protected reports = signal<Report[]>([]);
-  protected searchQuery = signal('');
+  protected selectedReport = signal<Report | null>(null);
+
   protected currentStatusFilter = signal<StatusFilter>('All Statuses');
-  protected isLoading = signal(true);
+  protected highlightId = signal<number | null>(null);
 
   protected currentFilter = signal<FilterState>({
     sort: 'newest',
     date: null,
     location: ''
   });
-
-  protected selectedReport = signal<Report | null>(null);
 
   protected readonly statusFilters: StatusFilter[] = [
       'All Statuses', 'pending', 'approved', 'rejected'];
@@ -134,6 +137,12 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     return [...data].sort((a, b) => {
+      const hId = this.highlightId();
+      if (hId) {
+        if (a.report_id === hId) return -1;
+        if (b.report_id === hId) return 1;
+      }
+
       const dateA = new Date(a.date_reported).getTime();
       const dateB = new Date(b.date_reported).getTime();
 
@@ -146,13 +155,24 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params: Params) => {
+        const hId = params['highlightId'];
+        this.highlightId.set(hId ? Number(hId) : null);
+      });
+
     this.refreshTrigger$.pipe(
       tap(() => this.isLoading.set(true)),
       switchMap(() => {
+        const currentStatus = this.currentStatusFilter();
+        const statusParam: ReportStatus | undefined =
+            currentStatus === 'All Statuses' ? undefined :
+                (currentStatus as unknown as ReportStatus);
+
         const filters: ReportFilters = {
           type: 'found' as const,
-          status: this.currentStatusFilter() ===
-              'All Statuses' ? undefined : this.currentStatusFilter() as any,
+          status: statusParam,
           query: this.searchQuery(),
           page: this.currentPage(),
           size: this.pageSize()
@@ -222,18 +242,24 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected onStatusChanged(newStatus: string): void {
+    const report = this.selectedReport();
+
     this.resetPagination();
     this.onCloseModal();
 
     let message = '';
     let actionLabel = '';
     let actionRoute = '';
+    let queryParams: Params | undefined = undefined;
 
     switch (newStatus.toLowerCase()) {
       case 'claimed':
         message = 'Item successfully marked as Claimed';
         actionLabel = 'View Archive';
         actionRoute = '/admin/archive/claimed';
+        if (report) {
+          queryParams = { highlightId: report.report_id };
+        }
         break;
       case 'approved':
         message = 'Item status updated to Verified';
@@ -245,6 +271,6 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
         message = 'Status updated successfully';
     }
 
-    this.toast.showSuccess(message, actionLabel, actionRoute);
+    this.toast.showSuccess(message, actionLabel, actionRoute, queryParams);
   }
 }

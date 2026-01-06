@@ -6,6 +6,7 @@
       [isUserProfilePage]="isUserProfilePage()"
       [isArchiveView]="isArchiveView()"
       [isAdmin]="isAdmin()"
+      [isHighlighted]="item.report_id === highlightId()"
       (cardClicked)="handleCardClick(item)"
       (ticketClicked)="handleTicketClick(item)"
       (editClicked)="handleEditClick(item)"

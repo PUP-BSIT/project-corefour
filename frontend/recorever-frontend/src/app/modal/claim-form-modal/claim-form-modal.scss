@@ -7,11 +7,21 @@ $verified-green: #2e7d32;
 $denied-red: #ef4444;
 $pending-yellow: #fbbf24;
 $claimed-dark: #333333;
+$matched-color: #1976D2;
 
 :host {
   .full-width, .w-100 { width: 100%; }
   .half-width { flex: 1; }
-  .row { display: flex; gap: 12px; }
+
+  .row {
+    display: flex;
+    gap: 12px;
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      gap: 12px;
+    }
+  }
 
   ::ng-deep .mat-mdc-form-field-subscript-wrapper {
     margin-bottom: 0px;
@@ -47,9 +57,11 @@ $claimed-dark: #333333;
   display: flex;
   flex-direction: column;
 
-  @media (max-width: 850px) {
+  @media (max-width: 768px) {
     height: auto;
+    max-height: 90vh;
     overflow-y: auto;
+    display: block;
   }
 }
 
@@ -80,6 +92,14 @@ $claimed-dark: #333333;
     width: 20px;
     height: 20px;
   }
+
+  @media (max-width: 768px) {
+    position: sticky;
+    float: right;
+    margin-top: 15px;
+    margin-right: 15px;
+    top: 15px;
+  }
 }
 
 .loading-state {
@@ -97,9 +117,10 @@ $claimed-dark: #333333;
   height: 100%;
   overflow: hidden;
 
-  @media (max-width: 850px) {
+  @media (max-width: 768px) {
     flex-direction: column;
-    overflow-y: auto;
+    height: auto;
+    overflow: visible;
   }
 }
 
@@ -110,12 +131,26 @@ $claimed-dark: #333333;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    flex: none;
+    width: 120%;
+    height: auto;
+    overflow: visible;
+    border-left: none;
+  }
 }
 
 .panel-scroll-content {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+
+  @media (max-width: 768px) {
+    overflow: visible;
+    height: auto;
+    padding: 20px;
+  }
 }
 
 .modal-header {
@@ -328,6 +363,19 @@ $claimed-dark: #333333;
     &.claimed { background-color: $claimed-dark; }
     &.denied, &.rejected { background-color: $denied-red; }
 
+    // Style for the unarchive button to match ItemDetailModal
+    &.unarchive {
+      background-color: #ff9500 !important;
+      color: white;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: #f6f5f3;
+      }
+    }
+
     .arrow { font-size: 0.7rem; }
   }
 
@@ -372,6 +420,15 @@ $claimed-dark: #333333;
   display: flex;
   flex-direction: column;
   border-left: 1px solid #e5e5ea;
+
+  @media (max-width: 768px) {
+    flex: none;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    border-left: none;
+    padding: 20px;
+  }
 
   .form-title {
     font-size: 1.25rem;

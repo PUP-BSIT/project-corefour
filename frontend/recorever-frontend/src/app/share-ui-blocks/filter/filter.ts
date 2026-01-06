@@ -63,6 +63,7 @@ export class Filter implements OnInit {
 
   protected filterForm: FormGroup;
   protected isDefaultState = signal<boolean>(true);
+  protected isFilterVisible = signal<boolean>(false);
   protected filteredLocations$: Observable<string[]> = of([]);
 
   private locations$ = toObservable(this.locations);
@@ -125,6 +126,17 @@ export class Filter implements OnInit {
       date: null,
       location: ''
     });
+  }
+
+  protected toggleFilter(): void {
+    this.isFilterVisible.update(value => !value);
+  }
+
+  private filterLocations(value: string): string[] {
+    const filterValue = value.toLowerCase();
+    return this.locations().filter(option =>
+      option.toLowerCase().includes(filterValue)
+    );
   }
 
   private updateDefaultState(formValue: Partial<FilterState>): void {
