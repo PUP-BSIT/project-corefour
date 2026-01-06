@@ -1,0 +1,55 @@
+<div class="modal-overlay" (click)="onSearchItems()">
+  <div
+        class="modal-card"
+        (click)="$event.stopPropagation()">
+
+    <div class="icon-container">
+      <img
+            src="assets/check-icon.png"
+            alt="Success"
+            class="success-icon">
+    </div>
+
+    <h2 class="modal-title">Lost Item Submitted!</h2>
+
+    <p class="modal-subtext">
+      Thank you for reporting your lost item. Your submission is currently 
+      being reviewed by an Administrator to ensure all details are accurate.
+    </p>
+
+    <div class="code-section">
+      <h3 class="input-label">What’s next?</h3>
+      <div class="input-group">
+        <div class="subtext-display">
+          Keep an eye on your notifications; you'll be alerted once a 
+          potential match is detected or if your item's status changes.
+        </div>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3 class="input-label">Want to check now?</h3>
+      <div class="input-group">
+        <div class="subtext-display">
+          You can view the real-time status of your report—<strong>Pending, 
+          Verified, or Claimed</strong>—on your User Profile. You may also 
+          use the search tool to look through reported found items at any time.
+        </div>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button
+            class="btn btn-outline-primary"
+            (click)="onViewReportClick()">
+        View My Report
+      </button>
+      <button
+            class="btn btn-primary"
+            (click)="onSearchItems()">
+        Search Found Items
+      </button>
+    </div>
+
+  </div>
+</div>
