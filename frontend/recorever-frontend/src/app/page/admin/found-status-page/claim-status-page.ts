@@ -101,22 +101,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   protected filteredReports = computed(() => {
     let data = this.reports();
-    const query = this.searchQuery().toLowerCase();
-    const status = this.currentStatusFilter();
     const filter = this.currentFilter();
-
-    data = data.filter(r => r.status.toLowerCase() !== 'claimed');
-
-    if (status !== 'All Statuses') {
-      data = data.filter(r => r.status.toLowerCase() === status.toLowerCase());
-    }
-
-    if (query) {
-      data = data.filter((r) =>
-        (r.item_name || '').toLowerCase().includes(query) ||
-        (r.surrender_code || '').toLowerCase().includes(query)
-      );
-    }
 
     if (filter.location) {
       const locTerm = filter.location.toLowerCase();
