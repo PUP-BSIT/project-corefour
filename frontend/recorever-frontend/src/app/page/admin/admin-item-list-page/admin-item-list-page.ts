@@ -5,10 +5,13 @@ import {
   computed,
   OnInit,
   HostBinding,
-  OnDestroy
+  OnDestroy,
+  AfterViewInit,
+  ViewChild,
+  ElementRef
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { ActivatedRoute, Data } from '@angular/router';
+import { ActivatedRoute, Data, Params } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, catchError, of, tap, BehaviorSubject, takeUntil, Subject, combineLatest, finalize } from 'rxjs';
@@ -24,6 +27,7 @@ import { Filter, FilterState } from '../../../share-ui-blocks/filter/filter';
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { AdminService } from '../../../core/services/admin-service';
+import { ToastService } from '../../../core/services/toast-service';
 
 import {
   ItemDetailModal
@@ -37,9 +41,6 @@ import { ClaimFormModal } from '../../../modal/claim-form-modal/claim-form-modal
 import type {
   Report,
   ReportFilters
-} from '../../../models/item-model';
-import {
-  StandardLocations
 } from '../../../models/item-model';
 
 type ItemType = 'lost' | 'found';
@@ -61,15 +62,19 @@ type ItemType = 'lost' | 'found';
   templateUrl: './admin-item-list-page.html',
   styleUrl: './admin-item-list-page.scss',
 })
-export class AdminItemListPage implements OnInit, OnDestroy {
+export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
   private adminService = inject(AdminService);
+  private toastService = inject(ToastService);
   private datePipe = inject(DatePipe);
 
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
+
+  @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
+  private observer!: IntersectionObserver;
 
   public currentPage = signal<number>(1);
   public pageSize = signal<number>(10);
@@ -84,6 +89,7 @@ export class AdminItemListPage implements OnInit, OnDestroy {
   public itemType = signal<ItemType>('lost');
   public isArchiveView = signal<boolean>(false);
   public pageTitle = signal<string>('Admin Item List');
+  public highlightId = signal<number | null>(null);
 
   @HostBinding('class.theme-lost') get isLost(): boolean {
     return this.itemType() === 'lost';
@@ -106,9 +112,12 @@ export class AdminItemListPage implements OnInit, OnDestroy {
   public viewCodeItem = signal<Report | null>(null);
   public itemToUnarchive = signal<Report | null>(null);
 
-  public readonly locationFilters: string[] = [
-    ...Object.values(StandardLocations) as string[],
-  ];
+  public locationFilters = computed(() => {
+    const locs = this.allReports()
+      .map(r => r.location)
+      .filter(l => !!l);
+    return [...new Set(locs)] as string[];
+  });
 
   public filteredReports = computed((): Report[] => {
     let reports = [...this.allReports()];
@@ -140,6 +149,12 @@ export class AdminItemListPage implements OnInit, OnDestroy {
     }
 
     reports.sort((a, b) => {
+      const hId = this.highlightId();
+      if (hId) {
+        if (a.report_id === hId) return -1;
+        if (b.report_id === hId) return 1;
+      }
+
       const dateA = new Date(a.date_reported).getTime();
       const dateB = new Date(b.date_reported).getTime();
       return this.currentSort() === 'newest' ? dateB - dateA : dateA - dateB;
@@ -165,6 +180,13 @@ export class AdminItemListPage implements OnInit, OnDestroy {
   });
 
   public ngOnInit(): void {
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params: Params) => {
+        const hId = params['highlightId'];
+        this.highlightId.set(hId ? Number(hId) : null);
+      });
+
     combineLatest([
       this.route.data,
       this.refreshTrigger$
@@ -193,13 +215,29 @@ export class AdminItemListPage implements OnInit, OnDestroy {
       }),
       takeUntil(this.destroy$)
     ).subscribe(response => {
-      this.allReports.set(response.items);
+
+      this.allReports.update(existing =>
+        this.currentPage() === 1 ? response.items :
+            [...existing, ...response.items]
+      );
       this.totalItems.set(response.totalItems);
       this.totalPages.set(response.totalPages);
     });
   }
 
+  public ngAfterViewInit(): void {
+    this.observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !this.isLoading() &&
+          this.currentPage() < this.totalPages()) {
+        this.currentPage.update(p => p + 1);
+        this.refreshTrigger$.next();
+      }
+    }, { rootMargin: '100px' });
+    this.observer.observe(this.scrollAnchor.nativeElement);
+  }
+
   public ngOnDestroy(): void {
+    this.observer?.disconnect();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -215,20 +253,6 @@ export class AdminItemListPage implements OnInit, OnDestroy {
     this.currentDateFilter.set(state.date);
     this.currentLocationFilter.set(state.location);
     this.currentPage.set(1);
-  }
-
-  public nextPage(): void {
-    if (this.currentPage() < this.totalPages()) {
-      this.currentPage.update(p => p + 1);
-      this.refreshTrigger$.next();
-    }
-  }
-
-  public prevPage(): void {
-    if (this.currentPage() > 1) {
-      this.currentPage.update(p => p - 1);
-      this.refreshTrigger$.next();
-    }
   }
 
   private updatePageTitle(data: Data): void {
@@ -257,10 +281,22 @@ export class AdminItemListPage implements OnInit, OnDestroy {
             reports.filter((r: Report) => r.report_id !== item.report_id)
           );
           this.itemToUnarchive.set(null);
+
+          const actionRoute = item.type === 'found' ?
+              '/admin/claim-status' : '/admin/report-status';
+          const actionLabel = item.type === 'found' ?
+              'View Found Status' : 'View Lost Item';
+
+          this.toastService.showSuccess(
+            'Item unarchived successfully.',
+            actionLabel,
+            actionRoute,
+            { highlightId: item.report_id }
+          );
         }),
         catchError((err: HttpErrorResponse) => {
           console.error('Failed to unarchive item', err);
-          alert('Failed to unarchive item.');
+          this.toastService.showError('Failed to unarchive item.');
           return of(null);
         })
       )

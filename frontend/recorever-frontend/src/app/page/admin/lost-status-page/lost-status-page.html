@@ -33,6 +33,7 @@
     @if (reports().length > 0) {
       <app-report-item-grid
           [items]="sortedReports()"
+          [highlightId]="highlightId()"
           (cardClicked)="onViewDetails($event)">
       </app-report-item-grid>
     }

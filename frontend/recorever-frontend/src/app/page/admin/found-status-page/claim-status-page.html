@@ -34,6 +34,7 @@
       <app-report-item-grid
             [items]="filteredReports()"
             [isAdmin]="isAdmin()"
+            [highlightId]="highlightId()"
             (cardClicked)="onViewDetails($event.report_id)">
       </app-report-item-grid>
     }

@@ -1,5 +1,12 @@
 <div class="modal-overlay" (click)="onClose()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+  <div class="modal-container"
+      (click)="$event.stopPropagation(); closeDropdown()">
+
+    @if (isArchiveView() || isAdmin()) {
+      <button class="close-btn" (click)="onClose()">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
 
     <div class="modal-content">
       <div class="modal-header">
@@ -28,7 +35,7 @@
             <mat-menu #modalMenu="matMenu" xPosition="before">
               @if (item().type !== 'lost' || item().claim_code) {
                 <button mat-menu-item (click)="onViewCode($event)">
-                  <mat-icon>qr_code_2</mat-icon>
+                  <mat-icon>tag</mat-icon>
                   <span>{{ getCodeButtonLabel() }}</span>
                 </button>
               }
@@ -131,50 +138,60 @@
       <div class="modal-actions">
         @if (isArchiveView()) {
           <button mat-raised-button
-                  class="action-btn action-btn--unarchive"
+                  class="action-btn action-btn--unarchive status-btn--matched"
                   (click)="onUnarchive()">
             <mat-icon>unarchive</mat-icon>
             UNARCHIVE
           </button>
-        } 
-        @else if (item().type === 'found' && !isOwner() && !isAdmin()) {
-          <button mat-raised-button
-                  color="primary"
-                  class="action-btn"
-                  (click)="onViewTicket()">
-            CLAIM ITEM
-          </button>
+        }
+        @else {
+          @if (item().type === 'found' && !isOwner() && !isAdmin()) {
+            <button mat-raised-button
+                    color="primary"
+                    class="action-btn"
+                    (click)="onViewTicket()">
+              CLAIM ITEM
+            </button>
+          }
         }
 
-        @if (isAdmin()) {
-          <button mat-raised-button 
-                  class="action-btn" 
-                  [class]="'status-btn--' + item().status"
-                  [matMenuTriggerFor]="statusMenu">
-            {{ (item().status === 'approved' ? 'Verified' : item().status) | titlecase }}
-            <span class="dropdown-arrow" [class.open]="isStatusMenuOpen()">▼</span>
-          </button>
-          
-          <mat-menu #statusMenu="matMenu" 
-                    (opened)="isStatusMenuOpen.set(true)" 
-                    (closed)="isStatusMenuOpen.set(false)">
-            @for (status of availableStatuses; track status) {
-              <button mat-menu-item 
-                      (click)="$event.stopPropagation(); onUpdateStatus(status)"
-                      [class.active-status-item]="item().status === status">
-                <span class="status-text">
-                  {{ (status === 'approved' ? 'Verified' : status) | titlecase }}
-                </span>
-              </button>
+        @if (isAdmin() && !isArchiveView()) {
+          <div class="status-dropdown-wrapper" style="flex: 1;">
+            <button
+                class="status-btn"
+                [ngClass]="(item().status || 'pending').toLowerCase()"
+                (click)="toggleDropdown($event)">
+              {{ (item().status === 'approved' ? 'Verified' : item().status) | titlecase }}
+              <span class="arrow">▼</span>
+            </button>
+
+            @if (isDropdownOpen()) {
+              <div class="dropdown-content"
+                   (click)="$event.stopPropagation()">
+                @for (option of STATUS_OPTIONS; track option.value) {
+                  @if (option.value !==
+                      (item().status || 'pending').toLowerCase()) {
+                    <div
+                      [class.disabled-option]="isStatusDisabled(option.value)"
+                      [matTooltip]="getOptionTooltip(option.value)"
+                      matTooltipPosition="left"
+                      (click)="onStatusOptionClick(option.value)">
+                      {{ option.label }}
+                    </div>
+                  }
+                }
+              </div>
             }
-          </mat-menu>
+          </div>
         }
 
-        <button mat-stroked-button
-                class="action-btn"
-                (click)="onClose()">
-          Close
-        </button>
+        @if (!isArchiveView() && !isAdmin()) {
+          <button mat-stroked-button
+                  class="action-btn"
+                  (click)="onClose()">
+            Close
+          </button>
+        }
       </div>
     </div>
   </div>
@@ -184,8 +201,8 @@
   <app-codes-modal
       title="Item Reference Details"
       [code]="referenceCodeValue()"
-      description="To claim this item, please present this code to the 
-                administrator. You will be asked to provide proof of ownership 
+      description="To claim this item, please present this code to the
+                administrator. You will be asked to provide proof of ownership
                 (e.g., describing the contents or showing an ID)"
       (close)="showClaimModal = false">
   </app-codes-modal>

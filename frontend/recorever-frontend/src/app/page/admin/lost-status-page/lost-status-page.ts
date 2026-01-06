@@ -11,8 +11,9 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule, ActivatedRoute, Params } from '@angular/router';
 import {
-  ReportItemGrid 
+  ReportItemGrid
 } from '../../../share-ui-blocks/report-item-grid/report-item-grid';
 import {
   SearchBarComponent
@@ -20,8 +21,7 @@ import {
 import {
   Report,
   ReportFilters,
-  PaginatedResponse,
-  StandardLocations
+  PaginatedResponse
 } from '../../../models/item-model';
 import { ItemService } from '../../../core/services/item-service';
 import {
@@ -38,9 +38,10 @@ import {
 } from "../../../modal/item-detail-modal/item-detail-modal";
 import { environment } from '../../../../environments/environment';
 import { AdminService } from '../../../core/services/admin-service';
+import { ToastService } from '../../../core/services/toast-service';
 import { Filter, FilterState } from '../../../share-ui-blocks/filter/filter';
 
-type LostReportStatusFilter = 'All Statuses' | 'pending' 
+type LostReportStatusFilter = 'All Statuses' | 'pending'
       | 'approved' | 'matched' | 'rejected';
 
 @Component({
@@ -51,7 +52,8 @@ type LostReportStatusFilter = 'All Statuses' | 'pending'
     ReportItemGrid,
     SearchBarComponent,
     ItemDetailModal,
-    Filter],
+    Filter
+  ],
   templateUrl: './lost-status-page.html',
   styleUrls: ['./lost-status-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -59,6 +61,9 @@ type LostReportStatusFilter = 'All Statuses' | 'pending'
 export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private itemService = inject(ItemService);
   private adminService = inject(AdminService);
+  private toastService = inject(ToastService);
+  private route = inject(ActivatedRoute);
+
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
   private reportCache = new Map<string, PaginatedResponse<Report>>();
@@ -77,11 +82,12 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   protected isError = signal(false);
 
   private currentSearchQuery = signal<string>('');
+
   protected currentSort = signal<'newest' | 'oldest'>('newest');
   protected currentDateFilter = signal<Date | null>(null);
   protected currentLocationFilter = signal<string>('');
-  protected currentStatusFilter = signal<LostReportStatusFilter>(
-      'All Statuses');
+  protected currentStatusFilter = signal<LostReportStatusFilter>('All Statuses');
+  protected highlightId = signal<number | null>(null);
 
   protected readonly statusFilters: LostReportStatusFilter[] = [
     'All Statuses', 'pending', 'approved', 'matched', 'rejected'
@@ -114,6 +120,12 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     return data.sort((a, b) => {
+      const hId = this.highlightId();
+      if (hId) {
+        if (a.report_id === hId) return -1;
+        if (b.report_id === hId) return 1;
+      }
+
       const dateA = Date.parse(a.date_reported || '') || 0;
       const dateB = Date.parse(b.date_reported || '') || 0;
       return sortType === 'newest' ? dateB - dateA : dateA - dateB;
@@ -127,6 +139,13 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params: Params) => {
+        const hId = params['highlightId'];
+        this.highlightId.set(hId ? Number(hId) : null);
+      });
+
     this.refreshTrigger$.pipe(
       tap(() => this.isLoading.set(true)),
       switchMap(() => {
@@ -162,9 +181,9 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
       }),
       takeUntil(this.destroy$)
     ).subscribe((response: PaginatedResponse<Report>) => {
-      this.reports.update(existing => 
-        this.currentPage() === 1 
-          ? response.items 
+      this.reports.update(existing =>
+        this.currentPage() === 1
+          ? response.items
           : [...existing, ...response.items]
       );
       this.totalPages.set(response.totalPages);
@@ -190,6 +209,34 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  public onStatusUpdate(newStatus: string): void {
+    const item = this.selectedReport();
+    if (!item) return;
+
+    this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
+      next: () => {
+        this.onStatusUpdated(item);
+
+        if (newStatus === 'matched') {
+          this.toastService.showSuccess(
+            `Item marked as ${newStatus} successfully.`,
+            'View Archive',
+            '/admin/archive/resolved',
+            { highlightId: item.report_id }
+          );
+        } else {
+          this.toastService.showSuccess(`Item marked as
+              ${newStatus} successfully.`);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to update status', err);
+        this.toastService.showError(
+            'Failed to update status. Please try again.');
+      }
+    });
+  }
+
   protected setStatusFilter(status: string): void {
     this.currentStatusFilter.set(status as LostReportStatusFilter);
     this.resetAndReload();
@@ -202,6 +249,17 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.resetAndReload();
   }
 
+  public getUserProfilePicture(): string {
+    const report = this.selectedReport();
+
+    if (report && report.reporter_profile_picture) {
+      const baseUrl = environment.apiUrl.replace('http://', 'https://');
+      return `${baseUrl}/image/download/${report.reporter_profile_picture}`;
+    }
+
+    return 'assets/profile-avatar.png';
+  }
+
   private resetAndReload(): void {
     this.currentPage.set(1);
     this.reports.set([]);
@@ -211,33 +269,14 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   onViewDetails(report: Report): void {
     this.selectedReport.set(report);
   }
+
   public onCloseDetailView(): void {
     this.selectedReport.set(null);
   }
+
   onStatusUpdated(updatedReport: Report): void {
     this.reportCache.clear();
     this.resetAndReload();
     this.onCloseDetailView();
-  }
-
-  public onStatusUpdate(newStatus: string): void {
-    const item = this.selectedReport();
-    if (!item) return;
-    this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
-      next: () => this.onStatusUpdated(item),
-      error: (err) => console.error('Failed to update status', err)
-    });
-  }
-  public getUserProfilePicture(): string {
-    const report = this.selectedReport();
-    
-    if (report?.reporter_profile_picture) {
-      const baseUrl = environment.apiUrl.replace('http://', 'https://');
-      const profilePic = report.reporter_profile_picture;
-      
-      return `${baseUrl}/image/download/${profilePic}`;
-    }
-
-    return 'assets/profile-avatar.png';
   }
 }
