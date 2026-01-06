@@ -107,11 +107,10 @@ public class ReportRepository {
       }
 
       if (query != null && !query.trim().isEmpty()) {
-          sql.append(" AND (r.item_name LIKE ? OR r.description LIKE ? OR r.location LIKE ? OR u.name LIKE ?)");
+          sql.append(" AND (r.item_name LIKE ? OR r.description LIKE ? OR r.location LIKE ? OR u.name LIKE ? OR r.surrender_code LIKE ?)");
           String searchPattern = "%" + query.trim() + "%";
 
-          for (int i = 0; i < 4; i++) {
-              params.add(searchPattern);
+          for (int i = 0; i < 5; i++) {params.add(searchPattern);
           }
       }
 
@@ -157,9 +156,10 @@ public class ReportRepository {
       }
 
       if (query != null && !query.trim().isEmpty()) {
-          sql.append(" AND (r.item_name LIKE ? OR r.description LIKE ? OR r.location LIKE ? OR u.name LIKE ?)");
+          sql.append(" AND (r.item_name LIKE ? OR r.description LIKE ? OR r.location LIKE ? OR u.name LIKE ? OR r.surrender_code LIKE ?)");
           String searchPattern = "%" + query.trim() + "%";
-          for (int i = 0; i < 4; i++) params.add(searchPattern);
+          for (int i = 0; i < 5; i++) {params.add(searchPattern);
+          }
       }
 
       return jdbcTemplate.queryForObject(sql.toString(), Integer.class, params.toArray());
