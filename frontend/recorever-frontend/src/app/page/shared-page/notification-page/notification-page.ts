@@ -15,6 +15,7 @@ import {
 } from '../../../core/services/notification-service';
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
+import { ToastService } from '../../../core/services/toast-service';
 import { ItemDetailModal } from '../../../modal/item-detail-modal/item-detail-modal';
 import { ClaimFormModal } from '../../../modal/claim-form-modal/claim-form-modal';
 import type { UserNotification } from '../../../models/notification-model';
@@ -33,6 +34,7 @@ export class NotificationPage implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
 
   private streamSub!: Subscription;
@@ -114,6 +116,7 @@ export class NotificationPage implements OnInit, OnDestroy {
       }),
       catchError((err) => {
         console.error('Failed to load report details', err);
+        this.toastService.showError('This item is no longer available.');
         return of(null);
       })
     ).subscribe();
