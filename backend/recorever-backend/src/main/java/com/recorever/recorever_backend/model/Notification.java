@@ -1,11 +1,34 @@
 package com.recorever.recorever_backend.model;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "notifications")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Notification {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int notif_id;
+
+    @Column(nullable = false)
     private int user_id;
+
+    @Column(nullable = false)
     private int report_id;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
-    private String status; // 'unread' or 'read'
+
+    @Column(nullable = false)
+    private String status;
+
+    @Column(updatable = false)
     private String created_at;
 
     // Getters and Setters
@@ -25,5 +48,6 @@ public class Notification {
     public void setStatus(String status) { this.status = status; }
 
     public String getCreated_at() { return created_at; }
-    public void setCreated_at(String created_at) { this.created_at = created_at; }
+    public void setCreated_at(String created_at) {
+        this.created_at = created_at; }
 }

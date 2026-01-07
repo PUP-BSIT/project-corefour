@@ -34,50 +34,63 @@ public class ReportMonitorService {
         LocalDateTime now = LocalDateTime.now();
         
         // Find and Mark for Notification 1 (6 days)
-        List<Integer> notify1ReportIds = reportScheduleRepository.findReportsForNotify1(now);
-        if (!notify1ReportIds.isEmpty()) {
-            System.out.println("SCHEDULER: Found " + notify1ReportIds.size() + " reports for NOTIFICATION 1 (6-day warning).");
+        List<Integer> notify1Ids = reportScheduleRepository
+                .findReportsForNotify1(now);
+        
+        if (!notify1Ids.isEmpty()) {
+            System.out.println("SCHEDULER: Found " + notify1Ids.size() + 
+                    " reports for NOTIFICATION 1 (6-day warning).");
 
-            for (Integer reportId : notify1ReportIds) {
-                Report report = reportRepository.getReportById(reportId);
-                if (report != null) {
-                    String message = String.format("Your report '%s' is scheduled for deletion in about 1 day. Status: %s. You may update it to keep it active.", 
-                                                    report.getItem_name(), report.getStatus());
-                    notificationService.create(report.getUser_id(), reportId, message, true);
-                }
+            for (Integer reportId : notify1Ids) {
+                reportRepository.findByReportIdAndIsDeletedFalse(reportId)
+                    .ifPresent(report -> {
+                        String msg = String.format("Your report '%s' is " +
+                            "scheduled for deletion in about 1 day. Status: " +
+                            "%s. You may update it to keep it active.", 
+                            report.getItemName(), report.getStatus());
+                        notificationService.create(report.getUserId(), 
+                            reportId, msg, true);
+                    });
             }
-            reportScheduleRepository.markNotify1Sent(notify1ReportIds);
+            reportScheduleRepository.markNotify1Sent(notify1Ids);
         }
 
         // Find and Mark for Notification 2 (7 days, before deletion)
-        List<Integer> notify2ReportIds = reportScheduleRepository.findReportsForNotify2(now);
-        if (!notify2ReportIds.isEmpty()) {
-            System.out.println("SCHEDULER: Found " + notify2ReportIds.size() + " reports for NOTIFICATION 2 (Final 15-min warning).");
+        List<Integer> notify2Ids = reportScheduleRepository
+                .findReportsForNotify2(now);
+        
+        if (!notify2Ids.isEmpty()) {
+            System.out.println("SCHEDULER: Found " + notify2Ids.size() + 
+                    " reports for NOTIFICATION 2 (Final 15-min warning).");
 
-            for (Integer reportId : notify2ReportIds) {
-                Report report = reportRepository.getReportById(reportId);
-                if (report != null) {
-                    String message = String.format("FINAL WARNING: Your report '%s' will be deleted in 15 minutes due to inactivity or no resolution. Status: %s.", 
-                                                    report.getItem_name(), report.getStatus());
-                    notificationService.create(report.getUser_id(), reportId, message, true);
-                }
+            for (Integer reportId : notify2Ids) {
+                reportRepository.findByReportIdAndIsDeletedFalse(reportId)
+                    .ifPresent(report -> {
+                        String msg = String.format("FINAL WARNING: Your " +
+                            "report '%s' will be deleted in 15 minutes due " +
+                            "to inactivity. Status: %s.", 
+                            report.getItemName(), report.getStatus());
+                        notificationService.create(report.getUserId(), 
+                            reportId, msg, true);
+                    });
             }
-            
-            reportScheduleRepository.markNotify2Sent(notify2ReportIds);
+            reportScheduleRepository.markNotify2Sent(notify2Ids);
         }
 
-        List<Report> reportsToDelete = reportRepository.getReportsReadyForSoftDelete(now);
+        // Get list of reports ready for deletion before executing the update
+        List<Report> reportsToDelete = reportScheduleRepository
+                .findReportsReadyForSoftDelete(now);
         
         // Execute Soft-Deletion (7 days + 15 min)
         int deletedCount = reportRepository.softDeleteExpiredReports(now);
         
         if (deletedCount > 0) {
             for (Report report : reportsToDelete) {
-                if (report.is_deleted() == false) { 
-                    String message = String.format("NOTICE: Your report for '%s' has been deleted due to expiration.",
-                                                    report.getItem_name(), report.getReport_id());
-                    notificationService.create(report.getUser_id(), report.getReport_id(), message, true);
-                }
+                String msg = String.format("NOTICE: Your report for '%s' " +
+                        "has been deleted due to expiration.",
+                        report.getItemName());
+                notificationService.create(report.getUserId(), 
+                        report.getReportId(), msg, true);
             }
         }
     }

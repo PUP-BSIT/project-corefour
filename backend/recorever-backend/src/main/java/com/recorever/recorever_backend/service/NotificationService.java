@@ -4,11 +4,15 @@ import com.recorever.recorever_backend.model.Notification;
 import com.recorever.recorever_backend.dto.NotificationResponseDTO;
 import com.recorever.recorever_backend.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -17,7 +21,8 @@ public class NotificationService {
     @Autowired
     private NotificationRepository repo;
 
-    private final Map<Integer, SseConnection> userConnections = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<Integer, SseConnection> userConnections = 
+            new ConcurrentHashMap<>();
 
     private static class SseConnection {
         final SseEmitter emitter;
@@ -37,14 +42,21 @@ public class NotificationService {
         this.userConnections.remove(userId);
     }
 
-    public Map<String, Object> create(int userId,
-                                      int reportId,
-                                      String message,
-                                      boolean isStatusUpdate) {
-        int id = repo.createNotification(userId, reportId, message);
+    @Transactional
+    public Map<String, Object> create(int userId, int reportId, 
+                                     String message, boolean isUpdate) {
+        
+        Notification notification = new Notification();
+        notification.setUser_id(userId);
+        notification.setReport_id(reportId);
+        notification.setMessage(message);
+        notification.setStatus("unread");
+        notification.setCreated_at(LocalDateTime.now().toString());
 
-        Map<String, Object> notificationData = Map.of(
-            "notif_id", id,
+        Notification saved = repo.save(notification);
+
+        Map<String, Object> data = Map.of(
+            "notif_id", saved.getNotif_id(),
             "user_id", userId,
             "report_id", reportId,
             "message", message,
@@ -52,13 +64,13 @@ public class NotificationService {
             "created_at", "Just now"
         );
 
-        if (isStatusUpdate) {
-            sendPrivateNotification(userId, notificationData);
+        if (isUpdate) {
+            sendPrivateNotification(userId, data);
         } else {
-            broadcastToAdmins(notificationData);
+            broadcastToAdmins(data);
         }
 
-        return notificationData;
+        return data;
     }
 
     private void broadcastToAdmins(Map<String, Object> data) {
@@ -75,8 +87,7 @@ public class NotificationService {
         });
     }
 
-    public void sendPrivateNotification(int userId,
-                                        Map<String, Object> data) {
+    public void sendPrivateNotification(int userId, Map<String, Object> data) {
         SseConnection conn = userConnections.get(userId);
         if (conn != null) {
             try {
@@ -90,20 +101,18 @@ public class NotificationService {
     }
 
     public Map<String, Object> listByUserId(int userId, int page, int size) {
-        int offset = (page - 1) * size;
-
-        List<Notification> notifications = repo.getNotificationsByUserId(userId, size, offset);
+        List<Notification> notifications = repo.findByUserId(
+                userId, PageRequest.of(page - 1, size));
 
         List<NotificationResponseDTO> dtos = notifications.stream()
             .map(NotificationResponseDTO::from)
             .collect(Collectors.toList());
 
-        int totalItems = repo.countNotificationsByUserId(userId);
-
+        int totalItems = repo.countByUserId(userId);
         int totalPages = (int) Math.ceil((double) totalItems / size);
 
         return Map.of(
-            "items", dtos, // Return the list of DTOs
+            "items", dtos,
             "currentPage", page,
             "totalPages", totalPages,
             "totalItems", totalItems
@@ -111,10 +120,10 @@ public class NotificationService {
     }
 
     public boolean markAsRead(int notifId) {
-        return repo.markAsRead(notifId);
+        return repo.markAsRead(notifId) > 0;
     }
     
     public Notification getById(int notifId) {
-        return repo.getNotificationById(notifId);
+        return repo.findById(notifId).orElse(null);
     }
 }
