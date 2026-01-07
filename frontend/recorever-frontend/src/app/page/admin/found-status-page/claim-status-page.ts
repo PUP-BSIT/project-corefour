@@ -109,7 +109,8 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   });
 
   protected filteredReports = computed(() => {
-    let data = this.reports();
+    let data = this.reports().filter(r => r.status !== 'claimed');
+    
     const filter = this.currentFilter();
 
     if (filter.location) {
@@ -137,11 +138,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
       const dateA = new Date(a.date_reported).getTime();
       const dateB = new Date(b.date_reported).getTime();
 
-      if (filter.sort === 'newest') {
-        return dateB - dateA;
-      } else {
-        return dateA - dateB;
-      }
+      return filter.sort === 'newest' ? dateB - dateA : dateA - dateB;
     });
   });
 

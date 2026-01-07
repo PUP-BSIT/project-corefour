@@ -47,6 +47,7 @@ import { UserService } from '../../core/services/user-service';
 import { AdminService } from '../../core/services/admin-service';
 import { StatusBadge, ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
 import { environment } from '../../../environments/environment';
+import { ToastService } from '../../core/services/toast-service';
 
 export enum ClaimStatus {
   PENDING = 'pending',
@@ -83,6 +84,7 @@ export class ClaimFormModal implements OnInit {
   private adminService = inject(AdminService);
   private fb = inject(FormBuilder);
   private datePipe = inject(DatePipe);
+  private toastService = inject(ToastService);
 
   @Input({ required: true }) claimData!: Claim | Report;
   @Input() isReadOnly: boolean = false;
@@ -390,6 +392,15 @@ export class ClaimFormModal implements OnInit {
 
   protected saveItemDetails(): void {
     if (this.isReadOnly) return;
+
+    const currentStatus = this.report()?.status.toLowerCase();
+
+    if (currentStatus === 'pending' || currentStatus === 'rejected') {
+      this.toastService.showError(
+        'Cannot submit a claim for reports that are Pending or Rejected.'
+      );
+      return;
+    }
 
     if (this.claimForm.invalid) {
       this.claimForm.markAllAsTouched();

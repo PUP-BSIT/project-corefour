@@ -244,15 +244,28 @@
               </button>
 
               @if (!isReadOnly) {
-                <button mat-raised-button color="primary"
-                        [disabled]="isSaving() || claimForm.invalid"
-                        (click)="saveItemDetails()">
-                  @if (isSaving()) {
-                    <mat-spinner diameter="20" class="btn-spinner">
-                    </mat-spinner>
-                  }
-                  {{ isSaving() ? 'Saving...' : 'Submit Claim' }}
-                </button>
+                <span 
+                  [matTooltip]="(report()?.status === 'pending' || 
+                                report()?.status === 'rejected') ? 
+                                'Cannot submit a claim for reports that are ' + 
+                                'Pending or Rejected.' : ''"
+                  matTooltipPosition="above">
+                  
+                  <button 
+                    mat-raised-button 
+                    color="primary"
+                    [disabled]="isSaving() || claimForm.invalid || 
+                              report()?.status === 'pending' || 
+                              report()?.status === 'rejected'"
+                    (click)="saveItemDetails()">
+                    
+                    @if (isSaving()) {
+                      <mat-spinner diameter="20" class="btn-spinner">
+                      </mat-spinner>
+                    }
+                    {{ isSaving() ? 'Saving...' : 'Submit Claim' }}
+                  </button>
+                </span>
               }
             </div>
           }
