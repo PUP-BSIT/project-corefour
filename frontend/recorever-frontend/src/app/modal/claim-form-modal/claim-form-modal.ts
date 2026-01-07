@@ -22,7 +22,8 @@ import {
   tap,
   debounceTime,
   distinctUntilChanged,
-  map
+  map,
+  filter
 } from 'rxjs/operators';
 import { of, Observable, forkJoin } from 'rxjs';
 
@@ -204,19 +205,26 @@ export class ClaimFormModal implements OnInit {
     if (this.isReadOnly) return;
 
     this.claimForm.get('claimantName')?.valueChanges.pipe(
-      debounceTime(300),
+      map(value => typeof value === 'string' ? value.trim() : ''),
+
+      tap(term => {
+        if (!term) {
+          this.filteredUsers.set([]);
+          this.isSearchingUsers.set(false);
+        }
+      }),
+      filter(term => term.length > 0), 
+
+      debounceTime(500), 
       distinctUntilChanged(),
+
       tap(() => this.isSearchingUsers.set(true)),
-      switchMap(value => {
-        if (typeof value !== 'string') return of([]);
-        if (value.length < 2) return of([]);
-        return this.userService.searchUsers(value).pipe(
-          tap(() => this.isSearchingUsers.set(false))
-        );
-      })
-    ).subscribe(users => {
-      this.filteredUsers.set(users);
-      this.isSearchingUsers.set(false);
+      switchMap(term => this.userService.searchUsers(term).pipe(
+        finalize(() => this.isSearchingUsers.set(false))
+      ))
+    ).subscribe({
+      next: users => this.filteredUsers.set(users),
+      error: () => this.isSearchingUsers.set(false)
     });
   }
 
@@ -336,7 +344,7 @@ export class ClaimFormModal implements OnInit {
     if (this.isReadOnly) return;
 
     if (status === ClaimStatus.CLAIMED) {
-      alert('Please fill out Claimant Details and click' +
+      this.toastService.showError('Please fill out Claimant Details and click' +
           '"Submit" to mark this item as Claimed.');
       this.closeDropdown();
       return;
