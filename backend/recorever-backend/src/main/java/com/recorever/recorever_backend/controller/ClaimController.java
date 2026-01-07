@@ -20,96 +20,92 @@ import java.util.Map;
 @RequestMapping("/api")
 public class ClaimController {
 
-  @Autowired
-  private ClaimService service;
+    @Autowired
+    private ClaimService service;
 
-  @Autowired
-  private ReportService reportService;
+    @Autowired
+    private ReportService reportService;
 
-  @PostMapping("/claims")
-  public ResponseEntity<?> createManualClaim(@RequestBody ManualClaimRequestDTO request) {
-    try {
-      if (reportService.getById(request.getReport_id().intValue()) == null) {
-        return ResponseEntity.status(404).body("Target report not found.");
-      }
+    @PostMapping("/claims")
+    public ResponseEntity<?> createManualClaim(
+            @RequestBody ManualClaimRequestDTO request) {
+        try {
+            if (reportService.getById(
+                    request.getReport_id().intValue()) == null) {
+                return ResponseEntity.status(404)
+                        .body("Target report not found.");
+            }
 
-      Claim newClaim = service.createManualClaim(request);
-      return ResponseEntity.status(201).body(newClaim);
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body("Error creating claim: " + e.getMessage());
-    }
-  }
-
-  @PostMapping("/claim")
-  public ResponseEntity<?> submitClaim(Authentication authentication,
-      @Valid @RequestBody ClaimCreationDTO claimCreationDTO) {
-
-    User authenticatedUser = (User) authentication.getPrincipal();
-    int userId = authenticatedUser.getUser_id();
-    int reportId = claimCreationDTO.getReport_id().intValue();
-
-    if (reportService.getById(reportId) == null) {
-      return ResponseEntity.status(404).body("Target report not found.");
+            Claim newClaim = service.createManualClaim(request);
+            return ResponseEntity.status(201).body(newClaim);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body("Error creating claim: " + e.getMessage());
+        }
     }
 
-    Map<String, Object> result = service.create(reportId, userId);
+    @PostMapping("/claim")
+    public ResponseEntity<?> submitClaim(
+            Authentication authentication,
+            @Valid @RequestBody ClaimCreationDTO claimCreationDTO) {
 
-    return ResponseEntity.status(201).body(result);
-  }
+        User authenticatedUser = (User) authentication.getPrincipal();
+        int userId = authenticatedUser.getUserId();
+        int reportId = claimCreationDTO.getReport_id().intValue();
 
-  @GetMapping("/claims/report/{reportId}")
-  public ResponseEntity<List<ClaimResponseDTO>> getClaimsByReport(@PathVariable int reportId) {
-    List<ClaimResponseDTO> claims = service.getClaimsForReport(reportId);
-    return ResponseEntity.ok(claims);
-  }
+        if (reportService.getById(reportId) == null) {
+            return ResponseEntity.status(404)
+                    .body("Target report not found.");
+        }
 
-  @GetMapping("/claim/ticket/{reportId}")
-  public ResponseEntity<?> getMyTicketCode(Authentication authentication,
-      @PathVariable int reportId) {
-    User authenticatedUser = (User) authentication.getPrincipal();
-    int userId = authenticatedUser.getUser_id();
+        Map<String, Object> result = service.create(reportId, userId);
 
-    String ticketCode = service.getClaimCode(userId, reportId);
-
-    if (ticketCode == null) {
-      return ResponseEntity.status(404).body("No ticket found for this item.");
+        return ResponseEntity.status(201).body(result);
     }
 
-    return ResponseEntity.ok(Map.of("claim_code", ticketCode));
-  }
-
-  @GetMapping("/claim/report/{reportId}")
-  public ResponseEntity<?> getClaimByReportId(@PathVariable int reportId) {
-    Claim claim = service.getClaimByReportId(reportId);
-
-    if (claim == null) {
-      return ResponseEntity.status(404).body("No claim found for this report.");
+    @GetMapping("/claims/report/{reportId}")
+    public ResponseEntity<List<ClaimResponseDTO>> getClaimsByReport(
+            @PathVariable int reportId) {
+        List<ClaimResponseDTO> claims = service.getClaimsForReport(reportId);
+        return ResponseEntity.ok(claims);
     }
 
-    return ResponseEntity.ok(claim);
-  }
+    @GetMapping("/claim/ticket/{reportId}")
+    public ResponseEntity<?> getMyTicketCode(
+            Authentication authentication,
+            @PathVariable int reportId) {
+        User authenticatedUser = (User) authentication.getPrincipal();
+        int userId = authenticatedUser.getUserId();
 
-  // for future cleaning up
-  // @PutMapping("/claim/{claimId}/status")
-  // public ResponseEntity<?> updateStatus(@PathVariable int claimId,
-  // @RequestBody Map<String, String> body) {
-  // String status = body.get("status");
-  // String remarks = body.get("admin_remarks");
+        String ticketCode = service.getClaimCode(userId, reportId);
 
-  // boolean updated = service.updateStatus(claimId, status, remarks);
+        if (ticketCode == null) {
+            return ResponseEntity.status(404)
+                    .body("No ticket found for this item.");
+        }
 
-  // if (updated) {
-  // return ResponseEntity.ok("Status updated successfully.");
-  // } else {
-  // return ResponseEntity.status(400).body("Failed to update status.");
-  // }
-  // }
+        return ResponseEntity.ok(Map.of("claim_code", ticketCode));
+    }
 
-  @GetMapping("/claims/user")
-  public ResponseEntity<List<ClaimResponseDTO>> getMyClaims(Authentication authentication) {
-    User authenticatedUser = (User) authentication.getPrincipal();
+    @GetMapping("/claim/report/{reportId}")
+    public ResponseEntity<?> getClaimByReportId(@PathVariable int reportId) {
+        Claim claim = service.getClaimByReportId(reportId);
 
-    List<ClaimResponseDTO> claims = service.getClaimsByUserId(authenticatedUser.getUser_id());
-    return ResponseEntity.ok(claims);
-  }
+        if (claim == null) {
+            return ResponseEntity.status(404)
+                    .body("No claim found for this report.");
+        }
+
+        return ResponseEntity.ok(claim);
+    }
+
+    @GetMapping("/claims/user")
+    public ResponseEntity<List<ClaimResponseDTO>> getMyClaims(
+            Authentication authentication) {
+        User authenticatedUser = (User) authentication.getPrincipal();
+
+        List<ClaimResponseDTO> claims = service
+                .getClaimsByUserId(authenticatedUser.getUserId());
+        return ResponseEntity.ok(claims);
+    }
 }
