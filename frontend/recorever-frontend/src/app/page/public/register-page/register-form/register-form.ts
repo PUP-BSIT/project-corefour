@@ -59,9 +59,7 @@ export function strongPasswordValidator(): ValidatorFn {
     const hasNumber = /\d/.test(value);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
-    const passwordValid = hasNumber && hasSpecialChar;
-
-    if (passwordValid) {
+    if (hasNumber && hasSpecialChar) {
       return null;
     }
 
@@ -89,35 +87,55 @@ export class RegisterFormComponent implements OnChanges {
 
   registerForm = this.formBuilder.group(
     {
-      name: ['', {
-        validators: [Validators.required],
-        asyncValidators: [this.userService.uniqueValidator('name', '')]
-      }],
+      name: [
+        '',
+        {
+          validators: [Validators.required],
+          asyncValidators: [this.userService.uniqueValidator('name', '')],
+          updateOn: 'blur',
+        },
+      ],
 
-      phone_number: ['', {
-        validators: [
-          Validators.required,
-          Validators.pattern(/^(\+63|0)9\d{9}$/),
-        ],
-        asyncValidators: [this.userService.uniqueValidator('phone_number', '')]
-      }],
+      phone_number: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            Validators.pattern(/^(\+63|0)9\d{9}$/),
+          ],
+          asyncValidators: [
+            this.userService.uniqueValidator('phone_number', ''),
+          ],
+          updateOn: 'blur',
+        },
+      ],
 
-      email: ['', {
-        validators: [Validators.required, Validators.email],
-        asyncValidators: [this.userService.uniqueValidator('email', '')]
-      }],
+      email: [
+        '',
+        {
+          validators: [Validators.required, Validators.email],
+          asyncValidators: [this.userService.uniqueValidator('email', '')],
+          updateOn: 'blur',
+        },
+      ],
 
-      password: ['', {
-        validators: [
-          Validators.required,
-          Validators.minLength(8),
-          strongPasswordValidator(),
-        ]
-      }],
+      password: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            Validators.minLength(8),
+            strongPasswordValidator(),
+          ],
+        },
+      ],
 
-      confirmPassword: ['', {
-        validators: [Validators.required]
-      }],
+      confirmPassword: [
+        '',
+        {
+          validators: [Validators.required],
+        },
+      ],
     },
     {
       validators: [passwordMatchValidator('password', 'confirmPassword')],
@@ -128,12 +146,6 @@ export class RegisterFormComponent implements OnChanges {
   @Input() isLoading = false;
   @Input() errorMessage: string | null = null;
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['isLoading'] || changes['errorMessage']) {
-      this.cdr.detectChanges();
-    }
-  }
-
   passwordFieldType: PasswordFieldType = 'password';
   confirmPasswordFieldType: PasswordFieldType = 'password';
   passwordStrength: PasswordStrength = 'none';
@@ -142,6 +154,12 @@ export class RegisterFormComponent implements OnChanges {
     this.registerForm.get('password')?.valueChanges.subscribe((value) => {
       this.updatePasswordStrength(value || '');
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isLoading'] || changes['errorMessage']) {
+      this.cdr.detectChanges();
+    }
   }
 
   get name() {
@@ -193,8 +211,8 @@ export class RegisterFormComponent implements OnChanges {
       this.confirmPasswordFieldType === 'password' ? 'text' : 'password';
   }
 
-onSubmit(): void {
-  this.errorMessage = null;
+  onSubmit(): void {
+    this.errorMessage = null;
     if (this.registerForm.valid) {
       this.formSubmit.emit(this.registerForm.getRawValue() as RegisterRequest);
     } else {
