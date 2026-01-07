@@ -16,14 +16,16 @@ import { NotificationService } from '../../core/services/notification-service';
 import { ItemService } from '../../core/services/item-service';
 import { AuthService } from '../../core/auth/auth-service';
 import { ItemDetailModal } from '../../modal/item-detail-modal/item-detail-modal';
+import { ClaimFormModal } from '../../modal/claim-form-modal/claim-form-modal';
 import type { UserNotification } from '../../models/notification-model';
 import type { Report } from '../../models/item-model';
 import { Subscription, tap, catchError, of, switchMap } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-notification',
   standalone: true,
-  imports: [TimeAgoPipe, ItemDetailModal],
+  imports: [TimeAgoPipe, ItemDetailModal, ClaimFormModal],
   templateUrl: './notification.html',
   styleUrl: './notification.scss',
 })
@@ -47,7 +49,9 @@ export class Notification implements OnInit, OnDestroy {
 
   selectedReport = signal<Report | null>(null);
   currentUser = toSignal(this.authService.currentUser$);
+
   currentUserId = computed(() => this.currentUser()?.user_id ?? null);
+  isAdmin = computed(() => this.currentUser()?.role === 'admin');
 
   @HostListener('document:click', ['$event'])
   clickout(event: Event) {
@@ -68,9 +72,7 @@ export class Notification implements OnInit, OnDestroy {
       .subscribe({
         next: (newNotif) => {
           this.notifications = [newNotif, ...this.notifications];
-
           this.hasUnreadNotifications = true;
-
           this.cdr.markForCheck();
         },
         error: (err) => console.error('SSE connection failed', err)
@@ -126,7 +128,7 @@ export class Notification implements OnInit, OnDestroy {
     const isMobile = window.innerWidth < 768;
 
     if (isMobile) {
-      const role = this.router.url.includes('/admin') ? 'admin' : 'user';
+      const role = this.isAdmin() ? 'admin' : 'user';
       this.router.navigate([`/${role}/notifications`]);
     } else {
       this.isDropdownOpen = !this.isDropdownOpen;
@@ -171,10 +173,20 @@ export class Notification implements OnInit, OnDestroy {
     this.selectedReport.set(null);
   }
 
+  getUserProfilePicture(): string | null {
+    const report = this.selectedReport();
+    if (report && report.reporter_profile_picture) {
+      const baseUrl = environment.apiUrl.replace('http://', 'https://');
+      return `${baseUrl}/image/download/${report.reporter_profile_picture}`;
+    }
+    return null;
+  }
+
   onViewTicket(): void {}
   onEdit(): void {}
   onDelete(): void {}
   onViewCode(): void {}
+  onStatusChange(event: any): void {}
 
   @HostListener('window:resize', ['$event'])
   onResize(event: UIEvent) {
@@ -182,7 +194,7 @@ export class Notification implements OnInit, OnDestroy {
 
     if (width < 768 && this.isDropdownOpen) {
       this.isDropdownOpen = false;
-      const role = this.router.url.includes('/admin') ? 'admin' : 'user';
+      const role = this.isAdmin() ? 'admin' : 'user';
       this.router.navigate([`/${role}/notifications`]);
       this.cdr.markForCheck();
     }

@@ -16,14 +16,16 @@ import {
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ItemDetailModal } from '../../../modal/item-detail-modal/item-detail-modal';
+import { ClaimFormModal } from '../../../modal/claim-form-modal/claim-form-modal';
 import type { UserNotification } from '../../../models/notification-model';
 import type { Report } from '../../../models/item-model';
 import { Subscription, tap, catchError, of, switchMap } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-notification-page',
   standalone: true,
-  imports: [CommonModule, TimeAgoPipe, ItemDetailModal],
+  imports: [CommonModule, TimeAgoPipe, ItemDetailModal, ClaimFormModal],
   templateUrl: './notification-page.html',
   styleUrl: './notification-page.scss',
 })
@@ -43,7 +45,9 @@ export class NotificationPage implements OnInit, OnDestroy {
 
   selectedReport = signal<Report | null>(null);
   currentUser = toSignal(this.authService.currentUser$);
+
   currentUserId = computed(() => this.currentUser()?.user_id ?? null);
+  isAdmin = computed(() => this.currentUser()?.role === 'admin');
 
   ngOnInit(): void {
     this.loadPage(1);
@@ -119,9 +123,19 @@ export class NotificationPage implements OnInit, OnDestroy {
     this.selectedReport.set(null);
   }
 
+  getUserProfilePicture(): string | null {
+    const report = this.selectedReport();
+    if (report && report.reporter_profile_picture) {
+      const baseUrl = environment.apiUrl.replace('http://', 'https://');
+      return `${baseUrl}/image/download/${report.reporter_profile_picture}`;
+    }
+    return null;
+  }
+
   // Placeholder handlers for modal outputs
   onViewTicket(): void {}
   onEdit(): void {}
   onDelete(): void {}
   onViewCode(): void {}
+  onStatusChange(event: any): void {}
 }

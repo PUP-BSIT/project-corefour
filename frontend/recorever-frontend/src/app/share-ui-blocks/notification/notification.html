@@ -49,16 +49,29 @@
     </div>
   }
 
-  @if (selectedReport(); as item) {
-    <app-item-detail-modal
-        [item]="item"
+  @if (selectedReport(); as report) {
+    @if (isAdmin() && report.type === 'found') {
+      <app-claim-form-modal
+        [claimData]="report"
+        [isArchive]="report.status === 'claimed'"
+        [isReadOnly]="report.status === 'claimed'"
+        (close)="onModalClose()"
+        (statusChange)="onStatusChange($event)">
+      </app-claim-form-modal>
+    } @else {
+      <app-item-detail-modal
+        [item]="report"
         [currentUserId]="currentUserId()"
-        [userProfilePicture]="null"
+        [userProfilePicture]="getUserProfilePicture()"
+        [isAdmin]="isAdmin()"
+        [isArchiveView]="report.status === 'matched' ||
+            report.status === 'claimed'"
         (close)="onModalClose()"
         (viewTicket)="onViewTicket()"
         (editClicked)="onEdit()"
         (deleteClicked)="onDelete()"
         (viewCodeClicked)="onViewCode()">
-    </app-item-detail-modal>
+      </app-item-detail-modal>
+    }
   }
 </div>
