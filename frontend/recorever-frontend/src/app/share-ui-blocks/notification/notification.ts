@@ -5,27 +5,36 @@ import {
   OnInit,
   ChangeDetectorRef,
   ElementRef,
-  HostListener
+  HostListener,
+  signal,
+  computed
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 import { NotificationService } from '../../core/services/notification-service';
+import { ItemService } from '../../core/services/item-service';
+import { AuthService } from '../../core/auth/auth-service';
+import { ItemDetailModal } from '../../modal/item-detail-modal/item-detail-modal';
 import type { UserNotification } from '../../models/notification-model';
-import { Subscription, tap, catchError, of } from 'rxjs';
+import type { Report } from '../../models/item-model';
+import { Subscription, tap, catchError, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-notification',
   standalone: true,
-  imports: [TimeAgoPipe],
+  imports: [TimeAgoPipe, ItemDetailModal],
   templateUrl: './notification.html',
   styleUrl: './notification.scss',
 })
 export class Notification implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
+  private itemService = inject(ItemService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private eRef = inject(ElementRef);
-  
+
   private streamSub!: Subscription;
   private notificationSub!: Subscription;
 
@@ -35,6 +44,10 @@ export class Notification implements OnInit, OnDestroy {
   isLoading = false;
   isDropdownOpen = false;
   hasUnreadNotifications = false;
+
+  selectedReport = signal<Report | null>(null);
+  currentUser = toSignal(this.authService.currentUser$);
+  currentUserId = computed(() => this.currentUser()?.user_id ?? null);
 
   @HostListener('document:click', ['$event'])
   clickout(event: Event) {
@@ -128,18 +141,40 @@ export class Notification implements OnInit, OnDestroy {
   }
 
   onNotificationClick(notification: UserNotification): void {
+    let action$ = of(null);
+
     if (notification.status === 'unread') {
-      this.notificationService.markAsRead(notification.notif_id)
-      .subscribe(() => {
-        notification.status = 'read';
-        this.hasUnreadNotifications = this.notifications
-        .some(n => n.status === 'unread');
-      });
+      action$ = this.notificationService.markAsRead(notification.notif_id).pipe(
+        tap(() => {
+          notification.status = 'read';
+          this.hasUnreadNotifications = this.notifications
+            .some(n => n.status === 'unread');
+        })
+      );
     }
-    // TODO(Florido, Maydelyn): Add navigation logic when the viewing
-    //                          notification feature is implemented.
-    this.isDropdownOpen = false;
+
+    action$.pipe(
+      switchMap(() => this.itemService.getReportById(notification.report_id)),
+      tap((report) => {
+        this.selectedReport.set(report);
+        this.isDropdownOpen = false;
+        this.cdr.markForCheck();
+      }),
+      catchError((err) => {
+        console.error('Failed to load report details', err);
+        return of(null);
+      })
+    ).subscribe();
   }
+
+  onModalClose(): void {
+    this.selectedReport.set(null);
+  }
+
+  onViewTicket(): void {}
+  onEdit(): void {}
+  onDelete(): void {}
+  onViewCode(): void {}
 
   @HostListener('window:resize', ['$event'])
   onResize(event: UIEvent) {

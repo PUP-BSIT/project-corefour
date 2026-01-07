@@ -31,7 +31,7 @@ export class ItemService {
     if (report.date_lost_found) {
     formData.append('date_lost_found', report.date_lost_found);
     }
-    
+
     if (files && files.length > 0) {
       files.forEach((file: File) => {
         formData.append('files', file, file.name);
@@ -45,7 +45,7 @@ export class ItemService {
   }
 
   updateReport(
-    report: FinalReportSubmission, 
+    report: FinalReportSubmission,
     files: File[]
   ): Observable<Report> {
     const formData = new FormData();
@@ -54,7 +54,7 @@ export class ItemService {
     formData.append('item_name', report.item_name);
     formData.append('location', report.location);
     formData.append('description', report.description);
-    
+
     if (report.date_lost_found) {
       formData.append('date_lost_found', report.date_lost_found);
     }
@@ -68,7 +68,7 @@ export class ItemService {
     const id = report.report_id;
 
     return this.http.put<Report>(
-      `${this.apiUrl}/report/${id}`, 
+      `${this.apiUrl}/report/${id}`,
       formData
     );
   }
@@ -81,7 +81,7 @@ export class ItemService {
     if (filters.size) params = params.set('size', filters.size.toString());
     if (filters.type) params = params.set('type', filters.type);
     if (filters.status) params = params.set('status', filters.status);
-    
+
     if (filters.user_id) {
       params = params.set('user_id', filters.user_id.toString());
     }
@@ -90,6 +90,10 @@ export class ItemService {
     if (filters.location) params = params.set('location', filters.location);
 
     return this.http.get<PaginatedResponse<Report>>(endpoint, { params });
+  }
+
+  getReportById(id: number): Observable<Report> {
+    return this.http.get<Report>(`${this.apiUrl}/report/${id}`);
   }
 
   deleteReport(reportId: number): Observable<void> {
@@ -114,7 +118,7 @@ export class ItemService {
 
   getTopLocations(): Observable<string[]> {
     if (this.cachedLocations) {
-      return of(this.cachedLocations); 
+      return of(this.cachedLocations);
     }
 
     return this.http.get<string[]>(`${this.apiUrl}/reports/top-locations`).pipe(

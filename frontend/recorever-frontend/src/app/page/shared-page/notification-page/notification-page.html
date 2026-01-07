@@ -2,7 +2,7 @@
   <div class="notification-card">
     <header class="page-header">
       <h1>Notifications</h1>
-      
+
       @if (notifications.length > 0) {
         <span class="count">
           {{ notifications.length }} Total
@@ -12,13 +12,13 @@
 
     <div class="notification-list">
       @for (notification of notifications; track notification.notif_id) {
-        <div 
-          class="notification-row" 
+        <div
+          class="notification-row"
           [class.unread]="notification.status === 'unread'"
           (click)="onNotificationClick(notification)">
-          
+
           <div class="status-indicator"></div>
-          
+
           <div class="content">
             <p class="message" [innerHTML]="notification.message"></p>
             <span class="date">{{ notification.created_at | timeAgo }}</span>
@@ -43,3 +43,16 @@
     }
   </div>
 </div>
+
+@if (selectedReport(); as item) {
+  <app-item-detail-modal
+      [item]="item"
+      [currentUserId]="currentUserId()"
+      [userProfilePicture]="null"
+      (close)="onModalClose()"
+      (viewTicket)="onViewTicket()"
+      (editClicked)="onEdit()"
+      (deleteClicked)="onDelete()"
+      (viewCodeClicked)="onViewCode()">
+  </app-item-detail-modal>
+}

@@ -9,18 +9,18 @@
 
   @if (isDropdownOpen) {
     <div class="dropdown-menu">
-      
+
       <div class="dropdown-header">
         <h3>Notification</h3>
       </div>
-      
+
       <div class="dropdown-list">
         @for (notification of notifications; track notification.notif_id) {
-          <div 
+          <div
             class="notification-item"
             (click)="onNotificationClick(notification)">
 
-            <p class="message" 
+            <p class="message"
                 [class.unread]="notification.status === 'unread'"
                 [innerHTML]="notification.message">
             </p>
@@ -47,5 +47,18 @@
         </div>
       }
     </div>
+  }
+
+  @if (selectedReport(); as item) {
+    <app-item-detail-modal
+        [item]="item"
+        [currentUserId]="currentUserId()"
+        [userProfilePicture]="null"
+        (close)="onModalClose()"
+        (viewTicket)="onViewTicket()"
+        (editClicked)="onEdit()"
+        (deleteClicked)="onDelete()"
+        (viewCodeClicked)="onViewCode()">
+    </app-item-detail-modal>
   }
 </div>

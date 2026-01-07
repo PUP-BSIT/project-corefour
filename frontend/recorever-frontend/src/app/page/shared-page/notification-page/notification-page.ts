@@ -1,29 +1,38 @@
-import { 
-  Component, 
-  inject, 
-  OnInit, 
-  OnDestroy, 
-  ChangeDetectorRef 
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  signal,
+  computed
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 import {
   NotificationService
 } from '../../../core/services/notification-service';
+import { ItemService } from '../../../core/services/item-service';
+import { AuthService } from '../../../core/auth/auth-service';
+import { ItemDetailModal } from '../../../modal/item-detail-modal/item-detail-modal';
 import type { UserNotification } from '../../../models/notification-model';
-import { Subscription, tap, catchError, of } from 'rxjs';
+import type { Report } from '../../../models/item-model';
+import { Subscription, tap, catchError, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-notification-page',
   standalone: true,
-  imports: [CommonModule, TimeAgoPipe],
+  imports: [CommonModule, TimeAgoPipe, ItemDetailModal],
   templateUrl: './notification-page.html',
   styleUrl: './notification-page.scss',
 })
 export class NotificationPage implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
+  private itemService = inject(ItemService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
-  
+
   private streamSub!: Subscription;
   private notificationSub!: Subscription;
 
@@ -31,6 +40,10 @@ export class NotificationPage implements OnInit, OnDestroy {
   currentPage = 1;
   totalPages = 1;
   isLoading = false;
+
+  selectedReport = signal<Report | null>(null);
+  currentUser = toSignal(this.authService.currentUser$);
+  currentUserId = computed(() => this.currentUser()?.user_id ?? null);
 
   ngOnInit(): void {
     this.loadPage(1);
@@ -62,8 +75,8 @@ export class NotificationPage implements OnInit, OnDestroy {
       .getNotifications(page, 10)
       .pipe(
         tap((response) => {
-          this.notifications = page === 1 
-                             ? response.items 
+          this.notifications = page === 1
+                             ? response.items
                              : [...this.notifications, ...response.items];
           this.currentPage = response.currentPage;
           this.totalPages = response.totalPages;
@@ -78,13 +91,37 @@ export class NotificationPage implements OnInit, OnDestroy {
   }
 
   onNotificationClick(notification: UserNotification): void {
+    let action$ = of(null);
+
     if (notification.status === 'unread') {
-      this.notificationService.markAsRead(notification.notif_id)
-      .subscribe(() => {
-        notification.status = 'read';
-        this.cdr.markForCheck();
-      });
+      action$ = this.notificationService.markAsRead(notification.notif_id).pipe(
+        tap(() => {
+          notification.status = 'read';
+          this.cdr.markForCheck();
+        })
+      );
     }
-    // Add navigation logic here
+
+    action$.pipe(
+      switchMap(() => this.itemService.getReportById(notification.report_id)),
+      tap((report) => {
+        this.selectedReport.set(report);
+        this.cdr.markForCheck();
+      }),
+      catchError((err) => {
+        console.error('Failed to load report details', err);
+        return of(null);
+      })
+    ).subscribe();
   }
+
+  onModalClose(): void {
+    this.selectedReport.set(null);
+  }
+
+  // Placeholder handlers for modal outputs
+  onViewTicket(): void {}
+  onEdit(): void {}
+  onDelete(): void {}
+  onViewCode(): void {}
 }
