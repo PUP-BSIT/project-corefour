@@ -128,6 +128,11 @@ export class Filter implements OnInit {
     });
   }
 
+  protected clearLocation(event: Event): void {
+    event.stopPropagation();
+    this.filterForm.get('location')?.setValue('');
+  }
+
   protected toggleFilter(): void {
     this.isFilterVisible.update(value => !value);
   }

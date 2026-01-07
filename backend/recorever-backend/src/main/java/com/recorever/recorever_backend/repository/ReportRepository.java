@@ -29,13 +29,15 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
            "LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.description) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.location) LIKE LOWER(CONCAT('%',:query,'%')) " +
-           "OR LOWER(u.name) LIKE LOWER(CONCAT('%',:query,'%'))) " +
+           "OR LOWER(u.name) LIKE LOWER(CONCAT('%',:query,'%')) " +
+           "OR LOWER(r.surrenderCode) LIKE LOWER(CONCAT('%',:query,'%'))) " +
            "ORDER BY r.reportId DESC")
-    List<Report> searchReports(@Param("userId") Integer userId,
-                               @Param("type") String type,
-                               @Param("status") String status,
-                               @Param("query") String query,
-                               Pageable pageable);
+    List<Report> searchReports(
+            @Param("userId") Integer userId,
+            @Param("type") String type,
+            @Param("status") String status,
+            @Param("query") String query,
+            Pageable pageable);
 
     @Query("SELECT COUNT(r) FROM Report r " +
            "LEFT JOIN User u ON r.userId = u.userId " +
@@ -45,11 +47,15 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
            "AND (:status IS NULL OR r.status = :status) " +
            "AND (:query IS NULL OR LOWER(r.itemName) LIKE " +
            "LOWER(CONCAT('%',:query,'%')) " +
-           "OR LOWER(u.name) LIKE LOWER(CONCAT('%',:query,'%')))")
-    int countSearchReports(@Param("userId") Integer userId,
-                           @Param("type") String type,
-                           @Param("status") String status,
-                           @Param("query") String query);
+           "OR LOWER(r.description) LIKE LOWER(CONCAT('%',:query,'%')) " +
+           "OR LOWER(r.location) LIKE LOWER(CONCAT('%',:query,'%')) " +
+           "OR LOWER(u.name) LIKE LOWER(CONCAT('%',:query,'%')) " +
+           "OR LOWER(r.surrenderCode) LIKE LOWER(CONCAT('%',:query,'%')))")
+    int countSearchReports(
+            @Param("userId") Integer userId,
+            @Param("type") String type,
+            @Param("status") String status,
+            @Param("query") String query);
 
     List<Report> findByStatusAndIsDeletedFalseOrderByDateReportedDesc(
             String status);
@@ -68,7 +74,8 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
            "WHERE r.isDeleted = false AND r.reportId IN " +
            "(SELECT rs.reportId FROM ReportSchedule rs " +
            "WHERE rs.deleteTime <= :currentTime)")
-    int softDeleteExpiredReports(@Param("currentTime") LocalDateTime currentTime);
+    int softDeleteExpiredReports(
+            @Param("currentTime") LocalDateTime currentTime);
 
     @Modifying
     @Transactional

@@ -50,6 +50,13 @@
            formControlName="location"
            [matAutocomplete]="auto">
 
+    @if (filterForm.get('location')?.value) {
+      <button mat-icon-button matSuffix type="button" 
+            (click)="clearLocation($event)">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+
     <mat-autocomplete #auto="matAutocomplete">
       @for (loc of filteredLocations$ | async; track loc) {
         <mat-option [value]="loc">
