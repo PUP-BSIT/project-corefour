@@ -61,6 +61,21 @@ export class ItemDetailModal {
 
   protected currentImageIndex = signal<number>(0);
 
+  isEditable = computed((): boolean => {
+    const status = this.item().status;
+    return status === 'pending';
+  });
+
+  isRemovable = computed((): boolean => {
+    return this.item().type === 'lost';
+  });
+
+  removeTooltip = computed((): string => {
+    return !this.isRemovable()
+      ? 'Found item reports are protected and cannot be removed directly.'
+      : 'Remove this report';
+  });
+
   photoUrls = computed((): string[] => {
     const report = this.item();
     if (report.images && report.images.length > 0) {
