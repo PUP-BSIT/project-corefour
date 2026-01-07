@@ -45,6 +45,7 @@ import { UserService } from '../../../core/services/user-service';
 import { PaginatedResponse, Report, ReportFilters } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
 import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth-service';
 
 type TabType = 'all' | 'found' | 'lost';
 
@@ -114,6 +115,8 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
   });
 
   constructor() {
+    const authService = inject(AuthService);
+
     this.currentUser$ = combineLatest([
       this.route.paramMap,
       this.refreshUser$.pipe(startWith(undefined))
@@ -123,7 +126,7 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
         if (userId) {
           return this.userService.getUserById(+userId); 
         }
-        return this.userService.getProfile();
+        return authService.initAuth();
       }),
       catchError(() => of(null)),
       shareReplay(1)
@@ -304,8 +307,7 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
 
   getUserProfilePicture(user: User | null): string {
     if (user && user.profile_picture) {
-      const baseUrl = environment.apiUrl.replace('http://', 'https://');
-      return `${baseUrl}/image/download/${user.profile_picture}`;
+      return `${environment.apiUrl}/image/download/${user.profile_picture}`;
     }
 
     return 'assets/profile-avatar.png';
