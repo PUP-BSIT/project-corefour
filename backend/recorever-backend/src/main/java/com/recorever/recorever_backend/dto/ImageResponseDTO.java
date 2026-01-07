@@ -13,5 +13,5 @@ public class ImageResponseDTO {
     private Integer reportId;
     private Integer claimId;
     private LocalDateTime uploadedAt;
-    private String imageUrl; // The public URL for the frontend
+    private String imageUrl;
 }
