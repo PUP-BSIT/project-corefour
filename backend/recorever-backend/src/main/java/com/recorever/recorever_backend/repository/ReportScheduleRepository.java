@@ -1,66 +1,52 @@
 package com.recorever.recorever_backend.repository;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
+import com.recorever.recorever_backend.model.Report;
+import com.recorever.recorever_backend.model.ReportSchedule;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Repository
-public class ReportScheduleRepository {
+public interface ReportScheduleRepository 
+        extends JpaRepository<ReportSchedule, Long> {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    Optional<ReportSchedule> findByReportId(int reportId);
 
-    // --- Service Layer Save Method ---
-    public void saveSchedule(Integer reportId, LocalDateTime notify1Time, LocalDateTime notify2Time, LocalDateTime deleteTime) {
-        String sql = """
-            INSERT INTO report_schedules 
-            (report_id, notify1_time, notify2_time, delete_time, notify1_sent, notify2_sent)
-            VALUES (?, ?, ?, ?, 0, 0)
-            """;
-        jdbcTemplate.update(sql, reportId, notify1Time, notify2Time, deleteTime);
-    }
+    @Query("SELECT rs.reportId FROM ReportSchedule rs " +
+           "WHERE rs.notify1Sent = false " +
+           "AND rs.notify1Time <= :now " +
+           "AND rs.reportId IN (SELECT r.reportId FROM Report r " +
+           "WHERE r.isDeleted = false)")
+    List<Integer> findReportsForNotify1(@Param("now") LocalDateTime now);
 
-    public List<Integer> findReportsForNotify1(LocalDateTime currentTime) {
-        String sql = """
-            SELECT rs.report_id
-            FROM report_schedules rs
-            JOIN reports r ON rs.report_id = r.report_id
-            WHERE rs.notify1_sent = 0
-            AND rs.notify1_time <= ?
-            AND r.is_deleted = 0
-            """;
-        return jdbcTemplate.queryForList(sql, Integer.class, currentTime);
-    }
+    @Query("SELECT rs.reportId FROM ReportSchedule rs " +
+           "WHERE rs.notify2Sent = false " +
+           "AND rs.notify2Time <= :now " +
+           "AND rs.reportId IN (SELECT r.reportId FROM Report r " +
+           "WHERE r.isDeleted = false)")
+    List<Integer> findReportsForNotify2(@Param("now") LocalDateTime now);
 
-    public List<Integer> findReportsForNotify2(LocalDateTime currentTime) {
-        String sql = """
-            SELECT rs.report_id
-            FROM report_schedules rs
-            JOIN reports r ON rs.report_id = r.report_id
-            WHERE rs.notify2_sent = 0
-            AND rs.notify2_time <= ?
-            AND r.is_deleted = 0
-            """;
-        return jdbcTemplate.queryForList(sql, Integer.class, currentTime);
-    }
+    @Query("SELECT r FROM Report r JOIN ReportSchedule rs " +
+           "ON r.reportId = rs.reportId " +
+           "WHERE r.isDeleted = false AND rs.deleteTime <= :now")
+    List<Report> findReportsReadyForSoftDelete(@Param("now") LocalDateTime now);
 
-    // UPDATE status for Notification 1 sent
-    public int markNotify1Sent(List<Integer> reportIds) {
-        if (reportIds.isEmpty()) return 0;
-        String inSql = reportIds.stream().map(id -> "?").collect(Collectors.joining(","));
-        String sql = "UPDATE report_schedules SET notify1_sent = 1 WHERE report_id IN (" + inSql + ")";
-        return jdbcTemplate.update(sql, reportIds.toArray());
-    }
+    @Modifying
+    @Transactional
+    @Query("UPDATE ReportSchedule rs SET rs.notify1Sent = true " +
+           "WHERE rs.reportId IN :reportIds")
+    int markNotify1Sent(@Param("reportIds") List<Integer> reportIds);
 
-    // UPDATE status for Notification 2 sent
-    public int markNotify2Sent(List<Integer> reportIds) {
-        if (reportIds.isEmpty()) return 0;
-        String inSql = reportIds.stream().map(id -> "?").collect(Collectors.joining(","));
-        String sql = "UPDATE report_schedules SET notify2_sent = 1 WHERE report_id IN (" + inSql + ")";
-        return jdbcTemplate.update(sql, reportIds.toArray());
-    }
+    @Modifying
+    @Transactional
+    @Query("UPDATE ReportSchedule rs SET rs.notify2Sent = true " +
+           "WHERE rs.reportId IN :reportIds")
+    int markNotify2Sent(@Param("reportIds") List<Integer> reportIds);
 }

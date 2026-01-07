@@ -38,7 +38,7 @@ public class ReportController {
 
     private ImageResponseDTO convertToImageDto(Image image) {
         if (image == null || image.isDeleted()) return null;
-        
+
         ImageResponseDTO dto = new ImageResponseDTO();
         dto.setImageId(image.getImageId());
         dto.setFileName(image.getFileName());
@@ -49,98 +49,93 @@ public class ReportController {
 
         String imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/image/download/")
-                .path(image.getFilePath()) 
+                .path(image.getFilePath())
                 .toUriString();
         dto.setImageUrl(imageUrl);
-        
+
         return dto;
     }
 
     private ReportResponseDTO mapToReportResponseDTO(Report report) {
         ReportResponseDTO dto = new ReportResponseDTO();
-        dto.setReport_id(report.getReport_id());
-        dto.setUser_id(report.getUser_id());
+        dto.setReport_id(report.getReportId());
+        dto.setUser_id(report.getUserId());
         dto.setType(report.getType());
-        dto.setItem_name(report.getItem_name()); 
+        dto.setItem_name(report.getItemName());
         dto.setLocation(report.getLocation());
-        dto.setDate_lost_found(report.getDate_lost_found());
-        dto.setDate_reported(report.getDate_reported());
-        dto.setDate_resolved(report.getDate_resolved());
+        dto.setDate_lost_found(report.getDateLostFound());
+        dto.setDate_reported(report.getDateReported());
+        dto.setDate_resolved(report.getDateResolved());
         dto.setDescription(report.getDescription());
         dto.setStatus(report.getStatus());
-        dto.setSurrender_code(report.getSurrender_code());
-        dto.setReporter_name(report.getReporter_name());
-        dto.setExpiry_date(report.getExpiry_date());
+        dto.setSurrender_code(report.getSurrenderCode());
+        dto.setReporter_name(report.getReporterName());
+        dto.setExpiry_date(report.getExpiryDate());
 
         if (report.getImages() != null) {
             dto.setImages(report.getImages().stream()
-                .filter(img -> !img.isDeleted())
-                .map(this::convertToImageDto)
-                .collect(Collectors.toList()));
+                    .filter(img -> !img.isDeleted())
+                    .map(this::convertToImageDto)
+                    .collect(Collectors.toList()));
         }
         return dto;
     }
 
-    @PostMapping("/reports/full-submit") 
+    @PostMapping("/reports/full-submit")
     public ResponseEntity<ReportResponseDTO> submitFullReport(
             Authentication authentication,
             @Valid @ModelAttribute ReportCreationDTO reportDto) {
 
         User authenticatedUser = (User) authentication.getPrincipal();
-        int userId = authenticatedUser.getUser_id();
+        int userId = authenticatedUser.getUserId();
 
-        Map<String, Object> creationResult = service.create( 
-            userId, 
-            reportDto.getType(), 
-            reportDto.getItem_name(), 
-            reportDto.getLocation(), 
-            reportDto.getDescription(),
-            reportDto.getDate_lost_found()
+        Map<String, Object> creationResult = service.create(
+                userId,
+                reportDto.getType(),
+                reportDto.getItem_name(),
+                reportDto.getLocation(),
+                reportDto.getDescription(),
+                reportDto.getDate_lost_found()
         );
 
         Integer newReportId = (Integer) creationResult.get("report_id");
-
         List<MultipartFile> files = reportDto.getFiles();
 
         if (files != null && !files.isEmpty() && files.get(0).getSize() > 0) {
             files.forEach(file -> {
-                String uniqueFileName = imageService.storeFile(file);
-                
+                String uniqueName = imageService.storeFile(file);
                 Image image = new Image(
-                    file.getOriginalFilename(),
-                    file.getContentType(), 
-                    uniqueFileName, 
-                    newReportId 
+                        file.getOriginalFilename(),
+                        file.getContentType(),
+                        uniqueName,
+                        newReportId
                 );
-
                 imageService.saveImageMetadata(image);
             });
         }
 
         Report finalReport = service.getById(newReportId);
-        
         if (finalReport == null) {
-            return ResponseEntity.status(500).body(null); 
+            return ResponseEntity.status(500).body(null);
         }
 
-        return ResponseEntity.status(201).body(mapToReportResponseDTO(finalReport));
+        return ResponseEntity.status(201)
+                .body(mapToReportResponseDTO(finalReport));
     }
 
-
     @PostMapping("/report")
-    public ResponseEntity<?> createReport( Authentication authentication,
+    public ResponseEntity<?> createReport(
+            Authentication authentication,
             @Valid @RequestBody ReportCreationDTO reportDto) {
-            
-        User authenticatedUser = (User) authentication.getPrincipal();
-        int userId = authenticatedUser.getUser_id();
 
+        User authUser = (User) authentication.getPrincipal();
         Map<String, Object> result = service.create(
-            userId, 
-            reportDto.getType(), 
-            reportDto.getItem_name(), 
-            reportDto.getLocation(),
-            reportDto.getDate_lost_found(),
-            reportDto.getDescription()
+                authUser.getUserId(),
+                reportDto.getType(),
+                reportDto.getItem_name(),
+                reportDto.getLocation(),
+                reportDto.getDate_lost_found(),
+                reportDto.getDescription()
         );
         return ResponseEntity.status(201).body(result);
     }
@@ -154,7 +149,8 @@ public class ReportController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Map<String, Object> serviceResponse = service.searchReports(user_id, type, status, query, page, size);
+        Map<String, Object> serviceResponse = service.searchReports(
+                user_id, type, status, query, page, size);
 
         @SuppressWarnings("unchecked")
         List<Report> reports = (List<Report>) serviceResponse.get("items");
@@ -164,22 +160,17 @@ public class ReportController {
                 .collect(Collectors.toList());
 
         serviceResponse.put("items", dtos);
-            
         return ResponseEntity.ok(serviceResponse);
     }
 
     @GetMapping("reports/type/{type}")
     public ResponseEntity<List<ReportResponseDTO>> getReportsByType(
-            @PathVariable String type, 
+            @PathVariable String type,
             @RequestParam(required = false) String status) {
-        
-        List<Report> reports;
-        
-        if (status != null && !status.isEmpty()) {
-            reports = service.getReportsByTypeAndStatus(type, status);
-        } else {
-            reports = service.getReportsByType(type);
-        }
+
+        List<Report> reports = (status != null && !status.isEmpty())
+                ? service.getReportsByTypeAndStatus(type, status)
+                : service.getReportsByType(type);
 
         List<ReportResponseDTO> responseList = reports.stream()
                 .map(this::mapToReportResponseDTO)
@@ -190,17 +181,16 @@ public class ReportController {
 
     @GetMapping("/reports/top-locations")
     public ResponseEntity<List<String>> getTopLocations() {
-        List<String> locations = service.getTopLocations();
-        return ResponseEntity.ok(locations);
+        return ResponseEntity.ok(service.getTopLocations());
     }
 
     @GetMapping("/report/{id}")
     public ResponseEntity<?> getReport(@PathVariable int id) {
         Report report = service.getById(id);
-        if (report == null) return ResponseEntity.status(404).body("Report not found");
-
-        ReportResponseDTO responseDto = mapToReportResponseDTO(report);
-        return ResponseEntity.ok(responseDto);
+        if (report == null) {
+            return ResponseEntity.status(404).body("Report not found");
+        }
+        return ResponseEntity.ok(mapToReportResponseDTO(report));
     }
 
     @PutMapping("/report/{id}")
@@ -210,69 +200,66 @@ public class ReportController {
             @Valid @ModelAttribute ReportCreationDTO reportDto) {
 
         Report report = service.getById(id);
-        if (report == null) {
-            return ResponseEntity.status(404).body(null);
-        }
+        if (report == null) return ResponseEntity.status(404).body(null);
 
-        User authenticatedUser = (User) authentication.getPrincipal();
-        if (report.getUser_id() != authenticatedUser.getUser_id()) {
-            return ResponseEntity.status(403).body(null);
-        }
-
-        if (!report.getStatus().equalsIgnoreCase("pending")) {
+        User authUser = (User) authentication.getPrincipal();
+        if (report.getUserId() != authUser.getUserId() ||
+                !report.getStatus().equalsIgnoreCase("pending")) {
             return ResponseEntity.status(403).body(null);
         }
 
         service.updateEditableFields(
-            id, 
-            reportDto.getItem_name(), 
-            reportDto.getLocation(), 
-            reportDto.getDescription()
+                id,
+                reportDto.getItem_name(),
+                reportDto.getLocation(),
+                reportDto.getDescription()
         );
 
         List<MultipartFile> files = reportDto.getFiles();
         if (files != null && !files.isEmpty() && files.get(0).getSize() > 0) {
             files.forEach(file -> {
-                String uniqueFileName = imageService.storeFile(file);
-                
+                String uniqueName = imageService.storeFile(file);
                 Image image = new Image(
-                    file.getOriginalFilename(),
-                    file.getContentType(), 
-                    uniqueFileName, 
-                    id
+                        file.getOriginalFilename(),
+                        file.getContentType(),
+                        uniqueName,
+                        id
                 );
-
                 imageService.saveImageMetadata(image);
             });
         }
 
-        Report updatedReport = service.getById(id);
-        return ResponseEntity.ok(mapToReportResponseDTO(updatedReport));
+        return ResponseEntity.ok(mapToReportResponseDTO(service.getById(id)));
     }
 
     @DeleteMapping("/report/{id}")
-    public ResponseEntity<?> deleteReport(Authentication authentication, @PathVariable int id) {
-        
+    public ResponseEntity<?> deleteReport(
+            Authentication authentication,
+            @PathVariable int id) {
+
         Report report = service.getById(id);
-        if (report == null) {
-            return ResponseEntity.status(404).body("Report not found");
+        if (report == null) return ResponseEntity.status(404).body("Not found");
+
+        User authUser = (User) authentication.getPrincipal();
+        if (report.getUserId() != authUser.getUserId()) {
+            return ResponseEntity.status(403).body("Not authorized");
         }
-        
-        User authenticatedUser = (User) authentication.getPrincipal();
-        if (report.getUser_id() != authenticatedUser.getUser_id()) {
-            return ResponseEntity.status(403).body("You are not authorized to delete this report.");
-        }
-        
+
         boolean deleted = service.delete(id);
-        if (!deleted) return ResponseEntity.status(404).body("Report not found or already deleted");
-        return ResponseEntity.ok(Map.of("success", true, "message", "Report deleted successfully."));
+        if (!deleted) return ResponseEntity.status(404).body("Already deleted");
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Report deleted successfully."
+        ));
     }
 
     @PutMapping("/report/{id}/codes")
-    public ResponseEntity<?> updateCodes(Authentication authentication,
-                                         @PathVariable int id,
-                                         @RequestParam String surrender_code,
-                                         @RequestParam String claim_code) {
-        return ResponseEntity.status(403).body("This endpoint is deprecated. Use the /api/admin endpoints for code management.");
+    public ResponseEntity<?> updateCodes(
+            Authentication authentication,
+            @PathVariable int id,
+            @RequestParam String surrender_code,
+            @RequestParam String claim_code) {
+        return ResponseEntity.status(403).body("This endpoint is deprecated.");
     }
 }

@@ -31,8 +31,9 @@
 
         @for (item of profileDropdownItems; track item.label) {
           @if (item.action === 'navigate') {
-            <a [routerLink]="item.route" (click)="handleDropdownAction(item)"
-                class="dropdown-item">
+            <a [routerLink]="item.route" 
+              (click)="isProfileDropdownOpen = false; onNavClick()" 
+              class="dropdown-item">
               <img [src]="item.iconPath" alt="{{ item.label }} Icon"
                   class="dropdown-item-icon">
               {{ item.label }}

@@ -14,51 +14,56 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtFilter;
+  @Autowired
+  private JwtAuthenticationFilter jwtFilter;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-        .cors(cors -> {})
-        .csrf(csrf -> csrf.disable())
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) 
+      throws Exception {
+    http
+      .cors(cors -> {})
+      .csrf(csrf -> csrf.disable())
+      .sessionManagement(session -> 
+        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+      )
+      .authorizeHttpRequests(auth -> auth
+        .requestMatchers(
+          "/api/login-user",
+          "/api/register-user",
+          "/api/refresh-token",
+          "/api/image/download/**",
+          "/api/forgot-password",
+          "/api/reset-password-public",
+          "/error"
+        ).permitAll()
+        .requestMatchers("/api/admin/**").hasRole("ADMIN") 
+        
+        // Allow public access to view reports and locations
+        .requestMatchers(HttpMethod.GET, "/api/reports").permitAll() 
+        .requestMatchers(
+          HttpMethod.GET, 
+          "/api/reports/top-locations"
+        ).permitAll()
+        .requestMatchers(HttpMethod.POST, 
+          "/api/report/*/upload-image", 
+          "/api/claim/*/upload-image"
+        ).authenticated()
+        .requestMatchers("/api/image/**").authenticated() 
+        .requestMatchers("/api/images").authenticated()
+        .anyRequest().authenticated()
+      )
+      .httpBasic(httpBasic -> httpBasic.disable())
+      .formLogin(form -> form.disable())
+      .addFilterBefore(
+        jwtFilter, 
+        UsernamePasswordAuthenticationFilter.class
+      );
 
-            // Stateless session — we use JWTs instead of sessions
-            .sessionManagement(session -> 
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/login-user",
-                    "/api/register-user",
-                    "/api/refresh-token",
-                    "/api/image/download/**",
-                    "/api/forgot-password",
-                    "/api/reset-password-public",
-                    "/error"
-                ).permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN") 
-
-                // Allow public access to view reports and locations
-                .requestMatchers(HttpMethod.GET, "/api/reports").permitAll() 
-                .requestMatchers(HttpMethod.GET, "/api/reports/top-locations").permitAll()
-
-                // Require authentication for uploading and managing images
-                .requestMatchers(HttpMethod.POST, 
-                    "/api/report/*/upload-image", 
-                    "/api/claim/*/upload-image").authenticated()
-                .requestMatchers("/api/image/**").authenticated() 
-                .requestMatchers("/api/images").authenticated()
-                .anyRequest().authenticated()
-            )
-            .httpBasic(httpBasic -> httpBasic.disable())
-            .formLogin(form -> form.disable())
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+    return http.build();
+  }
 }

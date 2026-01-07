@@ -1,144 +1,70 @@
 package com.recorever.recorever_backend.repository;
 
 import com.recorever.recorever_backend.model.User;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class UserRepository {
+public interface UserRepository extends JpaRepository<User, Integer> {
 
-  @Autowired
-  private JdbcTemplate jdbcTemplate;
+    @Query("SELECT u FROM User u WHERE u.email = :email " +
+           "AND u.isDeleted = false")
+    Optional<User> findByEmailAndIsDeletedFalse(
+        @Param("email") String email
+    );
 
-  private final RowMapper<User> userMapper = (rs, rowNum) -> {
-    User u = new User();
-    u.setUser_id(rs.getInt("user_id"));
-    u.setName(rs.getString("name"));
-    u.setEmail(rs.getString("email"));
-    u.setPassword_hash(rs.getString("password_hash"));
+    @Query("SELECT u FROM User u WHERE u.userId = :id " +
+           "AND u.isDeleted = false")
+    Optional<User> findByIdAndIsDeletedFalse(
+        @Param("id") int id
+    );
 
-    // Ensure the role is never null or empty; default to 'user' for security.
-    String role = rs.getString("role");
-    u.setRole(role != null && !role.isEmpty() ? role : "user");
+    @Query("SELECT u FROM User u WHERE (LOWER(u.name) " +
+           "LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.email) " +
+           "LIKE LOWER(CONCAT('%', :query, '%'))) AND u.isDeleted = false")
+    List<User> searchUsers(
+        @Param("query") String query
+    );
 
-    u.setProfile_picture(rs.getString("profile_picture"));
-    u.setPhone_number(rs.getString("phone_number"));
-    u.setCreated_at(rs.getString("created_at"));
-    u.setIs_deleted(rs.getBoolean("is_deleted"));
-    u.setRefresh_token(rs.getString("refresh_token"));
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.name = :name " +
+           "AND u.userId != :userId")
+    boolean isNameTaken(
+        @Param("name") String name, 
+        @Param("userId") int userId
+    );
 
-    if (rs.getTimestamp("refresh_token_expiry") != null) {
-      u.setRefresh_token_expiry(rs.getTimestamp("refresh_token_expiry").toLocalDateTime());
-    }
-    return u;
-  };
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.phoneNumber = :phoneNumber " +
+           "AND u.userId != :userId")
+    boolean isPhoneNumberTaken(
+        @Param("phoneNumber") String phoneNumber, 
+        @Param("userId") int userId
+    );
 
-  public int registerUser(String name, String phoneNumber, String email, String password) {
-    String checkSql = "SELECT COUNT(*) FROM users WHERE email = ?";
-    int exists = jdbcTemplate.queryForObject(checkSql, Integer.class, email);
-    if (exists > 0)
-      return -1;
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email " +
+           "AND u.userId != :userId")
+    boolean isEmailTaken(
+        @Param("email") String email, 
+        @Param("userId") int userId
+    );
 
-    String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
-    String sql = "INSERT INTO users (name, phone_number, email, password_hash, role, is_deleted) VALUES (?, ?, ?, ?, 'user', 0)";
+    @Query("SELECT u FROM User u WHERE u.refreshToken = :token " +
+           "AND u.isDeleted = false")
+    Optional<User> findByRefreshTokenAndIsDeletedFalse(
+        @Param("token") String token
+    );
 
-    KeyHolder keyHolder = new GeneratedKeyHolder();
-    jdbcTemplate.update(conn -> {
-      PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setString(1, name);
-      ps.setString(2, phoneNumber);
-      ps.setString(3, email);
-      ps.setString(4, hashed);
-      return ps;
-    }, keyHolder);
-
-    Number key = keyHolder.getKey();
-    return key != null ? key.intValue() : -1;
-  }
-
-  public User findByEmail(String email) {
-    try {
-      String sql = "SELECT * FROM users WHERE email = ? AND is_deleted = 0";
-      return jdbcTemplate.queryForObject(sql, userMapper, email);
-    } catch (EmptyResultDataAccessException e) {
-      return null;
-    }
-  }
-
-  public User findById(int id) {
-    try {
-      String sql = "SELECT * FROM users WHERE user_id = ? AND is_deleted = 0";
-      return jdbcTemplate.queryForObject(sql, userMapper, id);
-    } catch (EmptyResultDataAccessException e) {
-      return null;
-    }
-  }
-
-  // New Search Method
-  public List<User> searchUsers(String query) {
-    String sql = "SELECT * FROM users WHERE (LOWER(name) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?)) AND is_deleted = 0";
-    String searchParam = "%" + query + "%";
-    return jdbcTemplate.query(sql, userMapper, searchParam, searchParam);
-  }
-
-  public boolean isNameTaken(String name, int currentUserId) {
-    String sql = "SELECT COUNT(*) FROM users WHERE name = ? AND user_id != ?";
-    Integer count = jdbcTemplate.queryForObject(sql, Integer.class, name, currentUserId);
-    return count != null && count > 0;
-  }
-
-  public boolean isPhoneNumberTaken(String phoneNumber, int currentUserId) {
-    String sql = "SELECT COUNT(*) FROM users WHERE phone_number = ? AND user_id != ?";
-    Integer count = jdbcTemplate.queryForObject(sql, Integer.class, phoneNumber, currentUserId);
-    return count != null && count > 0;
-  }
-
-  public boolean isEmailTaken(String email, int currentUserId) {
-    String sql = "SELECT COUNT(*) FROM users WHERE email = ? AND user_id != ?";
-    Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email, currentUserId);
-    return count != null && count > 0;
-  }
-
-  public boolean updateUser(int id, String name, String phone, String email, String picture) {
-    String sql = "UPDATE users SET name=?, phone_number=?, email = ?, profile_picture=? WHERE user_id=? AND is_deleted = 0";
-    return jdbcTemplate.update(sql, name, phone, email, picture, id) > 0;
-  }
-
-  public boolean updatePassword(int userId, String newHash) {
-    String sql = "UPDATE users SET password_hash = ? WHERE user_id = ?";
-    return jdbcTemplate.update(sql, newHash, userId) > 0;
-  }
-
-  public boolean deleteUser(int id) {
-    String sql = "UPDATE users SET is_deleted = 1 WHERE user_id=? AND is_deleted = 0";
-    return jdbcTemplate.update(sql, id) > 0;
-  }
-
-  public boolean saveRefreshToken(int userId, String token, LocalDateTime expiry) {
-    String sql = "UPDATE users SET refresh_token = ?, refresh_token_expiry = ? WHERE user_id = ?";
-    Timestamp expiryTs = expiry != null ? Timestamp.valueOf(expiry) : null;
-    int rows = jdbcTemplate.update(sql, token, expiryTs, userId);
-    return rows > 0;
-  }
-
-  public User findByRefreshToken(String token) {
-    try {
-      String sql = "SELECT * FROM users WHERE refresh_token = ? AND is_deleted = 0";
-      return jdbcTemplate.queryForObject(sql, userMapper, token);
-    } catch (EmptyResultDataAccessException e) {
-      return null;
-    }
-  }
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.isDeleted = true WHERE u.userId = :id " +
+           "AND u.isDeleted = false")
+    int softDeleteUser(
+        @Param("id") int id
+    );
 }
