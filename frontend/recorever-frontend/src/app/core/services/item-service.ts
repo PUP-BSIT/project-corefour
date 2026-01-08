@@ -121,4 +121,10 @@ export class ItemService {
       tap(locations => this.cachedLocations = locations)
     );
   }
+
+  getPotentialMatches(reportId: number, claimantId: number): Observable<Report[]> {
+    return this.http.get<Report[]>(
+      `${this.apiUrl}/reports/${reportId}/potential-matches/${claimantId}`
+    );
+  }
 }
