@@ -82,6 +82,19 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
     @Query("UPDATE Report r SET r.isDeleted = true WHERE r.reportId = :id")
     int softDeleteById(@Param("id") int id);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE Report r SET r.isDeleted = true " +
+           "WHERE r.userId = :userId AND r.type = 'lost' AND r.isDeleted = false")
+    void softDeleteLostReportsByUserId(@Param("userId") int userId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Report r SET r.userId = :adminId, " +
+           "r.description = CONCAT(r.description, ' [Reporter Account Deleted]') " +
+           "WHERE r.userId = :userId AND r.type = 'found' AND r.isDeleted = false")
+    void transferFoundReportsToAdmin(@Param("userId") int userId, @Param("adminId") int adminId);
+
     int countByIsDeletedFalse();
 
     int countByStatusAndIsDeletedFalse(String status);
