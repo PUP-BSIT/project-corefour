@@ -362,6 +362,8 @@ $matched-color: #1976D2;
     &.pending { background-color: $pending-yellow; color: black; }
     &.claimed { background-color: $claimed-dark; }
     &.denied, &.rejected { background-color: $denied-red; }
+    &.resolved { background-color: $claimed-dark; }
+    &.matched { background-color: $matched-color; }
 
     // Style for the unarchive button
     &.unarchive {

@@ -90,7 +90,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   protected highlightId = signal<number | null>(null);
 
   protected readonly statusFilters: LostReportStatusFilter[] = [
-    'All Statuses', 'pending', 'approved', 'matched', 'rejected'
+    'All Statuses', 'pending', 'approved', 'rejected'
   ];
 
   protected locations = computed(() => {
@@ -181,9 +181,13 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
       }),
       takeUntil(this.destroy$)
     ).subscribe((response: PaginatedResponse<Report>) => {
+      const filtered = response.items.filter(item => 
+        item.status?.toLowerCase() !== 'resolved'
+      );
+
       this.reports.update(existing =>
         this.currentPage() === 1
-          ? response.items
+          ? filtered
           : [...existing, ...response.items]
       );
       this.totalPages.set(response.totalPages);
@@ -216,21 +220,10 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
       next: () => {
         this.onStatusUpdated(item);
-
-        if (newStatus === 'matched') {
-          this.toastService.showSuccess(
-            `Item marked as ${newStatus} successfully.`,
-            'View Archive',
-            '/admin/archive/resolved',
-            { highlightId: item.report_id }
-          );
-        } else {
           this.toastService.showSuccess(`Item marked as
               ${newStatus} successfully.`);
-        }
       },
       error: (err) => {
-        console.error('Failed to update status', err);
         this.toastService.showError(
             'Failed to update status. Please try again.');
       }
