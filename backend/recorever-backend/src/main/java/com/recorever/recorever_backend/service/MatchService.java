@@ -65,6 +65,22 @@ public class MatchService {
     }
   }
 
+    /**
+   * Finds lost reports for a specific user that match a given found report
+   */
+  public List<Report> findPotentialMatchesForUser(
+      Report foundReport, int claimantId) {
+      List<Report> userLostReports = reportRepo
+          .findByUserIdAndTypeAndIsDeletedFalse(claimantId, "lost");
+
+    return userLostReports.stream()
+        .filter(lostReport -> 
+            "approved".equalsIgnoreCase(lostReport.getStatus()) || 
+            "matched".equalsIgnoreCase(lostReport.getStatus()))
+        .filter(lostReport -> checkNameSimilarity(foundReport, lostReport))
+        .collect(Collectors.toList());
+  }
+
   private void processMatchCreation(Report newR, Report existR, String type) {
     boolean isLocMatch = checkLocationProximity(newR, existR);
     boolean isDescMatch = checkDescriptionSimilarity(newR, existR);
@@ -83,8 +99,12 @@ public class MatchService {
       detail = "Name matched, but location/description differ. Check.";
     }
 
-    int lostId = type.equals("lost") ? newR.getReportId() : existR.getReportId();
-    int foundId = type.equals("found") ? newR.getReportId() : existR.getReportId();
+    int lostId = type.equals("lost") 
+        ? newR.getReportId() 
+        : existR.getReportId();
+    int foundId = type.equals("found") 
+        ? newR.getReportId()
+        : existR.getReportId();
 
     Match match = new Match();
     match.setLostReportId(lostId);
@@ -123,8 +143,10 @@ public class MatchService {
   }
 
   private boolean checkDescriptionSimilarity(Report r1, Report r2) {
-    String d1 = r1.getDescription() != null ? r1.getDescription().toLowerCase() : "";
-    String d2 = r2.getDescription() != null ? r2.getDescription().toLowerCase() : "";
+    String d1 = r1.getDescription() != null 
+        ? r1.getDescription().toLowerCase() : "";
+    String d2 = r2.getDescription() != null 
+        ? r2.getDescription().toLowerCase() : "";
 
     if (d1.isEmpty() || d2.isEmpty()) return false;
 
