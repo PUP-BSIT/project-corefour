@@ -16,6 +16,7 @@ export class ItemService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
   private cachedLocations: string[] | null = null;
+  private searchLocationCache = new Map<string, string[]>();
 
   submitFullReport(
       report: FinalReportSubmission,
@@ -123,6 +124,19 @@ export class ItemService {
 
     return this.http.get<string[]>(`${this.apiUrl}/reports/top-locations`).pipe(
       tap(locations => this.cachedLocations = locations)
+    );
+  }
+
+  searchLocations(query: string): Observable<string[]> {
+    if (this.searchLocationCache.has(query)) {
+      return of(this.searchLocationCache.get(query)!);
+    }
+
+    const params = new HttpParams().set('query', query);
+    return this.http.get<string[]>(`${this.apiUrl}/reports/locations`,
+        { params }).pipe(
+      tap((locations: string[]) =>
+          this.searchLocationCache.set(query, locations))
     );
   }
 }
