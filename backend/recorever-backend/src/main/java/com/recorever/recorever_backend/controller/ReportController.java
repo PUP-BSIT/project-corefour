@@ -7,6 +7,7 @@ import com.recorever.recorever_backend.service.ReportService;
 
 // Image Imports
 import com.recorever.recorever_backend.service.ImageService;
+import com.recorever.recorever_backend.service.MatchService;
 import com.recorever.recorever_backend.model.Image;
 
 // DTO imports
@@ -35,6 +36,9 @@ public class ReportController {
 
     @Autowired
     private ImageService imageService;
+
+    @Autowired
+    private MatchService matchService;
 
     private ImageResponseDTO convertToImageDto(Image image) {
         if (image == null || image.isDeleted()) return null;
@@ -261,5 +265,20 @@ public class ReportController {
             @RequestParam String surrender_code,
             @RequestParam String claim_code) {
         return ResponseEntity.status(403).body("This endpoint is deprecated.");
+    }
+
+    @GetMapping("/reports/{reportId}/potential-matches/{claimantId}")
+    public ResponseEntity<List<Report>> getPotentialMatches(
+            @PathVariable int reportId, 
+            @PathVariable int claimantId) {
+        Report foundReport = service.getById(reportId); 
+        if (foundReport == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Report> matches = matchService
+            .findPotentialMatchesForUser(foundReport, claimantId);
+        
+        return ResponseEntity.ok(matches);
     }
 }
