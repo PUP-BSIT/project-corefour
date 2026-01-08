@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 import { NotificationService } from '../../core/services/notification-service';
 import { ItemService } from '../../core/services/item-service';
@@ -26,7 +27,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-notification',
   standalone: true,
-  imports: [TimeAgoPipe, ItemDetailModal, ClaimFormModal],
+  imports: [TimeAgoPipe, ItemDetailModal, ClaimFormModal, MatButtonModule],
   templateUrl: './notification.html',
   styleUrl: './notification.scss',
 })
@@ -45,9 +46,12 @@ export class Notification implements OnInit, OnDestroy {
   notifications: UserNotification[] = [];
   currentPage = 1;
   totalPages = 1;
+  totalItems = 0;
   isLoading = false;
   isDropdownOpen = false;
-  hasUnreadNotifications = false;
+  unreadCount = 0;
+
+  currentFilter: 'all' | 'unread' = 'all';
 
   selectedReport = signal<Report | null>(null);
   currentUser = toSignal(this.authService.currentUser$);
@@ -74,7 +78,8 @@ export class Notification implements OnInit, OnDestroy {
       .subscribe({
         next: (newNotif) => {
           this.notifications = [newNotif, ...this.notifications];
-          this.hasUnreadNotifications = true;
+          this.unreadCount++;
+          this.totalItems++;
           this.cdr.markForCheck();
         },
         error: (err) => console.error('SSE connection failed', err)
@@ -98,7 +103,7 @@ export class Notification implements OnInit, OnDestroy {
     }
 
     this.notificationSub = this.notificationService
-      .getNotifications(page, 5)
+      .getNotifications(page, 5, this.currentFilter)
       .pipe(
         tap((response) => {
           if (page === 1) {
@@ -109,9 +114,8 @@ export class Notification implements OnInit, OnDestroy {
 
           this.currentPage = response.currentPage;
           this.totalPages = response.totalPages;
-          this.hasUnreadNotifications = this.notifications.some(
-            (notif) => notif.status === 'unread'
-          );
+          this.totalItems = response.totalItems;
+          this.unreadCount = response.unreadCount;
 
           this.isLoading = false;
           this.cdr.markForCheck();
@@ -126,12 +130,17 @@ export class Notification implements OnInit, OnDestroy {
       .subscribe();
   }
 
+  setFilter(filter: 'all' | 'unread'): void {
+    this.currentFilter = filter;
+    this.loadPage(1);
+  }
+
   toggleDropdown(): void {
     const isMobile = window.innerWidth < 768;
 
     if (isMobile) {
-      const role = this.isAdmin() ? 'admin' : 'user';
-      this.router.navigate([`/${role}/notifications`]);
+      const prefix = this.isAdmin() ? 'admin' : 'app';
+      this.router.navigate([`/${prefix}/notifications`]);
     } else {
       this.isDropdownOpen = !this.isDropdownOpen;
       if (this.isDropdownOpen) {
@@ -144,6 +153,28 @@ export class Notification implements OnInit, OnDestroy {
     this.loadPage(this.currentPage + 1);
   }
 
+  onMarkAllRead(event: Event): void {
+    event.stopPropagation();
+    if (this.unreadCount === 0) return;
+
+    this.notificationService.markAllAsRead().pipe(
+      tap(() => {
+        if (this.currentFilter === 'unread') {
+          this.notifications = [];
+        } else {
+          this.notifications.forEach(n => n.status = 'read');
+        }
+        this.unreadCount = 0;
+        this.cdr.markForCheck();
+        this.toastService.showSuccess('All notifications marked as read');
+      }),
+      catchError((err) => {
+        console.error('Failed to mark all as read', err);
+        return of(null);
+      })
+    ).subscribe();
+  }
+
   onNotificationClick(notification: UserNotification): void {
     let action$ = of(null);
 
@@ -151,8 +182,10 @@ export class Notification implements OnInit, OnDestroy {
       action$ = this.notificationService.markAsRead(notification.notif_id).pipe(
         tap(() => {
           notification.status = 'read';
-          this.hasUnreadNotifications = this.notifications
-            .some(n => n.status === 'unread');
+          this.unreadCount = Math.max(0, this.unreadCount - 1);
+
+          if (this.currentFilter === 'unread') {
+          }
         })
       );
     }
@@ -197,8 +230,8 @@ export class Notification implements OnInit, OnDestroy {
 
     if (width < 768 && this.isDropdownOpen) {
       this.isDropdownOpen = false;
-      const role = this.isAdmin() ? 'admin' : 'user';
-      this.router.navigate([`/${role}/notifications`]);
+      const prefix = this.isAdmin() ? 'admin' : 'app';
+      this.router.navigate([`/${prefix}/notifications`]);
       this.cdr.markForCheck();
     }
   }

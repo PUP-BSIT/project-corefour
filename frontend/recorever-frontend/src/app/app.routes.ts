@@ -4,7 +4,7 @@ import { authGuard } from './core/auth/auth-guard';
 import { publicGuard } from './core/auth/public-guard';
 import { adminGuard } from './core/auth/admin-guard';
 
-import { HeaderNFooterOnly 
+import { HeaderNFooterOnly
   } from './layout/header-nfooter-only/header-nfooter-only';
 import { HeaderOnly } from './layout/header-only/header-only';
 import { UserLayout } from './layout/user-layout/user-layout';
@@ -56,11 +56,11 @@ export const routes: Routes = [
       { path: 'register',
         loadComponent: () => import('./page/public/register-page/register-page')
           .then(m => m.RegisterPage) },
-      { path: 'forgot-password', 
+      { path: 'forgot-password',
         loadComponent: () =>
           import('./page/public/forgot-pass-page/forgot-pass-page')
             .then(m => m.ForgotPassPage) },
-      { path: 'reset-password', 
+      { path: 'reset-password',
         loadComponent: () =>
           import('./page/public/reset-pass-page/reset-pass-page')
             .then(m => m.ResetPassPage) },
@@ -71,26 +71,26 @@ export const routes: Routes = [
     component: UserLayout,
     children: [
       { path: 'lost-items',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/user/user-item-list-page/user-item-list-page')
             .then(m => m.UserItemListPage),
         data: { itemType: 'lost' }
       },
       { path: 'found-items',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/user/user-item-list-page/user-item-list-page')
             .then(m => m.UserItemListPage),
         data: { itemType: 'found' }
       },
       { path: 'report-lost',
         canActivate: [authGuard],
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/user/report-lost-page/report-lost-page')
             .then(m => m.ReportLostPage)
       },
       { path: 'report-found',
         canActivate: [authGuard],
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/user/report-found-page/report-found-page')
             .then(m => m.ReportFoundPage)
       },
@@ -105,6 +105,7 @@ export const routes: Routes = [
           .then(m => m.ProfilePage)
       },
       { path: 'notifications',
+        canActivate: [authGuard],
         loadComponent: () => import(
           './page/shared-page/notification-page/notification-page'
         ).then(m => m.NotificationPage)
@@ -113,7 +114,7 @@ export const routes: Routes = [
         loadComponent: () => import('./page/public/about-us-page/about-us-page')
           .then(m => m.AboutUsPage)
       },
-      { 
+      {
         path: 'help-page',
         loadComponent: () => import('./page/public/help-page/help-page')
           .then(m => m.HelpPage)
@@ -127,46 +128,46 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard],
     children: [
       { path: 'dashboard',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/admin/admin-dashboard-page/admin-dashboard-page')
             .then(m => m.AdminDashboardPage)
       },
       { path: 'manage-items',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/admin/manage-items-page/manage-items-page')
             .then(m => m.ManageItemsPage)
       },
       { path: 'lost-items',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/admin/admin-item-list-page/admin-item-list-page')
             .then(m => m.AdminItemListPage),
         data: { itemType: 'lost', status: 'approved' }
       },
       { path: 'found-items',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/admin/admin-item-list-page/admin-item-list-page')
             .then(m => m.AdminItemListPage),
         data: { itemType: 'found', status: 'approved' }
       },
       { path: 'report-status',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/admin/lost-status-page/lost-status-page')
             .then(m => m.LostStatusPage)
       },
       { path: 'archive/resolved',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/admin/admin-item-list-page/admin-item-list-page')
             .then(m => m.AdminItemListPage),
         data: { type: 'lost', status: 'matched' }
       },
       { path: 'archive/claimed',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/admin/admin-item-list-page/admin-item-list-page')
             .then(m => m.AdminItemListPage),
         data: { type: 'found', status: 'claimed' }
       },
       { path: 'claim-status',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./page/admin/found-status-page/claim-status-page')
             .then(m => m.ClaimStatusPage)
       },

@@ -50,7 +50,7 @@
       <mat-menu #cardMenu="matMenu" xPosition="before">
         @if (report().type !== 'lost' || report().claim_code) {
           <button mat-menu-item (click)="onViewCode($event)">
-            <mat-icon>qr_code_2</mat-icon>
+            <mat-icon>tag</mat-icon>
             <span>{{ getCodeButtonLabel() }}</span>
           </button>
         }

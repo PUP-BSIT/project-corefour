@@ -1,13 +1,25 @@
 <div class="page-container">
   <div class="notification-card">
     <header class="page-header">
-      <h1>Notifications</h1>
-
-      @if (notifications.length > 0) {
+      <div class="header-left">
+        <h1>Notifications</h1>
         <span class="count">
-          {{ notifications.length }} Total
+          <span (click)="setFilter('all')"
+                [class.active]="currentFilter === 'all'"
+                class="filter-link">All</span>
+          &bull;
+          <span (click)="setFilter('unread')"
+                [class.active]="currentFilter === 'unread'"
+                class="filter-link">{{ unreadCount }} Unread</span>
         </span>
-      }
+      </div>
+
+      <button mat-flat-button
+              color="primary"
+              [disabled]="unreadCount === 0"
+              (click)="onMarkAllRead()">
+        Mark all as read
+      </button>
     </header>
 
     <div class="notification-list">
@@ -29,14 +41,21 @@
           @if (!isLoading) {
             <img src="assets/no-notifications.svg" alt="No data">
           }
-          <p>You're all caught up!</p>
+          <p>
+            @if (currentFilter === 'unread') {
+              No unread notifications.
+            } @else {
+              You're all caught up!
+            }
+          </p>
         </div>
       }
     </div>
 
     @if (currentPage < totalPages) {
       <div class="page-footer">
-        <button class="load-more" (click)="loadPage(currentPage + 1)" [disabled]="isLoading">
+        <button class="load-more" (click)="loadPage(currentPage + 1)"
+            [disabled]="isLoading">
           {{ isLoading ? 'Loading...' : 'Load Older Notifications' }}
         </button>
       </div>

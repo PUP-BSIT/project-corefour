@@ -16,89 +16,99 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RequestMapping("/api")
 public class NotificationController {
 
-    @Autowired
-    private NotificationService service;
+  @Autowired
+  private NotificationService service;
 
-    private final CopyOnWriteArrayList<SseEmitter> emitters = 
-            new CopyOnWriteArrayList<>();
+  private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    @GetMapping("/notifications/stream")
-    public SseEmitter streamNotifications(Authentication authentication) {
-        User authenticatedUser = (User) authentication.getPrincipal();
-        int userId = authenticatedUser.getUserId();
-        String role = authenticatedUser.getRole();
+  @GetMapping("/notifications/stream")
+  public SseEmitter streamNotifications(Authentication authentication) {
+    User authenticatedUser = (User) authentication.getPrincipal();
+    int userId = authenticatedUser.getUserId();
+    String role = authenticatedUser.getRole();
 
-        SseEmitter emitter = new SseEmitter(0L);
+    SseEmitter emitter = new SseEmitter(0L);
 
-        service.addEmitter(userId, role, emitter);
+    service.addEmitter(userId, role, emitter);
 
-        emitter.onCompletion(() -> service.removeEmitter(userId));
-        emitter.onTimeout(() -> service.removeEmitter(userId));
-        emitter.onError((e) -> service.removeEmitter(userId));
+    emitter.onCompletion(() -> service.removeEmitter(userId));
+    emitter.onTimeout(() -> service.removeEmitter(userId));
+    emitter.onError((e) -> service.removeEmitter(userId));
 
-        new Thread(() -> {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("connected")
-                        .data("ok"));
+    new Thread(() -> {
+      try {
+        emitter.send(SseEmitter.event()
+            .name("connected")
+            .data("ok"));
 
-                while (true) {
-                    Thread.sleep(15000);
-                    emitter.send(SseEmitter.event()
-                            .name("ping")
-                            .data(""));
-                }
-            } catch (Exception e) {
-                emitter.complete();
-            }
-        }).start();
+        while (true) {
+          Thread.sleep(15000);
+          emitter.send(SseEmitter.event()
+              .name("ping")
+              .data(""));
+        }
+      } catch (Exception e) {
+        emitter.complete();
+      }
+    }).start();
 
-        return emitter;
+    return emitter;
+  }
+
+  @GetMapping("/notifications")
+  public ResponseEntity<Map<String, Object>> listNotifications(
+      Authentication authentication,
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(required = false) String status) {
+
+    User authenticatedUser = (User) authentication.getPrincipal();
+    int userId = authenticatedUser.getUserId();
+
+    Map<String, Object> paginatedResponse = service.listByUserId(userId, page, size, status);
+
+    return ResponseEntity.ok(paginatedResponse);
+  }
+
+  @PutMapping("/notifications/{id}/read")
+  public ResponseEntity<?> markAsRead(
+      Authentication authentication,
+      @PathVariable int id) {
+
+    User authenticatedUser = (User) authentication.getPrincipal();
+    int userId = authenticatedUser.getUserId();
+
+    Notification notification = service.getById(id);
+    if (notification == null) {
+      return ResponseEntity.status(404)
+          .body("Notification not found.");
     }
 
-    @GetMapping("/notifications")
-    public ResponseEntity<Map<String, Object>> listNotifications(
-            Authentication authentication,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        
-        User authenticatedUser = (User) authentication.getPrincipal();
-        int userId = authenticatedUser.getUserId();
-
-        Map<String, Object> paginatedResponse = 
-                service.listByUserId(userId, page, size);
-        
-        return ResponseEntity.ok(paginatedResponse);
+    if (notification.getUser_id() != userId) {
+      return ResponseEntity.status(403)
+          .body("You are not authorized to access this.");
     }
 
-    @PutMapping("/notifications/{id}/read")
-    public ResponseEntity<?> markAsRead(
-            Authentication authentication, 
-            @PathVariable int id) {
-
-        User authenticatedUser = (User) authentication.getPrincipal();
-        int userId = authenticatedUser.getUserId();
-
-        Notification notification = service.getById(id);
-        if (notification == null) {
-            return ResponseEntity.status(404)
-                    .body("Notification not found.");
-        }
-
-        if (notification.getUser_id() != userId) {
-            return ResponseEntity.status(403)
-                    .body("You are not authorized to access this.");
-        }
-
-        boolean updated = service.markAsRead(id);
-        if (!updated) {
-            return ResponseEntity.badRequest()
-                    .body("Failed to mark notification as read.");
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "success", true, 
-                "message", "Notification marked as read."
-        ));
+    boolean updated = service.markAsRead(id);
+    if (!updated) {
+      return ResponseEntity.badRequest()
+          .body("Failed to mark notification as read.");
     }
+
+    return ResponseEntity.ok(Map.of(
+        "success", true,
+        "message", "Notification marked as read."));
+  }
+
+  @PutMapping("/notifications/read-all")
+  public ResponseEntity<?> markAllAsRead(Authentication authentication) {
+    User authenticatedUser = (User) authentication.getPrincipal();
+    int userId = authenticatedUser.getUserId();
+
+    service.markAllAsRead(userId);
+
+    return ResponseEntity.ok(Map.of(
+        "success", true,
+        "message", "All notifications marked as read."));
+  }
 }

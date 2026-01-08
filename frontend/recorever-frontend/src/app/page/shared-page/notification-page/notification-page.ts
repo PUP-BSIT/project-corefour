@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
 import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 import {
   NotificationService
@@ -26,7 +27,13 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-notification-page',
   standalone: true,
-  imports: [CommonModule, TimeAgoPipe, ItemDetailModal, ClaimFormModal],
+  imports: [
+    CommonModule,
+    TimeAgoPipe,
+    ItemDetailModal,
+    ClaimFormModal,
+    MatButtonModule
+  ],
   templateUrl: './notification-page.html',
   styleUrl: './notification-page.scss',
 })
@@ -43,7 +50,11 @@ export class NotificationPage implements OnInit, OnDestroy {
   notifications: UserNotification[] = [];
   currentPage = 1;
   totalPages = 1;
+  totalItems = 0;
+  unreadCount = 0;
   isLoading = false;
+
+  currentFilter: 'all' | 'unread' = 'all';
 
   selectedReport = signal<Report | null>(null);
   currentUser = toSignal(this.authService.currentUser$);
@@ -62,6 +73,8 @@ export class NotificationPage implements OnInit, OnDestroy {
       .subscribe({
         next: (newNotif) => {
           this.notifications = [newNotif, ...this.notifications];
+          this.unreadCount++;
+          this.totalItems++;
           this.cdr.markForCheck();
         },
         error: (err) => console.error('SSE connection failed', err)
@@ -78,7 +91,7 @@ export class NotificationPage implements OnInit, OnDestroy {
     this.isLoading = true;
 
     this.notificationSub = this.notificationService
-      .getNotifications(page, 10)
+      .getNotifications(page, 10, this.currentFilter)
       .pipe(
         tap((response) => {
           this.notifications = page === 1
@@ -86,6 +99,9 @@ export class NotificationPage implements OnInit, OnDestroy {
                              : [...this.notifications, ...response.items];
           this.currentPage = response.currentPage;
           this.totalPages = response.totalPages;
+          this.totalItems = response.totalItems;
+          this.unreadCount = response.unreadCount;
+
           this.isLoading = false;
           this.cdr.markForCheck();
         }),
@@ -96,6 +112,32 @@ export class NotificationPage implements OnInit, OnDestroy {
       ).subscribe();
   }
 
+  setFilter(filter: 'all' | 'unread'): void {
+    this.currentFilter = filter;
+    this.loadPage(1);
+  }
+
+  onMarkAllRead(): void {
+    if (this.unreadCount === 0) return;
+
+    this.notificationService.markAllAsRead().pipe(
+      tap(() => {
+        if (this.currentFilter === 'unread') {
+           this.notifications = [];
+        } else {
+           this.notifications.forEach(n => n.status = 'read');
+        }
+        this.unreadCount = 0;
+        this.cdr.markForCheck();
+        this.toastService.showSuccess('All notifications marked as read');
+      }),
+      catchError((err) => {
+        console.error('Failed to mark all as read', err);
+        return of(null);
+      })
+    ).subscribe();
+  }
+
   onNotificationClick(notification: UserNotification): void {
     let action$ = of(null);
 
@@ -103,6 +145,7 @@ export class NotificationPage implements OnInit, OnDestroy {
       action$ = this.notificationService.markAsRead(notification.notif_id).pipe(
         tap(() => {
           notification.status = 'read';
+          this.unreadCount = Math.max(0, this.unreadCount - 1);
           this.cdr.markForCheck();
         })
       );
@@ -135,7 +178,6 @@ export class NotificationPage implements OnInit, OnDestroy {
     return null;
   }
 
-  // Placeholder handlers for modal outputs
   onViewTicket(): void {}
   onEdit(): void {}
   onDelete(): void {}

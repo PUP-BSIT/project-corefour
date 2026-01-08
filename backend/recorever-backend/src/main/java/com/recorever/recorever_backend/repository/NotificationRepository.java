@@ -12,20 +12,38 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Repository
-public interface NotificationRepository 
-        extends JpaRepository<Notification, Integer> {
+public interface NotificationRepository
+    extends JpaRepository<Notification, Integer> {
 
-    @Query("SELECT n FROM Notification n WHERE n.user_id = :userId " +
-           "ORDER BY n.created_at DESC")
-    List<Notification> findByUserId(@Param("userId") int userId, 
-                                    Pageable pageable);
+  @Query("SELECT n FROM Notification n WHERE n.user_id = :userId " +
+      "ORDER BY n.created_at DESC")
+  List<Notification> findByUserId(@Param("userId") int userId,
+      Pageable pageable);
 
-    @Query("SELECT COUNT(n) FROM Notification n WHERE n.user_id = :userId")
-    int countByUserId(@Param("userId") int userId);
+  @Query("SELECT n FROM Notification n WHERE n.user_id = :userId AND n.status = :status " +
+      "ORDER BY n.created_at DESC")
+  List<Notification> findByUserIdAndStatus(@Param("userId") int userId,
+      @Param("status") String status,
+      Pageable pageable);
 
-    @Modifying
-    @Transactional
-    @Query("UPDATE Notification n SET n.status = 'read' " +
-           "WHERE n.notif_id = :notifId")
-    int markAsRead(@Param("notifId") int notifId);
+  @Query("SELECT COUNT(n) FROM Notification n WHERE n.user_id = :userId")
+  int countByUserId(@Param("userId") int userId);
+
+  @Query("SELECT COUNT(n) FROM Notification n WHERE n.user_id = :userId AND n.status = :status")
+  int countByUserIdAndStatus(@Param("userId") int userId, @Param("status") String status);
+
+  @Query("SELECT COUNT(n) FROM Notification n WHERE n.user_id = :userId AND n.status = 'unread'")
+  int countUnreadByUserId(@Param("userId") int userId);
+
+  @Modifying
+  @Transactional
+  @Query("UPDATE Notification n SET n.status = 'read' " +
+      "WHERE n.notif_id = :notifId")
+  int markAsRead(@Param("notifId") int notifId);
+
+  @Modifying
+  @Transactional
+  @Query("UPDATE Notification n SET n.status = 'read' " +
+      "WHERE n.user_id = :userId AND n.status = 'unread'")
+  void markAllAsRead(@Param("userId") int userId);
 }
