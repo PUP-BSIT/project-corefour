@@ -2,6 +2,7 @@ package com.recorever.recorever_backend.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -13,6 +14,7 @@ import lombok.Data;
 public class UserRegistrationDTO {
 
     @NotBlank(message = "Name is required")
+    @Pattern(regexp = "^\\S+$", message = "Username cannot contain spaces")
     private String name;
 
     @NotBlank(message = "Email is required")

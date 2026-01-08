@@ -33,8 +33,16 @@ public class UserService {
 
     @Transactional
     public int register(String name, String phone, String email, String pwd) {
-        if (repo.findByEmailAndIsDeletedFalse(email).isPresent()) {
-            return -1;
+        if (repo.isNameTaken(name, 0)) {
+            throw new IllegalArgumentException("Username is already taken.");
+        }
+
+        if (repo.isPhoneNumberTaken(phone, 0)) {
+            throw new IllegalArgumentException("Phone number is already registered.");
+        }
+
+        if (repo.isEmailTaken(email, 0)) {
+            throw new IllegalArgumentException("Email is already in use.");
         }
 
         User user = new User();
