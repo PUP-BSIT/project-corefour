@@ -6,7 +6,11 @@ import {
   Output,
   ViewEncapsulation,
   signal,
-  computed
+  computed,
+  inject,
+  ElementRef,
+  Renderer2,
+  DestroyRef
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -20,6 +24,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { ScrollDispatcher, ScrollingModule, CdkScrollable } from '@angular/cdk/scrolling';
 
 import {
   debounceTime,
@@ -48,7 +53,8 @@ export type FilterState = {
     MatButtonModule,
     MatIconModule,
     MatInputModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    ScrollingModule
   ],
   templateUrl: './filter.html',
   styleUrl: './filter.scss',
@@ -67,6 +73,11 @@ export class Filter implements OnInit {
   protected filteredLocations$: Observable<string[]> = of([]);
 
   private locations$ = toObservable(this.locations);
+
+  private scrollDispatcher = inject(ScrollDispatcher);
+  private elementRef = inject(ElementRef);
+  private renderer = inject(Renderer2);
+  private destroyRef = inject(DestroyRef);
 
   protected dateLabel = computed((): string => {
     if (this.genericLabels()) {
@@ -87,6 +98,10 @@ export class Filter implements OnInit {
       sort: ['newest'],
       date: [null],
       location: ['']
+    });
+
+    this.destroyRef.onDestroy(() => {
+      this.toggleParentScroll(true);
     });
   }
 
@@ -118,6 +133,29 @@ export class Filter implements OnInit {
         this.updateDefaultState(value);
         this.emitFilter(value);
       });
+  }
+
+  protected onLocationPanelOpened(): void {
+    this.toggleParentScroll(false);
+  }
+
+  protected onLocationPanelClosed(): void {
+    this.toggleParentScroll(true);
+  }
+
+  /**
+  @param enable
+   */
+  private toggleParentScroll(enable: boolean): void {
+    const scrollContainers =
+        this.scrollDispatcher.getAncestorScrollContainers(this.elementRef);
+
+    if (scrollContainers && scrollContainers.length > 0) {
+      const containerRef = scrollContainers[0].getElementRef();
+      const value = enable ? '' : 'hidden';
+
+      this.renderer.setStyle(containerRef.nativeElement, 'overflow', value);
+    }
   }
 
   protected resetFilters(): void {
