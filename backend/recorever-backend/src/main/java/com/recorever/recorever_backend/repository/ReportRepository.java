@@ -66,6 +66,8 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
     List<Report> findByTypeAndStatusAndIsDeletedFalseOrderByDateReportedDesc(
             String type, String status);
 
+    List<Report> findByUserIdAndTypeAndIsDeletedFalse(int userId, String type);
+
     Optional<Report> findByReportIdAndIsDeletedFalse(int id);
 
     @Modifying
