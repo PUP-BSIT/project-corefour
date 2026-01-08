@@ -246,7 +246,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     const type = this.itemType();
     const statusFilter = type === 'found'
       ? (showResolved ? 'claimed' : 'approved')
-      : (showResolved ? 'matched' : 'approved');
+      : (showResolved ? 'resolved' : 'approved');
 
     this.filters.update(curr => ({ ...curr, status: statusFilter as any }));
     this.resetPagination();
