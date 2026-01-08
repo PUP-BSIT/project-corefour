@@ -13,7 +13,8 @@ export type ReportStatus =
   | 'matched'
   | 'claimed'
   | 'closed'
-  | 'rejected';
+  | 'rejected'
+  | 'resolved';
 
 export type Report = {
   report_id: number;
