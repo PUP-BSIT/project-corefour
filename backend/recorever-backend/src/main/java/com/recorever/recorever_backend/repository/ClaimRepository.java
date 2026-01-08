@@ -14,6 +14,9 @@ import java.util.Optional;
 @Repository
 public interface ClaimRepository extends JpaRepository<Claim, Integer> {
 
+    List<Claim> findByReportIdOrMatchingLostReportId(
+       int reportId, int matchingLostReportId);
+
     @Query("SELECT c FROM Claim c ORDER BY c.createdAt DESC")
     List<Claim> findAllOrderByCreatedAtDesc();
 
