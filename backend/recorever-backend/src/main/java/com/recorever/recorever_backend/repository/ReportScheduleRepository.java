@@ -19,23 +19,27 @@ public interface ReportScheduleRepository
 
     Optional<ReportSchedule> findByReportId(int reportId);
 
-    @Query("SELECT rs.reportId FROM ReportSchedule rs " +
+   @Query("SELECT rs.reportId FROM ReportSchedule rs " +
            "WHERE rs.notify1Sent = false " +
            "AND rs.notify1Time <= :now " +
            "AND rs.reportId IN (SELECT r.reportId FROM Report r " +
-           "WHERE r.isDeleted = false)")
+           "WHERE r.isDeleted = false " +
+           "AND r.status NOT IN ('resolved', 'claimed'))")
     List<Integer> findReportsForNotify1(@Param("now") LocalDateTime now);
 
     @Query("SELECT rs.reportId FROM ReportSchedule rs " +
            "WHERE rs.notify2Sent = false " +
            "AND rs.notify2Time <= :now " +
            "AND rs.reportId IN (SELECT r.reportId FROM Report r " +
-           "WHERE r.isDeleted = false)")
+           "WHERE r.isDeleted = false " +
+           "AND r.status NOT IN ('resolved', 'claimed'))")
     List<Integer> findReportsForNotify2(@Param("now") LocalDateTime now);
 
     @Query("SELECT r FROM Report r JOIN ReportSchedule rs " +
            "ON r.reportId = rs.reportId " +
-           "WHERE r.isDeleted = false AND rs.deleteTime <= :now")
+           "WHERE r.isDeleted = false " +
+           "AND r.status NOT IN ('resolved', 'claimed') " +
+           "AND rs.deleteTime <= :now")
     List<Report> findReportsReadyForSoftDelete(@Param("now") LocalDateTime now);
 
     @Modifying
