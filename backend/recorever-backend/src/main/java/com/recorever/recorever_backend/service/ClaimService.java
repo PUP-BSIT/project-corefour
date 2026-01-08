@@ -67,59 +67,54 @@ public class ClaimService {
 
   @Transactional
   public Claim createManualClaim(ManualClaimRequestDTO req) {
-    int reportId = req.getReport_id().intValue();
-    Report report = reportRepo.findByReportIdAndIsDeletedFalse(reportId)
-        .orElseThrow(() -> new RuntimeException("Report not found"));
+      int reportId = req.getReport_id().intValue();
+      Report foundReport = reportRepo.findByReportIdAndIsDeletedFalse(reportId)
+              .orElseThrow(() -> new RuntimeException("Found report not found"));
 
-    Claim claim = new Claim();
-    claim.setReportId(reportId);
-    claim.setClaimantName(req.getClaimant_name());
-    claim.setContactEmail(req.getContact_email());
-    claim.setContactPhone(req.getContact_phone());
-    claim.setAdminRemarks(req.getAdmin_remarks());
-    claim.setCreatedAt(LocalDateTime.now().toString());
+      Claim claim = new Claim();
+      claim.setReportId(reportId);
+      claim.setClaimantName(req.getClaimant_name());
+      claim.setContactEmail(req.getContact_email());
+      claim.setContactPhone(req.getContact_phone());
+      claim.setAdminRemarks(req.getAdmin_remarks());
+      claim.setCreatedAt(LocalDateTime.now().toString());
 
-    Claim saved = repo.save(claim);
+      if (req.getMatching_lost_report_id() != null) {
+          int lostId = req.getMatching_lost_report_id().intValue();
+          claim.setMatchingLostReportId(lostId);
 
-    report.setStatus("claimed");
-    reportRepo.save(report);
+          Report lostReport = reportRepo.findByReportIdAndIsDeletedFalse(lostId)
+                  .orElseThrow(() -> new RuntimeException(
+                          "Matching lost report not found"));
 
-    return saved;
-  }
+          lostReport.setStatus("resolved");
+          lostReport.setDateResolved(LocalDateTime.now().toString());
+          reportRepo.save(lostReport);
 
-  @Transactional
-  public Map<String, Object> create(int reportId, int userId) {
-    Report report = reportRepo.findByReportIdAndIsDeletedFalse(reportId)
-        .orElseThrow(() -> new RuntimeException("Target Report not found"));
+          // NOTIFICATION: To the user who LOST the item
+          String lostMsg = String.format(
+                  "Your lost item '%s' has been resolved. " +
+                  "We're glad we could help you find it!",
+                  lostReport.getItemName());
 
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+          notificationService.create(
+                  lostReport.getUserId(), lostId, lostMsg, true);
+      }
 
-    String code = UUID.randomUUID().toString()
-        .substring(0, 8).toUpperCase();
+      Claim saved = repo.save(claim);
+      foundReport.setStatus("claimed");
+      reportRepo.save(foundReport);
 
-    Claim claim = new Claim();
-    claim.setReportId(reportId);
-    claim.setClaimantName(user.getName());
-    claim.setContactEmail(user.getEmail());
-    claim.setContactPhone(user.getPhoneNumber());
+      // NOTIFICATION: To the user who FOUND the item
+      String foundMsg = String.format(
+          "Good news! Your found item '%s' has been successfully claimed. " +
+          "Thank you for your honesty and for being a hero in our community!",
+          foundReport.getItemName());
 
-    claim.setAdminRemarks("System Generated Claim");
-    claim.setCreatedAt(LocalDateTime.now().toString());
+      notificationService.create(
+              foundReport.getUserId(), reportId, foundMsg, true);
 
-    Claim saved = repo.save(claim);
-
-    String notifMsg = String.format(
-        "New Claim #%d submitted for item: %s. Code: %s",
-        saved.getClaimId(), report.getItemName(), code);
-
-    notificationService.create(ADMIN_USER_ID, reportId, notifMsg, false);
-
-    return Map.of(
-        "claim_id", saved.getClaimId(),
-        "claim_code", code,
-        "status", "pending",
-        "message", "Claim ticket created successfully.");
+      return saved;
   }
 
   private void populateTransientUserData(Claim claim) {
