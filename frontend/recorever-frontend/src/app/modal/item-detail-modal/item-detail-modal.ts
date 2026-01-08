@@ -175,6 +175,19 @@ export class ItemDetailModal {
 
   onEdit(event: Event): void {
     event.stopPropagation();
+
+    const reportData = this.item();
+    const path = reportData.type === 'lost'
+      ? '/app/report-lost'
+      : '/app/report-found';
+
+    this.router.navigate([path], {
+      state: {
+        data: reportData,
+        mode: 'EDIT'
+      }
+    });
+
     this.editClicked.emit();
   }
 
