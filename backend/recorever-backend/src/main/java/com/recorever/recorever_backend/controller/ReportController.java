@@ -18,6 +18,7 @@ import com.recorever.recorever_backend.dto.ImageResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -75,6 +76,22 @@ public class ReportController {
         dto.setSurrender_code(report.getSurrenderCode());
         dto.setReporter_name(report.getReporterName());
         dto.setExpiry_date(report.getExpiryDate());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isOwnerOrAdmin = false;
+
+        if (auth != null && auth.getPrincipal() instanceof User) {
+            User currentUser = (User) auth.getPrincipal();
+            boolean isOwner = (report.getUserId() == currentUser.getUserId());
+            boolean isAdmin = currentUser.getRole().equalsIgnoreCase("ADMIN");
+            isOwnerOrAdmin = isOwner || isAdmin;
+        }
+
+        if (isOwnerOrAdmin && !"resolved".equalsIgnoreCase(report.getStatus())) {
+            dto.setExpiry_date(report.getExpiryDate());
+        } else {
+            dto.setExpiry_date(null);
+        }
 
         if (report.getImages() != null) {
             dto.setImages(report.getImages().stream()
