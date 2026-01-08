@@ -171,16 +171,17 @@
                 class="status-btn"
                 [ngClass]="(item().status || 'pending').toLowerCase()"
                 (click)="toggleDropdown($event)">
-              {{ (item().status === 'approved' ? 'Verified' : item().status) | titlecase }}
+                {{ (item().status === 'approved' || item().status === 'matched' 
+                    ? 'Verified' 
+                    : item().status) | titlecase }}
               <span class="arrow">▼</span>
             </button>
 
             @if (isDropdownOpen()) {
-              <div class="dropdown-content"
-                   (click)="$event.stopPropagation()">
+              <div class="dropdown-content" (click)="$event.stopPropagation()">
                 @for (option of STATUS_OPTIONS; track option.value) {
-                  @if (option.value !==
-                      (item().status || 'pending').toLowerCase()) {
+                  @if (option.value !== (item().status || 'pending').toLowerCase() && 
+                      !(option.label === 'Verified' && displayStatus() === 'Verified')) {
                     <div
                       [class.disabled-option]="isStatusDisabled(option.value)"
                       [matTooltip]="getOptionTooltip(option.value)"

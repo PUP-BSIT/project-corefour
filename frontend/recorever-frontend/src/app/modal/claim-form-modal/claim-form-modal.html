@@ -101,11 +101,13 @@
                 </button>
               } @else {
                 <button
-                    class="status-btn"
-                    [ngClass]="(report()?.status || 'pending').toLowerCase()"
-                    [style.cursor]="isReadOnly ? 'default' : 'pointer'"
-                    (click)="toggleDropdown($event)">
-                  {{ report()?.status || 'Pending' }}
+                  class="status-btn"
+                  [ngClass]="(report()?.status || 'pending').toLowerCase()"
+                  [style.cursor]="isReadOnly ? 'default' : 'pointer'"
+                  (click)="toggleDropdown($event)">
+                  
+                  {{ displayStatus() | titlecase }}
+
                   @if (!isReadOnly) {
                     <span class="arrow">▼</span>
                   }
@@ -113,11 +115,10 @@
               }
 
               @if (isDropdownOpen() && !isReadOnly && !isArchive) {
-                <div class="dropdown-content"
-                    (click)="$event.stopPropagation()">
+                <div class="dropdown-content" (click)="$event.stopPropagation()">
                   @for (option of STATUS_OPTIONS; track option.value) {
-                    @if (option.value !==
-                        (report()?.status || 'pending').toLowerCase()) {
+                    @if (option.value !== (report()?.status || 'pending').toLowerCase() && 
+                        !(option.label === 'Verified' && displayStatus() === 'Verified')) {
                       <div
                         [class.disabled-option]="isStatusDisabled(option.value)"
                         [matTooltip]="getOptionTooltip(option.value)"

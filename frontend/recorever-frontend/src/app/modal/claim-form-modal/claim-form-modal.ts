@@ -134,18 +134,21 @@ export class ClaimFormModal implements OnInit {
 
   protected displayStatus = computed((): ItemStatus => {
     const currentStatus = this.report()?.status;
-    if (currentStatus === 'approved') {
-      return 'Verified';
-    }
-    if (currentStatus === 'matched') {
-      return 'Matched';
-    }
     if (currentStatus === 'claimed') {
       return 'Claimed';
     }
+    if (currentStatus === 'resolved') {
+      return 'Resolved';
+    }
+
+    if (currentStatus === 'approved' || currentStatus === 'matched') {
+      return 'Verified';
+    }
+    
     if (currentStatus === 'rejected') {
       return 'Rejected';
     }
+    
     return 'Pending';
   });
 
