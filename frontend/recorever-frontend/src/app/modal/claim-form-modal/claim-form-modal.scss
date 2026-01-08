@@ -7,7 +7,6 @@ $verified-green: #2e7d32;
 $denied-red: #ef4444;
 $pending-yellow: #fbbf24;
 $claimed-dark: #333333;
-$matched-color: #1976D2;
 
 :host {
   .full-width, .w-100 { width: 100%; }
@@ -358,12 +357,11 @@ $matched-color: #1976D2;
 
     &:active { transform: scale(0.98); }
 
-    &.verified, &.approved { background-color: $verified-green; }
+    &.verified, &.approved, &.matched { background-color: $verified-green; }
     &.pending { background-color: $pending-yellow; color: black; }
     &.claimed { background-color: $claimed-dark; }
     &.denied, &.rejected { background-color: $denied-red; }
     &.resolved { background-color: $claimed-dark; }
-    &.matched { background-color: $matched-color; }
 
     // Style for the unarchive button
     &.unarchive {
