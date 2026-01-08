@@ -62,7 +62,7 @@
 }
 
 @if (selectedItem(); as item) {
-  @if (isArchiveView() && (item.status === 'claimed' || item.status === 'resolved')) {
+  @if (isArchiveView() && (item.status === 'claimed')) {
     <app-claim-form-modal
       [claimData]="item"
       [isReadOnly]="true"
