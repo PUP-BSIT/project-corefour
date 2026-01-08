@@ -9,7 +9,7 @@ import {
   signal,
   computed
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
@@ -21,7 +21,7 @@ import { ItemDetailModal } from '../../modal/item-detail-modal/item-detail-modal
 import { ClaimFormModal } from '../../modal/claim-form-modal/claim-form-modal';
 import type { UserNotification } from '../../models/notification-model';
 import type { Report } from '../../models/item-model';
-import { Subscription, tap, catchError, of, switchMap } from 'rxjs';
+import { Subscription, tap, catchError, of, switchMap, filter } from 'rxjs'; // [Update] Added filter
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -42,6 +42,7 @@ export class Notification implements OnInit, OnDestroy {
 
   private streamSub!: Subscription;
   private notificationSub!: Subscription;
+  private routerSub!: Subscription;
 
   notifications: UserNotification[] = [];
   currentPage = 1;
@@ -51,6 +52,7 @@ export class Notification implements OnInit, OnDestroy {
   isDropdownOpen = false;
   unreadCount = 0;
 
+  isOnNotificationPage = false;
   currentFilter: 'all' | 'unread' = 'all';
 
   selectedReport = signal<Report | null>(null);
@@ -68,8 +70,26 @@ export class Notification implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.checkCurrentRoute(); // [New] Initial check
+
+    // [New] Listen for route changes
+    this.routerSub = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.checkCurrentRoute();
+    });
+
     this.loadPage(1);
     this.initSseStream();
+  }
+
+  // [New] Helper to determine if we are on the page
+  checkCurrentRoute(): void {
+    this.isOnNotificationPage = this.router.url.includes('/notifications');
+    if (this.isOnNotificationPage) {
+      this.isDropdownOpen = false;
+    }
+    this.cdr.markForCheck();
   }
 
   initSseStream(): void {
@@ -89,6 +109,7 @@ export class Notification implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.streamSub) this.streamSub.unsubscribe();
     if (this.notificationSub) this.notificationSub.unsubscribe();
+    if (this.routerSub) this.routerSub.unsubscribe();
   }
 
   loadPage(page: number, silentLoad = false): void {
@@ -136,17 +157,30 @@ export class Notification implements OnInit, OnDestroy {
   }
 
   toggleDropdown(): void {
+    if (this.isOnNotificationPage) {
+      return;
+    }
+
     const isMobile = window.innerWidth < 768;
 
     if (isMobile) {
-      const prefix = this.isAdmin() ? 'admin' : 'app';
-      this.router.navigate([`/${prefix}/notifications`]);
+      this.navigateToNotificationsPage();
     } else {
       this.isDropdownOpen = !this.isDropdownOpen;
       if (this.isDropdownOpen) {
         this.loadPage(1);
       }
     }
+  }
+
+  onSeeAll(): void {
+    this.navigateToNotificationsPage();
+    this.isDropdownOpen = false;
+  }
+
+  private navigateToNotificationsPage(): void {
+    const prefix = this.isAdmin() ? 'admin' : 'app';
+    this.router.navigate([`/${prefix}/notifications`]);
   }
 
   onViewMore(): void {
@@ -183,9 +217,6 @@ export class Notification implements OnInit, OnDestroy {
         tap(() => {
           notification.status = 'read';
           this.unreadCount = Math.max(0, this.unreadCount - 1);
-
-          if (this.currentFilter === 'unread') {
-          }
         })
       );
     }
@@ -230,8 +261,7 @@ export class Notification implements OnInit, OnDestroy {
 
     if (width < 768 && this.isDropdownOpen) {
       this.isDropdownOpen = false;
-      const prefix = this.isAdmin() ? 'admin' : 'app';
-      this.router.navigate([`/${prefix}/notifications`]);
+      this.navigateToNotificationsPage();
       this.cdr.markForCheck();
     }
   }

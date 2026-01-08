@@ -1,6 +1,9 @@
 <div class="notification-wrapper">
-  <button (click)="toggleDropdown()" class="icon-button">
-    <img src="assets/notification.png" alt="Notification">
+  <button
+    (click)="toggleDropdown()"
+    class="icon-button"
+    [class.active]="isOnNotificationPage"> <img src="assets/notification.png"
+        alt="Notification">
 
     @if (unreadCount > 0) {
       <div class="notification-badge">
@@ -23,13 +26,17 @@
       </div>
 
       <div class="dropdown-subheader">
-        <span (click)="setFilter('all')"
-              [class.active]="currentFilter === 'all'"
-              class="filter-link">All</span>
-        &bull;
-        <span (click)="setFilter('unread')"
-              [class.active]="currentFilter === 'unread'"
-              class="filter-link">{{ unreadCount }} Unread</span>
+        <div class="filters">
+          <span (click)="setFilter('all')"
+                [class.active]="currentFilter === 'all'"
+                class="filter-link">All</span>
+          &bull;
+          <span (click)="setFilter('unread')"
+                [class.active]="currentFilter === 'unread'"
+                class="filter-link">{{ unreadCount }} Unread</span>
+        </div>
+
+        <span class="see-all-link" (click)="onSeeAll()">See all</span>
       </div>
 
       <div class="dropdown-list">
@@ -63,7 +70,7 @@
       @if (currentPage < totalPages) {
         <div class="dropdown-footer">
           <button class="view-more-btn" (click)="onViewMore()">
-            View more
+            See previous notifications
           </button>
         @if(isLoading && currentPage > 1) {
           <div class="loading-spinner">Loading...</div>

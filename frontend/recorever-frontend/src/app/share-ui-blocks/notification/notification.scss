@@ -16,9 +16,10 @@
   justify-content: center;
   color: #374151;
 
-  &:hover {
+  &:hover, &.active {
     background-color: #f3f4f6;
   }
+
   img {
     width: 20px;
     height: 20px;
@@ -93,18 +94,38 @@
   font-size: 0.75rem;
   color: #6b7280;
   font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
-  .filter-link {
+  .filters {
+    display: flex;
+    gap: 0.25rem;
+
+    .filter-link {
+      cursor: pointer;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #111827;
+      }
+
+      &.active {
+        color: #2563eb;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .see-all-link {
     cursor: pointer;
+    color: #2563eb;
+    font-weight: 500;
     transition: color 0.2s;
 
     &:hover {
-      color: #111827;
-    }
-
-    &.active {
-      color: #2563eb;
-      font-weight: 600;
+      color: #1e3a8a;
+      text-decoration: underline;
     }
   }
 }
