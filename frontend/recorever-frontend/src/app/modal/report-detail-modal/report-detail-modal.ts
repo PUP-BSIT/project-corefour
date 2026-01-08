@@ -76,8 +76,9 @@ export class ReportDetailModal implements OnInit {
   protected getDisplayStatus(status: Report['status']): ItemStatus {
     switch (status) {
       case 'approved':
+        return 'Verified'
       case 'matched':
-        return 'Verified';
+        return 'Matched';
       case 'claimed':
         return 'Claimed';
       case 'rejected':

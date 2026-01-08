@@ -55,8 +55,7 @@ export class ItemDetailModal {
   protected readonly STATUS_OPTIONS = [
     { value: 'pending', label: 'Pending' },
     { value: 'approved', label: 'Verified' },
-    { value: 'rejected', label: 'Rejected' },
-    { value: 'matched', label: 'Matched' }
+    { value: 'rejected', label: 'Rejected' }
   ];
 
   protected currentImageIndex = signal<number>(0);
@@ -113,6 +112,9 @@ export class ItemDetailModal {
     const s = this.item().status;
     if (s === 'approved' || s === 'matched') {
       return 'Verified';
+    }
+    if (s === 'resolved') {
+      return 'Resolved';
     }
     return (s.charAt(0).toUpperCase() + s.slice(1)) as ItemStatus;
   });
