@@ -4,6 +4,7 @@ import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import com.recorever.recorever_backend.repository.ReportScheduleRepository;
 import com.recorever.recorever_backend.repository.UserRepository;
+import com.recorever.recorever_backend.repository.ClaimRepository;
 import com.recorever.recorever_backend.repository.ImageRepository;
 import com.recorever.recorever_backend.model.Image;
 import com.recorever.recorever_backend.model.ReportSchedule;
@@ -44,6 +45,9 @@ public class ReportService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ClaimRepository claimRepo;
 
     private static final int ADMIN_USER_ID = 1;
 
@@ -189,9 +193,27 @@ public class ReportService {
             report.setDateResolved(dateResolved);
 
             if ("approved".equalsIgnoreCase(status)) {
-                String now = LocalDateTime.now().format(
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                report.setDateReported(now);
+                report.setDateResolved(null);
+
+                claimRepo.findByReportIdOrMatchingLostReportId(id, id)
+                .forEach(claim -> {
+                    int linkedId = (claim.getReportId() == id) 
+                        ? (claim.getMatchingLostReportId() != null ? claim.getMatchingLostReportId() : 0)
+                        : claim.getReportId();
+                    
+                    if (linkedId != 0) {
+                      repo.findByReportIdAndIsDeletedFalse(linkedId)
+                        .ifPresent(linked -> {
+                        if ("claimed".equalsIgnoreCase(linked.getStatus()) || 
+                          "rejected".equalsIgnoreCase(linked.getStatus())) {
+                          
+                          linked.setStatus("approved");
+                          linked.setDateResolved(null);
+                          repo.save(linked);
+                        }
+                      });
+                    }
+                });
             }
 
             repo.save(report);
