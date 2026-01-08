@@ -25,6 +25,13 @@ import { UserService } from '../../../../core/services/user-service';
 type PasswordFieldType = 'password' | 'text';
 type PasswordStrength = 'none' | 'weak' | 'medium' | 'strong';
 
+export function noWhitespaceValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const isWhitespace = (control.value || '').toString().indexOf(' ') >= 0;
+    return isWhitespace ? { hasSpaces: true } : null;
+  };
+}
+
 export function passwordMatchValidator(
   controlName: string,
   matchingControlName: string
@@ -40,12 +47,12 @@ export function passwordMatchValidator(
     if (control.value !== matchingControl.value) {
       matchingControl.setErrors({ passwordMismatch: true });
       return { passwordMismatch: true };
-    } else {
-      if (matchingControl.hasError('passwordMismatch')) {
-        matchingControl.setErrors(null);
-      }
-      return null;
     }
+
+    if (matchingControl.hasError('passwordMismatch')) {
+      matchingControl.setErrors(null);
+    }
+    return null;
   };
 }
 
@@ -85,14 +92,26 @@ export class RegisterFormComponent implements OnChanges {
   private userService = inject(UserService);
   private cdr = inject(ChangeDetectorRef);
 
+  @Input() isLoading = false;
+  @Input() errorMessage: string | null = null;
+  @Output() formSubmit = new EventEmitter<RegisterRequest>();
+
+  passwordFieldType: PasswordFieldType = 'password';
+  confirmPasswordFieldType: PasswordFieldType = 'password';
+  passwordStrength: PasswordStrength = 'none';
+
   registerForm = this.formBuilder.group(
     {
       name: [
         '',
         {
-          validators: [Validators.required],
-          asyncValidators: [this.userService.uniqueValidator('name', '')],
-          updateOn: 'blur',
+          validators: [
+            Validators.required,
+            noWhitespaceValidator(),
+          ],
+          asyncValidators: [
+            this.userService.uniqueValidator('name', '')
+          ],
         },
       ],
 
@@ -104,9 +123,8 @@ export class RegisterFormComponent implements OnChanges {
             Validators.pattern(/^(\+63|0)9\d{9}$/),
           ],
           asyncValidators: [
-            this.userService.uniqueValidator('phone_number', ''),
+            this.userService.uniqueValidator('phone_number', '')
           ],
-          updateOn: 'blur',
         },
       ],
 
@@ -114,8 +132,9 @@ export class RegisterFormComponent implements OnChanges {
         '',
         {
           validators: [Validators.required, Validators.email],
-          asyncValidators: [this.userService.uniqueValidator('email', '')],
-          updateOn: 'blur',
+          asyncValidators: [
+            this.userService.uniqueValidator('email', '')
+          ],
         },
       ],
 
@@ -142,14 +161,6 @@ export class RegisterFormComponent implements OnChanges {
     }
   );
 
-  @Output() formSubmit = new EventEmitter<RegisterRequest>();
-  @Input() isLoading = false;
-  @Input() errorMessage: string | null = null;
-
-  passwordFieldType: PasswordFieldType = 'password';
-  confirmPasswordFieldType: PasswordFieldType = 'password';
-  passwordStrength: PasswordStrength = 'none';
-
   constructor() {
     this.registerForm.get('password')?.valueChanges.subscribe((value) => {
       this.updatePasswordStrength(value || '');
@@ -162,23 +173,22 @@ export class RegisterFormComponent implements OnChanges {
     }
   }
 
-  get name() {
+  get name(): AbstractControl | null {
     return this.registerForm.get('name');
   }
-  get phone_number() {
+  get phone_number(): AbstractControl | null {
     return this.registerForm.get('phone_number');
   }
-  get email() {
+  get email(): AbstractControl | null {
     return this.registerForm.get('email');
   }
-  get password() {
+  get password(): AbstractControl | null {
     return this.registerForm.get('password');
   }
-  get confirmPassword() {
+  get confirmPassword(): AbstractControl | null {
     return this.registerForm.get('confirmPassword');
   }
 
-  // Method to Calculate Strength
   private updatePasswordStrength(value: string): void {
     if (!value) {
       this.passwordStrength = 'none';

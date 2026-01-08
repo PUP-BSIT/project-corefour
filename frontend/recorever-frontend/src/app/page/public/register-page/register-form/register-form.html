@@ -17,7 +17,9 @@
         @if (name?.errors?.['required']) {
           <span>Name is required.</span>
         }
-
+        @if (name?.errors?.['hasSpaces']) {
+          <span>Username cannot contain spaces.</span>
+        }
         @if (name?.errors?.['notUnique']) {
           <span>This username is already taken.</span>
         }
