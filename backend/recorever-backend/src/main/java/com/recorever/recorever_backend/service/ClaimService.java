@@ -4,7 +4,6 @@ import com.recorever.recorever_backend.dto.ClaimResponseDTO;
 import com.recorever.recorever_backend.dto.ManualClaimRequestDTO;
 import com.recorever.recorever_backend.model.Claim;
 import com.recorever.recorever_backend.model.Report;
-import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.ClaimRepository;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import com.recorever.recorever_backend.repository.UserRepository;
@@ -14,8 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,8 +29,6 @@ public class ClaimService {
 
   @Autowired
   private UserRepository userRepository;
-
-  private static final int ADMIN_USER_ID = 1;
 
   public List<ClaimResponseDTO> getClaimsForReport(int reportId) {
     return repo.findByReportId(reportId).stream()
