@@ -118,10 +118,15 @@ export class ItemService {
     );
   }
 
+  updateMatchStatus(matchId: number, status: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/match/${matchId}`, { status });
+  }
+
   getMatchForReport(reportId: number): Observable<MatchResponseDTO | undefined> {
     return this.http.get<MatchResponseDTO[]>(`${this.apiUrl}/matches`).pipe(
       map((matches) =>
-        matches.find(m => m.lost_report_id === reportId || m.found_report_id === reportId)
+        matches.find(m => m.lost_report_id === reportId ||
+            m.found_report_id === reportId)
       )
     );
   }

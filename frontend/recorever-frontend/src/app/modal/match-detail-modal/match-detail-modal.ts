@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip' // [Imported for tooltip]
+import { MatTooltipModule } from '@angular/material/tooltip'
 import { ItemDetailModal } from '../item-detail-modal/item-detail-modal';
 import { Report } from '../../models/item-model';
 import { ItemService } from '../../core/services/item-service';
@@ -23,6 +23,7 @@ export class MatchDetailModal implements OnInit {
 
   matchedItem = signal<Report | null>(null);
   isLoading = signal<boolean>(true);
+  matchId = signal<number | null>(null);
 
   step: 'confirm' | 'success' = 'confirm';
   showItemDetails = false;
@@ -37,6 +38,12 @@ export class MatchDetailModal implements OnInit {
     this.itemService.getMatchForReport(this.report.report_id).pipe(
       switchMap(match => {
         if (!match) throw new Error('Match not found');
+
+        this.matchId.set(match.match_id);
+
+        if (match.status === 'Confirmed') {
+          this.step = 'success';
+        }
 
         const otherId = match.lost_report_id === this.report.report_id
           ? match.found_report_id
@@ -71,7 +78,21 @@ export class MatchDetailModal implements OnInit {
   }
 
   onConfirmOwnership(): void {
-    this.step = 'success';
+    const id = this.matchId();
+    if (!id) return;
+
+    this.isLoading.set(true);
+
+    this.itemService.updateMatchStatus(id, 'Confirmed').subscribe({
+      next: () => {
+        this.step = 'success';
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to confirm match', err);
+        this.isLoading.set(false);
+      }
+    });
   }
 
   onItemClick(): void {
