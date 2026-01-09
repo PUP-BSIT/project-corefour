@@ -23,5 +23,6 @@ public class ReportResponseDTO {
     private String expiry_date;
     private String surrender_code;
     private String reporter_name;
+    private String reporter_profile_picture;
     private List<ImageResponseDTO> images;
 }
