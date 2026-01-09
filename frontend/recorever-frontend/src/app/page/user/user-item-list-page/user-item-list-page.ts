@@ -377,7 +377,6 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
   public getUserProfilePicture(): string | null {
     const item = this.selectedItem();
-    if (!item) return null;
-    return null;
+    return item?.reporter_profile_picture ?? null;
   }
 }

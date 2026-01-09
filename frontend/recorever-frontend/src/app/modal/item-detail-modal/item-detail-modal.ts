@@ -134,7 +134,11 @@ export class ItemDetailModal {
   }
 
   getUserProfilePicture(): string {
-    return this.userProfilePicture() || 'assets/profile-avatar.png';
+    const path = this.item().reporter_profile_picture;
+    if (!path) return 'assets/profile-avatar.png';
+
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://').replace(/\/$/, '');
+    return `${secureBaseUrl}/image/download/${path}`;
   }
 
   getCodeButtonLabel(): string {
