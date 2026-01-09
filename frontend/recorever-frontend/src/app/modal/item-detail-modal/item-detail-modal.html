@@ -105,7 +105,7 @@
       <div class="details-section">
         <h2 class="item-title">{{ item().item_name }}</h2>
 
-        @if (item().expiry_date && (isOwner() || isAdmin())) {
+        @if (item().expiry_date && (isOwner() )) {
           <div class="detail-row expiry-warning">
             <mat-icon color="warn">event_busy</mat-icon>
             <span class="detail-label">Report Expiry:</span>
@@ -175,17 +175,17 @@
                 class="status-btn"
                 [ngClass]="(item().status || 'pending').toLowerCase()"
                 (click)="toggleDropdown($event)">
-              {{ (item().status === 'approved' ? 'Verified' :
-                  item().status) | titlecase }}
+                {{ (item().status === 'approved' || item().status === 'matched'
+                    ? 'Verified'
+                    : item().status) | titlecase }}
               <span class="arrow">▼</span>
             </button>
 
             @if (isDropdownOpen()) {
-              <div class="dropdown-content"
-                   (click)="$event.stopPropagation()">
+              <div class="dropdown-content" (click)="$event.stopPropagation()">
                 @for (option of STATUS_OPTIONS; track option.value) {
-                  @if (option.value !==
-                      (item().status || 'pending').toLowerCase()) {
+                  @if (option.value !== (item().status || 'pending').toLowerCase() &&
+                      !(option.label === 'Verified' && displayStatus() === 'Verified')) {
                     <div
                       [class.disabled-option]="isStatusDisabled(option.value)"
                       [matTooltip]="getOptionTooltip(option.value)"

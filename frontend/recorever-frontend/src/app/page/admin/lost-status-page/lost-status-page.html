@@ -14,7 +14,7 @@
               (change)="setStatusFilter(statusSelect.value)">
         @for (status of statusFilters; track status) {
           <option [value]="status">
-            {{ status | titlecase }}
+            {{ status === 'approved' ? 'Verified' : (status | titlecase) }}
           </option>
         }
       </select>

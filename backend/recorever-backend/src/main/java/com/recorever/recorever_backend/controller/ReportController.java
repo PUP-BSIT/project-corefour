@@ -7,6 +7,7 @@ import com.recorever.recorever_backend.service.ReportService;
 
 // Image Imports
 import com.recorever.recorever_backend.service.ImageService;
+import com.recorever.recorever_backend.service.MatchService;
 import com.recorever.recorever_backend.model.Image;
 
 // DTO imports
@@ -17,6 +18,7 @@ import com.recorever.recorever_backend.dto.ImageResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -35,6 +37,9 @@ public class ReportController {
 
     @Autowired
     private ImageService imageService;
+
+    @Autowired
+    private MatchService matchService;
 
     private ImageResponseDTO convertToImageDto(Image image) {
         if (image == null || image.isDeleted()) return null;
@@ -71,6 +76,22 @@ public class ReportController {
         dto.setSurrender_code(report.getSurrenderCode());
         dto.setReporter_name(report.getReporterName());
         dto.setExpiry_date(report.getExpiryDate());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isOwnerOrAdmin = false;
+
+        if (auth != null && auth.getPrincipal() instanceof User) {
+            User currentUser = (User) auth.getPrincipal();
+            boolean isOwner = (report.getUserId() == currentUser.getUserId());
+            boolean isAdmin = currentUser.getRole().equalsIgnoreCase("ADMIN");
+            isOwnerOrAdmin = isOwner || isAdmin;
+        }
+
+        if (isOwnerOrAdmin && !"resolved".equalsIgnoreCase(report.getStatus())) {
+            dto.setExpiry_date(report.getExpiryDate());
+        } else {
+            dto.setExpiry_date(null);
+        }
 
         if (report.getImages() != null) {
             dto.setImages(report.getImages().stream()
@@ -261,5 +282,20 @@ public class ReportController {
             @RequestParam String surrender_code,
             @RequestParam String claim_code) {
         return ResponseEntity.status(403).body("This endpoint is deprecated.");
+    }
+
+    @GetMapping("/reports/{reportId}/potential-matches/{claimantId}")
+    public ResponseEntity<List<Report>> getPotentialMatches(
+            @PathVariable int reportId, 
+            @PathVariable int claimantId) {
+        Report foundReport = service.getById(reportId); 
+        if (foundReport == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Report> matches = matchService
+            .findPotentialMatchesForUser(foundReport, claimantId);
+        
+        return ResponseEntity.ok(matches);
     }
 }

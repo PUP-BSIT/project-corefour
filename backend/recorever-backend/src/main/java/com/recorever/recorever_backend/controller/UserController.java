@@ -61,24 +61,29 @@ public class UserController {
     @PostMapping("/register-user")
     public ResponseEntity<?> registerUser(
             @Valid @RequestBody UserRegistrationDTO registrationDto) {
-        int userId = service.register(
-                registrationDto.getName(),
-                registrationDto.getPhone_number(),
-                registrationDto.getEmail(),
-                registrationDto.getPassword()
-        );
+        try {
+            int userId = service.register(
+                    registrationDto.getName(),
+                    registrationDto.getPhone_number(),
+                    registrationDto.getEmail(),
+                    registrationDto.getPassword()
+            );
 
-        if (userId == -1) {
+            User newUser = repo.findByIdAndIsDeletedFalse(userId)
+                    .orElseThrow(() -> new RuntimeException(
+                            "User not found after registration"));
+
+            UserResponseDTO responseDto = mapToUserResponseDTO(newUser);
+            return ResponseEntity.status(201).body(responseDto);
+
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Email already exists"));
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "error", "An unexpected error occurred."
+            ));
         }
-
-        User newUser = repo.findByIdAndIsDeletedFalse(userId)
-                .orElseThrow(() -> new RuntimeException(
-                        "User not found after registration"));
-        
-        UserResponseDTO responseDto = mapToUserResponseDTO(newUser);
-        return ResponseEntity.status(201).body(responseDto);
     }
 
     @PostMapping("/login-user")
@@ -166,8 +171,15 @@ public class UserController {
             Authentication authentication,
             @RequestParam String field,
             @RequestParam String value) {
-        User user = (User) authentication.getPrincipal();
-        int userId = user.getUserId();
+        
+        int userId = 0;
+
+        if (authentication != null && authentication.isAuthenticated() && 
+            !"anonymousUser".equals(authentication.getPrincipal())) {
+            User user = (User) authentication.getPrincipal();
+            userId = user.getUserId();
+        }
+
         boolean isUnique = true;
 
         if ("email".equals(field)) {

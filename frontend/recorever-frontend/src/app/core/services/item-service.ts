@@ -153,4 +153,10 @@ export class ItemService {
           this.searchLocationCache.set(query, locations))
     );
   }
+
+  getPotentialMatches(reportId: number, claimantId: number): Observable<Report[]> {
+    return this.http.get<Report[]>(
+      `${this.apiUrl}/reports/${reportId}/potential-matches/${claimantId}`
+    );
+  }
 }

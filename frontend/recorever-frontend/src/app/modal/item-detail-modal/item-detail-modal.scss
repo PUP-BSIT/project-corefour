@@ -340,11 +340,10 @@ $rejected-color: #D32F2F;
 
     &:active { transform: scale(0.98); }
 
-    &.verified, &.approved { background-color: $verified-color; }
+    &.verified, &.approved, &.matched { background-color: $verified-color; }
     &.pending { background-color: $pending-color; color: black; }
-    &.claimed { background-color: $claimed-color; }
+    &.claimed, &.resolved { background-color: $claimed-color; }
     &.denied, &.rejected { background-color: $rejected-color; }
-    &.matched { background-color: $matched-color; }
 
     .arrow { font-size: 0.7rem; }
   }
