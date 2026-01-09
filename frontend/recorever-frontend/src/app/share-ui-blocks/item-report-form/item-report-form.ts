@@ -1,5 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject
-} from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { 
   ReactiveFormsModule,
@@ -65,7 +64,6 @@ export class ItemReportForm implements OnInit {
   protected locationOptions: string[] = [];
   protected filteredLocations!: Observable<string[]>;
   protected allLocations: string[] = [];
-  private locationsSubject = new BehaviorSubject<string[]>([])
   protected maxDate = new Date();
   protected isSubmitting = false;
   protected loadingMessage = 'Submitting...';
@@ -144,7 +142,7 @@ export class ItemReportForm implements OnInit {
         this.allLocations = Object.values(StandardLocations);
         this.setupFiltering();
       }
-    })
+    });
 
     if (this.initialData) {
       const rawDate = this.initialData.date_lost_found
@@ -276,7 +274,9 @@ export class ItemReportForm implements OnInit {
     const formatDateForMySQL = (dateInput: string | Date | null): string => {
         if (!dateInput) return '';
         const d = new Date(dateInput);
-        return d.toISOString().slice(0, 19).replace('T', ' ');
+        const localDate = 
+                    new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
+        return localDate.toISOString().slice(0, 19).replace('T', ' ');
     };
 
     const cleanedPhotoUrls = this.photoUrlsFormArray.value
