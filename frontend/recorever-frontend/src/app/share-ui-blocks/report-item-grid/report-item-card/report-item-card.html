@@ -50,7 +50,7 @@
       <mat-menu #cardMenu="matMenu" xPosition="before">
         @if (report().type !== 'lost' || report().claim_code) {
           <button mat-menu-item (click)="onViewCode($event)">
-            <mat-icon>qr_code_2</mat-icon>
+            <mat-icon>tag</mat-icon>
             <span>{{ getCodeButtonLabel() }}</span>
           </button>
         }
@@ -110,7 +110,7 @@
   </mat-card-content>
 
   <mat-card-actions align="end" class="card-footer">
-    @if (isArchiveView()) {
+    @if (canShowUnarchive()) {
       <button
           mat-button class="unarchive-btn"
           (click)="onUnarchive($event);
@@ -135,7 +135,7 @@
         </div>
       }
 
-      @else {
+      @else if (report().status !== 'claimed') {
         <button
               mat-button class="view-ticket-btn"
               (click)="onTicketClick();

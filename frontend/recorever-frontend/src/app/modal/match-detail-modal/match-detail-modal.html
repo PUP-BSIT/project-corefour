@@ -1,0 +1,123 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      @if (step === 'confirm') {
+        <h2>Confirm Match</h2>
+      } @else {
+        <h2>It's a Match!</h2>
+      }
+      <button class="close-btn" (click)="onClose()">
+        <img src="assets/remove.png" alt="Close">
+      </button>
+    </div>
+
+    <div class="modal-body">
+      @if (isLoading()) {
+        <div class="loading-state">Finding your match details...</div>
+      }
+      @else if (matchedItem(); as item) {
+
+        @if (step === 'confirm') {
+          <div class="step-content">
+            <p class="instruction-text">
+              We found an item that matches your report!
+              <br><strong>Is this the item?</strong>
+            </p>
+
+            <div class="item-card clickable"
+                 (click)="onItemClick()"
+                 title="Click to view full details">
+
+              @if (matchedImageUrl) {
+                <img [src]="matchedImageUrl" alt="Item Image"
+                    class="item-image">
+              } @else {
+                <div class="no-image-placeholder">No Image Available</div>
+              }
+
+              <div class="item-info">
+                <h3>{{ item.item_name }}</h3>
+                <p class="description">{{ item.description }}</p>
+
+                <div class="meta-row">
+                  <span class="label">Location:</span>
+                  <span class="value">{{ item.location }}</span>
+                </div>
+
+                <div class="meta-row">
+                  <span class="label">Date:</span>
+                  <span class="value">{{ (item.date_lost_found ||
+                      item.date_reported) | date:'mediumDate' }}</span>
+                </div>
+              </div>
+
+              <div class="chevron">
+                <img src="assets/arrow-right.png" alt="View">
+              </div>
+            </div>
+
+            <div class="actions-row">
+              <button mat-stroked-button color="warn" (click)="onClose()">
+                No, not mine
+              </button>
+              <button mat-flat-button color="primary"
+                  (click)="onConfirmOwnership()">
+                Yes, it's mine
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (step === 'success') {
+          <div class="step-content success-view">
+            <div class="success-icon">
+              <img src="assets/check-icon.png" alt="Success">
+            </div>
+
+            <h3>Verification Successful</h3>
+            <p class="sub-text">
+              Please present this <strong>Reference Code</strong> to the
+              <strong>ADMIN Office</strong> to claim your item.
+            </p>
+
+            <div class="code-container">
+              <div class="code-box">
+                <span class="code-text">{{ matchedReferenceCode }}</span>
+              </div>
+              <span class="code-label">FOUND ITEM REFERENCE CODE</span>
+            </div>
+
+            <div class="reminder-box">
+              <p><strong>Note:</strong> You may be asked to provide additional proof of ownership.</p>
+            </div>
+
+            <div class="actions-row single-action">
+              <button mat-flat-button color="primary" (click)="onClose()">
+                Done
+              </button>
+            </div>
+          </div>
+        }
+
+      }
+      @else {
+        <div class="error-state">
+          <p>Could not load match details. Please try again later.</p>
+          <button mat-button (click)="onClose()">Close</button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (showItemDetails && matchedItem()) {
+  <app-item-detail-modal
+    [item]="matchedItem()!"
+    [currentUserId]="currentUserId"
+    [isAdmin]="false"
+    [isArchiveView]="false"
+    [isMatchView]="true"
+    (close)="onItemDetailClose()">
+  </app-item-detail-modal>
+}

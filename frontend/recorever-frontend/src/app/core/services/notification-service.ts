@@ -18,11 +18,15 @@ export class NotificationService {
   private authService = inject(AuthService);
 
   getNotifications(
-    page: number, size: number
+    page: number, size: number, status?: string
   ): Observable<PaginatedNotifications> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
+
+    if (status && status !== 'all') {
+      params = params.set('status', status);
+    }
 
     return this.http.get<PaginatedNotifications>(
       `${this.API_BASE_URL}/notifications`, { params }
@@ -31,6 +35,10 @@ export class NotificationService {
 
   markAsRead(id: number): Observable<any> {
     return this.http.put(`${this.API_BASE_URL}/notifications/${id}/read`, {});
+  }
+
+  markAllAsRead(): Observable<any> {
+    return this.http.put(`${this.API_BASE_URL}/notifications/read-all`, {});
   }
 
   getNotificationStream(): Observable<UserNotification> {

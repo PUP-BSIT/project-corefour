@@ -277,9 +277,15 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
     this.adminService.updateReportStatus(item.report_id, targetStatus)
       .pipe(
         tap(() => {
+          this.adminService.clearCache();
+
           this.allReports.update((reports: Report[]) =>
-            reports.filter((r: Report) => r.report_id !== item.report_id)
+            reports.filter((r: Report) => 
+              r.report_id !== item.report_id && 
+              r.report_id !== item.matching_lost_report_id
+            )
           );
+
           this.itemToUnarchive.set(null);
 
           const actionRoute = item.type === 'found' ?
@@ -288,7 +294,7 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
               'View Found Status' : 'View Lost Item';
 
           this.toastService.showSuccess(
-            'Item unarchived successfully.',
+            'Item and linked reports unarchived successfully.',
             actionLabel,
             actionRoute,
             { highlightId: item.report_id }

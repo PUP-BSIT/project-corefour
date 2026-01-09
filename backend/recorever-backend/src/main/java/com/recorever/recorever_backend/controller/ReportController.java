@@ -3,6 +3,7 @@ package com.recorever.recorever_backend.controller;
 // Service & Repository Imports
 import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.model.User;
+import com.recorever.recorever_backend.repository.UserRepository;
 import com.recorever.recorever_backend.service.ReportService;
 
 // Image Imports
@@ -41,6 +42,9 @@ public class ReportController {
     @Autowired
     private MatchService matchService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private ImageResponseDTO convertToImageDto(Image image) {
         if (image == null || image.isDeleted()) return null;
 
@@ -77,17 +81,20 @@ public class ReportController {
         dto.setReporter_name(report.getReporterName());
         dto.setExpiry_date(report.getExpiryDate());
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Authentication auth = SecurityContextHolder
+                .getContext().getAuthentication();
         boolean isOwnerOrAdmin = false;
 
         if (auth != null && auth.getPrincipal() instanceof User) {
             User currentUser = (User) auth.getPrincipal();
             boolean isOwner = (report.getUserId() == currentUser.getUserId());
-            boolean isAdmin = currentUser.getRole().equalsIgnoreCase("ADMIN");
+            boolean isAdmin = currentUser.getRole()
+                .equalsIgnoreCase("ADMIN");
             isOwnerOrAdmin = isOwner || isAdmin;
         }
 
-        if (isOwnerOrAdmin && !"resolved".equalsIgnoreCase(report.getStatus())) {
+        if (isOwnerOrAdmin && !"resolved"
+            .equalsIgnoreCase(report.getStatus())) {
             dto.setExpiry_date(report.getExpiryDate());
         } else {
             dto.setExpiry_date(null);
@@ -98,6 +105,12 @@ public class ReportController {
                     .filter(img -> !img.isDeleted())
                     .map(this::convertToImageDto)
                     .collect(Collectors.toList()));
+        }
+
+        User reporter = userRepository.findById(report.getUserId()).orElse(null);
+        if (reporter != null) {
+            dto.setReporter_name(reporter.getName());
+            dto.setReporter_profile_picture(reporter.getProfilePicture());
         }
         return dto;
     }

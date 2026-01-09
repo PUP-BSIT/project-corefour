@@ -75,8 +75,9 @@
   </div>
 
   <div class="form-field photo-upload-field">
-    <label>Upload Photo: 
-      <small>(Upload if available, max 5 photos)</small></label>
+    <label>Upload Photo <span class="required-asterisk">*</span>: 
+    <small>(Required, max 5 photos)</small>
+    </label>
 
     <input
         #fileInput
@@ -126,6 +127,12 @@
         </div>
       }
     </div>
+    
+    @if (imageError) {
+        <mat-error class="photo-error">
+            At least one image is required.
+        </mat-error>
+    }
   </div>
 
   @if (submissionError) {
@@ -139,8 +146,8 @@
     <button 
       type="submit" 
       class="btn btn-submit" 
-      [disabled]="isSubmitting || reportForm.invalid"
-      [title]="reportForm.invalid
+      [disabled]="isSubmitting"
+      [title]="reportForm.invalid || imageError
         ? 'Please fill out all required fields correctly' : ''">
       
       <div class="loading-container">

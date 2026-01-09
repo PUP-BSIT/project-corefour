@@ -1,24 +1,36 @@
 <div class="page-container">
   <div class="notification-card">
     <header class="page-header">
-      <h1>Notifications</h1>
-      
-      @if (notifications.length > 0) {
+      <div class="header-left">
+        <h1>Notifications</h1>
         <span class="count">
-          {{ notifications.length }} Total
+          <span (click)="setFilter('all')"
+                [class.active]="currentFilter === 'all'"
+                class="filter-link">All</span>
+          &bull;
+          <span (click)="setFilter('unread')"
+                [class.active]="currentFilter === 'unread'"
+                class="filter-link">{{ unreadCount }} Unread</span>
         </span>
-      }
+      </div>
+
+      <button mat-flat-button
+              color="primary"
+              [disabled]="unreadCount === 0"
+              (click)="onMarkAllRead()">
+        Mark all as read
+      </button>
     </header>
 
     <div class="notification-list">
       @for (notification of notifications; track notification.notif_id) {
-        <div 
-          class="notification-row" 
+        <div
+          class="notification-row"
           [class.unread]="notification.status === 'unread'"
           (click)="onNotificationClick(notification)">
-          
+
           <div class="status-indicator"></div>
-          
+
           <div class="content">
             <p class="message" [innerHTML]="notification.message"></p>
             <span class="date">{{ notification.created_at | timeAgo }}</span>
@@ -27,19 +39,71 @@
       } @empty {
         <div class="empty-state">
           @if (!isLoading) {
-            <img src="assets/no-notifications.svg" alt="No data">
+            <img src="assets/notification.png" alt="No data">
           }
-          <p>You're all caught up!</p>
+          <p>
+            @if (currentFilter === 'unread') {
+              No unread notifications.
+            } @else {
+              You're all caught up!
+            }
+          </p>
         </div>
       }
     </div>
 
     @if (currentPage < totalPages) {
       <div class="page-footer">
-        <button class="load-more" (click)="loadPage(currentPage + 1)" [disabled]="isLoading">
+        <button class="load-more" (click)="loadPage(currentPage + 1)"
+            [disabled]="isLoading">
           {{ isLoading ? 'Loading...' : 'Load Older Notifications' }}
         </button>
       </div>
     }
   </div>
 </div>
+
+@if (selectedReport(); as report) {
+  @if (isAdmin() && report.type === 'found') {
+    <app-claim-form-modal
+      [claimData]="report"
+      [isArchive]="report.status === 'claimed'"
+      [isReadOnly]="report.status === 'claimed'"
+      (close)="onModalClose()"
+      (statusChange)="onStatusChange($event)">
+    </app-claim-form-modal>
+  }
+  @else if (!isAdmin() && report.status === 'matched'
+      && report.type === 'lost') {
+    <app-match-detail-modal
+      [report]="report"
+      [currentUserId]="currentUserId()"
+      (close)="onModalClose()">
+    </app-match-detail-modal>
+  }
+  @else {
+    <app-item-detail-modal
+      [item]="report"
+      [currentUserId]="currentUserId()"
+      [userProfilePicture]="getUserProfilePicture()"
+      [isAdmin]="isAdmin()"
+      [isArchiveView]="report.status === 'matched' ||
+          report.status === 'claimed'"
+      (close)="onModalClose()"
+      (viewTicket)="onViewTicket()"
+      (editClicked)="onEdit()"
+      (deleteClicked)="onDelete()"
+      (viewCodeClicked)="onViewCode()"
+      (statusChanged)="onStatusChange($event)">
+    </app-item-detail-modal>
+  }
+}
+
+@if (showCodeModal && selectedReport()) {
+  <app-codes-modal
+    title="Reference Code"
+    [code]="selectedReport()!.surrender_code ||
+        selectedReport()!.claim_code || 'N/A'"
+    (close)="showCodeModal = false">
+  </app-codes-modal>
+}
