@@ -81,14 +81,15 @@
               <strong>OSAS Office</strong> to claim your item.
             </p>
 
-            <div class="reference-code-box">
-              <span class="label">ITEM REF CODE</span>
-              <span class="code">REF-{{ item.report_id }}</span>
+            <div class="code-container">
+              <div class="code-box">
+                <span class="code-text">{{ matchedReferenceCode }}</span>
+              </div>
+              <span class="code-label">FOUND ITEM REFERENCE CODE</span>
             </div>
 
             <div class="reminder-box">
-              <p><strong>Note:</strong> You may be asked to provide additional
-                  proof of ownership.</p>
+              <p><strong>Note:</strong> You may be asked to provide additional proof of ownership.</p>
             </div>
 
             <div class="actions-row single-action">
@@ -116,6 +117,7 @@
     [currentUserId]="currentUserId"
     [isAdmin]="false"
     [isArchiveView]="false"
+    [isMatchView]="true"
     (close)="onItemDetailClose()">
   </app-item-detail-modal>
 }

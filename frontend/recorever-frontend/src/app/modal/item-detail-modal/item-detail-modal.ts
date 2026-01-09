@@ -40,6 +40,8 @@ export class ItemDetailModal {
   isArchiveView = input<boolean>(false);
   isAdmin = input<boolean>(false);
 
+  isMatchView = input<boolean>(false);
+
   @Output() close = new EventEmitter<void>();
   @Output() viewTicket = new EventEmitter<void>();
   @Output() editClicked = new EventEmitter<void>();
@@ -51,7 +53,6 @@ export class ItemDetailModal {
   public isDropdownOpen = signal<boolean>(false);
   showClaimModal = false;
 
-  // Preserved dropdown options for Manage Lost Items
   protected readonly STATUS_OPTIONS = [
     { value: 'pending', label: 'Pending' },
     { value: 'approved', label: 'Verified' },

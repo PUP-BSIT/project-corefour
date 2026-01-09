@@ -1,15 +1,16 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip' // [Imported for tooltip]
 import { ItemDetailModal } from '../item-detail-modal/item-detail-modal';
 import { Report } from '../../models/item-model';
 import { ItemService } from '../../core/services/item-service';
-import { switchMap, tap, of } from 'rxjs';
+import { switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-match-detail-modal',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, ItemDetailModal],
+  imports: [CommonModule, MatButtonModule, MatTooltipModule, ItemDetailModal],
   templateUrl: './match-detail-modal.html',
   styleUrl: './match-detail-modal.scss',
 })
@@ -35,9 +36,7 @@ export class MatchDetailModal implements OnInit {
 
     this.itemService.getMatchForReport(this.report.report_id).pipe(
       switchMap(match => {
-        if (!match) {
-          throw new Error('Match not found');
-        }
+        if (!match) throw new Error('Match not found');
 
         const otherId = match.lost_report_id === this.report.report_id
           ? match.found_report_id
@@ -60,14 +59,15 @@ export class MatchDetailModal implements OnInit {
   get matchedImageUrl(): string | null {
     const item = this.matchedItem();
     if (!item) return null;
-
-    if (item.photoUrls && item.photoUrls.length > 0) {
-      return item.photoUrls[0];
-    }
-    if (item.images && item.images.length > 0) {
-      return item.images[0].imageUrl;
-    }
+    if (item.photoUrls && item.photoUrls.length > 0) return item.photoUrls[0];
+    if (item.images && item.images.length > 0) return item.images[0].imageUrl;
     return null;
+  }
+
+  get matchedReferenceCode(): string {
+    const item = this.matchedItem();
+    if (!item) return 'Pending...';
+    return item.surrender_code || item.claim_code || `REF-${item.report_id}`;
   }
 
   onConfirmOwnership(): void {
