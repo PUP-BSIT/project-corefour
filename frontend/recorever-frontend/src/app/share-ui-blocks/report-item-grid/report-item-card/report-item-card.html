@@ -134,7 +134,7 @@
         </div>
       }
 
-      @else {
+      @else if (report().status !== 'claimed') {
         <button
               mat-button class="view-ticket-btn"
               (click)="onTicketClick();

@@ -155,7 +155,8 @@
           </button>
         }
         @else {
-          @if (item().type === 'found' && !isOwner() && !isAdmin()) {
+          @if (item().type === 'found' && !isOwner() && !isAdmin() 
+              && item().status !== 'claimed') {
             <button mat-raised-button
                     color="primary"
                     class="action-btn"
