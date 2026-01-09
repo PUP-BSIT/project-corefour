@@ -20,9 +20,8 @@
             <div class="modal-header">
               <div class="user-info">
                 <div class="avatar-circle">
-                  @if (report()?.reporter_profile_picture) {
-                    <img [src]="report()?.reporter_profile_picture"
-                         alt="Avatar" class="avatar-img">
+                  @if (reportOwnerPicture()) {
+                    <img [src]="getReportOwnerPicture()" alt="Avatar" class="avatar-img">
                   } @else {
                     {{ reportOwnerName().charAt(0).toUpperCase() }}
                   }
