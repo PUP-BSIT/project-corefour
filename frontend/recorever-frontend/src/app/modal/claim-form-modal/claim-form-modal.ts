@@ -122,6 +122,9 @@ export class ClaimFormModal implements OnInit {
   protected matchingLostReports = signal<Report[]>([]);
   protected isSearchingReports = signal(false);
   protected selectedLostReportId = signal<number | null>(null);
+  
+  // Signal to control zoom state
+  protected isZoomed = signal(false);
 
   protected isReportType = computed(() => 'type' in this.claimData);
 
@@ -463,6 +466,14 @@ export class ClaimFormModal implements OnInit {
     event.stopPropagation();
     const len = this.photoUrls().length;
     if (len > 0) this.activeImageIndex.update((i) => (i - 1 + len) % len);
+  }
+
+  protected openZoom(): void {
+    this.isZoomed.set(true);
+  }
+
+  protected closeZoom(): void {
+    this.isZoomed.set(false);
   }
 
   onClose(): void {

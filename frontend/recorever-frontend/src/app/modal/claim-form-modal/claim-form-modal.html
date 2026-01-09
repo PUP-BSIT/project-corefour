@@ -39,7 +39,8 @@
             <div class="image-section">
               <div class="carousel-container">
                 <img [src]="currentImageUrl()" alt="Item Image"
-                     class="modal-image">
+                     class="modal-image clickable-image"
+                     (click)="openZoom()">
 
                 @if (photoUrls().length > 1) {
                   <button
@@ -303,3 +304,27 @@
     }
   </div>
 </div>
+
+@if (isZoomed()) {
+  <div class="zoom-overlay" (click)="closeZoom()">
+    <button class="close-zoom-btn" (click)="closeZoom()">
+      <mat-icon>close</mat-icon>
+    </button>
+    
+    <div class="zoom-content">
+      <img [src]="currentImageUrl()" 
+           class="zoomed-image" 
+           alt="Zoomed Item"
+           (click)="$event.stopPropagation()">
+      
+      @if (photoUrls().length > 1) {
+        <button class="nav-btn prev" (click)="prevImage($event)">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button class="nav-btn next" (click)="nextImage($event)">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      }
+    </div>
+  </div>
+}
