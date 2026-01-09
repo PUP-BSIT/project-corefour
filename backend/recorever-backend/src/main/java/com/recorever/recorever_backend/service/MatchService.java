@@ -70,17 +70,13 @@ public class MatchService {
     boolean isDescMatch = checkDescriptionSimilarity(newR, existR);
 
     String confidence;
-    String detail;
 
     if (isLocMatch && isDescMatch) {
       confidence = "High-Confidence Match";
-      detail = "Name, Location, and Description are highly similar.";
     } else if (isLocMatch || isDescMatch) {
       confidence = "Medium-Confidence Match";
-      detail = "Name matched, and either Location or Description matched.";
     } else {
       confidence = "Low-Confidence Match (Location Conflict)";
-      detail = "Name matched, but location/description differ. Check.";
     }
 
     Report lostReport = type.equals("lost") ? newR : existR;
