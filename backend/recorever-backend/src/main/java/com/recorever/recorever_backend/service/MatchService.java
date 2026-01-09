@@ -83,12 +83,12 @@ public class MatchService {
       detail = "Name matched, but location/description differ. Check.";
     }
 
-    int lostId = type.equals("lost") ? newR.getReportId() : existR.getReportId();
-    int foundId = type.equals("found") ? newR.getReportId() : existR.getReportId();
+    Report lostReport = type.equals("lost") ? newR : existR;
+    Report foundReport = type.equals("found") ? newR : existR;
 
     Match match = new Match();
-    match.setLostReportId(lostId);
-    match.setFoundReportId(foundId);
+    match.setLostReportId(lostReport.getReportId());
+    match.setFoundReportId(foundReport.getReportId());
     match.setStatus("pending");
     matchRepo.save(match);
 
@@ -97,14 +97,17 @@ public class MatchService {
     reportRepo.save(newR);
     reportRepo.save(existR);
 
-    String msg = String.format(
-        "%s found: Your %s linked to report #%d. %s",
-        confidence, newR.getItemName(), lostId, detail);
+    String msgLost = String.format(
+        "Match Found: We found a potential match (%s) for your lost %s. Click to verify.",
+        confidence, lostReport.getItemName());
+    notificationService.create(
+        lostReport.getUserId(), lostReport.getReportId(), msgLost, true);
 
+    String msgFound = String.format(
+        "Update: The %s you found has been matched to a lost report. Thank you for helping!",
+        foundReport.getItemName());
     notificationService.create(
-        newR.getUserId(), newR.getReportId(), msg, true);
-    notificationService.create(
-        existR.getUserId(), existR.getReportId(), msg, true);
+        foundReport.getUserId(), foundReport.getReportId(), msgFound, true);
   }
 
   private boolean checkNameSimilarity(Report report1, Report report2) {
