@@ -13,7 +13,8 @@ export type ReportStatus =
   | 'matched'
   | 'claimed'
   | 'closed'
-  | 'rejected';
+  | 'rejected'
+  | 'resolved';
 
 export type Report = {
   report_id: number;
@@ -27,6 +28,7 @@ export type Report = {
   date_resolved: string | null;
   description: string;
   status: ReportStatus;
+  matching_lost_report_id: number | null;
   surrender_code: string | null;
   claim_code: string | null;
   expiry_date?: string;

@@ -1,5 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject
-} from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { 
   ReactiveFormsModule,
@@ -29,6 +28,7 @@ import { MatIcon } from "@angular/material/icon";
 import { ToastService } from '../../core/services/toast-service';
 import { ItemService } from '../../core/services/item-service';
 import { environment } from '../../../environments/environment';
+import { ConfirmationModal } from '../../modal/confirmation-modal/confirmation-modal';
 
 @Component({
   selector: 'app-item-report-form',
@@ -42,8 +42,9 @@ import { environment } from '../../../environments/environment';
     MatDatepickerModule,
     MatNativeDateModule,
     MatProgressSpinnerModule,
-    MatIcon
-],
+    MatIcon,
+    ConfirmationModal
+  ],
   templateUrl: './item-report-form.html',
   styleUrl: './item-report-form.scss',
 })
@@ -63,11 +64,12 @@ export class ItemReportForm implements OnInit {
   protected locationOptions: string[] = [];
   protected filteredLocations!: Observable<string[]>;
   protected allLocations: string[] = [];
-  private locationsSubject = new BehaviorSubject<string[]>([])
   protected maxDate = new Date();
   protected isSubmitting = false;
   protected loadingMessage = 'Submitting...';
   protected submissionError: string | null = null;
+  protected showConfirmationModal = false;
+  protected imageError = false;
 
   private fb = inject(FormBuilder);
   private toastService = inject(ToastService);
@@ -101,7 +103,7 @@ export class ItemReportForm implements OnInit {
         '',
         { validators: [Validators.required] }
       ],
-      date_lost_found: [new Date().toISOString() as any, {
+      date_lost_found: [new Date().toISOString(), {
         validators: [
           Validators.required,
           (control: AbstractControl): ValidationErrors | null => {
@@ -132,7 +134,7 @@ export class ItemReportForm implements OnInit {
 
   ngOnInit(): void {
     this.itemService.getTopLocations().subscribe({
-      next: (locations) => {
+      next: (locations: string[]) => {
         const standard = Object.values(StandardLocations);
         this.allLocations = [...new Set([...locations, ...standard])];
         this.setupFiltering();
@@ -141,7 +143,7 @@ export class ItemReportForm implements OnInit {
         this.allLocations = Object.values(StandardLocations);
         this.setupFiltering();
       }
-    })
+    });
 
     if (this.initialData) {
       const rawDate = this.initialData.date_lost_found
@@ -184,7 +186,7 @@ export class ItemReportForm implements OnInit {
   private setupFiltering(): void {
     this.filteredLocations = this.reportForm.controls.location.valueChanges.pipe(
       startWith(''),
-      map(value => this.filterLocations(value || ''))
+      map((value: string | null) => this.filterLocations(value || ''))
     );
   }
 
@@ -194,7 +196,7 @@ export class ItemReportForm implements OnInit {
       return this.allLocations.slice(0, 5);
     }
 
-    return this.allLocations.filter(option => 
+    return this.allLocations.filter(option =>
       option.toLowerCase().includes(filterValue)
     );
   }
@@ -233,6 +235,7 @@ export class ItemReportForm implements OnInit {
         this.selectedFilesPreview.push({
             file: file, url: url, name: file.name });
       }
+      this.imageError = false;
       input.value = '';
     }
   }
@@ -249,52 +252,77 @@ export class ItemReportForm implements OnInit {
   }
 
   onSubmit(): void {
+    const totalImages = this.selectedFiles.length 
+        + this.photoUrlsFormArray.length;
+
+    if (totalImages === 0) {
+      this.imageError = true;
+      this.reportForm.markAllAsTouched();
+      return;
+    }
+
     if (this.reportForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
-      this.loadingMessage = 'Submitting...';
-
-      const formatDateForMySQL = (dateInput: any): string => {
-        const d = new Date(dateInput);
-        return d.toISOString().slice(0, 19).replace('T', ' ');
-      };
-
-      const cleanedPhotoUrls = this.photoUrlsFormArray.value
-        .filter((url): url is string => !!url)
-        .map(url => {
-          if (url.includes('/image/download/')) {
-            return url.split('/image/download/')[1];
-          }
-          return url;
-        });
-
-      const basePayload: ReportSubmissionPayload = {
-        type: this.formType,
-        item_name: this.reportForm.controls.item_name.value!,
-        location: this.reportForm.controls.location.value!,
-        description: this.reportForm.controls.description.value!,
-      };
-
-      const finalPayload: ReportSubmissionWithFiles = {
-        ...basePayload,
-        report_id: this.isEditMode ? this.initialData?.report_id : undefined,
-        status: 'pending',
-        date_lost_found:
-          formatDateForMySQL(this.reportForm.controls.date_lost_found.value!), 
-        date_reported: formatDateForMySQL(new Date()), 
-        photoUrls: cleanedPhotoUrls,
-        files: this.selectedFiles,
-      };
-
-      this.formSubmitted.emit(finalPayload);
-
-      this.selectedFilesPreview.forEach((p: FilePreview) =>
-          URL.revokeObjectURL(p.url));
-      this.selectedFiles = [];
-      this.selectedFilesPreview = [];
-
+      this.showConfirmationModal = true;
     } else {
       this.reportForm.markAllAsTouched();
     }
+  }
+
+  onConfirmSubmission(): void {
+    this.showConfirmationModal = false;
+    this.proceedWithSubmission();
+  }
+
+  onCancelSubmission(): void {
+    this.showConfirmationModal = false;
+  }
+
+  private proceedWithSubmission(): void {
+    this.isSubmitting = true;
+    this.loadingMessage = this.isEditMode ? 
+                'Updating Report...' : 'Submitting...';
+
+    const formatDateForMySQL = (dateInput: string | Date | null): string => {
+        if (!dateInput) return '';
+        const d = new Date(dateInput);
+        const localDate = 
+                    new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
+        return localDate.toISOString().slice(0, 19).replace('T', ' ');
+    };
+
+    const cleanedPhotoUrls = this.photoUrlsFormArray.value
+      .filter((url): url is string => !!url)
+      .map((url: string) => {
+        if (url.includes('/image/download/')) {
+          return url.split('/image/download/')[1];
+        }
+        return url;
+      });
+
+    const basePayload: ReportSubmissionPayload = {
+      type: this.formType,
+      item_name: this.reportForm.controls.item_name.value!,
+      location: this.reportForm.controls.location.value!,
+      description: this.reportForm.controls.description.value!,
+    };
+
+    const finalPayload: ReportSubmissionWithFiles = {
+      ...basePayload,
+      report_id: this.isEditMode ? this.initialData?.report_id : undefined,
+      status: 'pending',
+      date_lost_found:
+        formatDateForMySQL(this.reportForm.controls.date_lost_found.value),
+      date_reported: formatDateForMySQL(new Date()),
+      photoUrls: cleanedPhotoUrls,
+      files: this.selectedFiles,
+    };
+
+    this.formSubmitted.emit(finalPayload);
+
+    this.selectedFilesPreview.forEach((p: FilePreview) =>
+        URL.revokeObjectURL(p.url));
+    this.selectedFiles = [];
+    this.selectedFilesPreview = [];
   }
 
   public handleSubmissionError(errorMessage: string): void {
@@ -306,11 +334,13 @@ export class ItemReportForm implements OnInit {
     this.reportForm.reset({
       date_lost_found: new Date().toISOString() as any,
     });
-
+    
+    this.imageError = false;
     this.photoUrlsFormArray.clear();
     this.selectedFilesPreview.forEach((p: FilePreview) =>
       URL.revokeObjectURL(p.url));
     this.selectedFiles = [];
     this.selectedFilesPreview = [];
+    this.formCancelled.emit();
   }
 }

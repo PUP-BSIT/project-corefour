@@ -35,6 +35,15 @@ $secondary-text: #666;
         color: $secondary-text;
         font-size: 14px;
       }
+
+      .required-asterisk {
+      color: red;
+    }
+
+    .photo-error {
+    font-size: 0.75rem;
+    margin-top: 8px;
+    }
     }
   }
 

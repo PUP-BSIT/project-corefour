@@ -25,6 +25,13 @@ import { UserService } from '../../../../core/services/user-service';
 type PasswordFieldType = 'password' | 'text';
 type PasswordStrength = 'none' | 'weak' | 'medium' | 'strong';
 
+export function noWhitespaceValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const isWhitespace = (control.value || '').toString().indexOf(' ') >= 0;
+    return isWhitespace ? { hasSpaces: true } : null;
+  };
+}
+
 export function passwordMatchValidator(
   controlName: string,
   matchingControlName: string
@@ -40,12 +47,12 @@ export function passwordMatchValidator(
     if (control.value !== matchingControl.value) {
       matchingControl.setErrors({ passwordMismatch: true });
       return { passwordMismatch: true };
-    } else {
-      if (matchingControl.hasError('passwordMismatch')) {
-        matchingControl.setErrors(null);
-      }
-      return null;
     }
+
+    if (matchingControl.hasError('passwordMismatch')) {
+      matchingControl.setErrors(null);
+    }
+    return null;
   };
 }
 
@@ -59,9 +66,7 @@ export function strongPasswordValidator(): ValidatorFn {
     const hasNumber = /\d/.test(value);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
-    const passwordValid = hasNumber && hasSpecialChar;
-
-    if (passwordValid) {
+    if (hasNumber && hasSpecialChar) {
       return null;
     }
 
@@ -87,56 +92,74 @@ export class RegisterFormComponent implements OnChanges {
   private userService = inject(UserService);
   private cdr = inject(ChangeDetectorRef);
 
+  @Input() isLoading = false;
+  @Input() errorMessage: string | null = null;
+  @Output() formSubmit = new EventEmitter<RegisterRequest>();
+
+  passwordFieldType: PasswordFieldType = 'password';
+  confirmPasswordFieldType: PasswordFieldType = 'password';
+  passwordStrength: PasswordStrength = 'none';
+
   registerForm = this.formBuilder.group(
     {
-      name: ['', {
-        validators: [Validators.required],
-        asyncValidators: [this.userService.uniqueValidator('name', '')]
-      }],
+      name: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            noWhitespaceValidator(),
+          ],
+          asyncValidators: [
+            this.userService.uniqueValidator('name', '')
+          ],
+        },
+      ],
 
-      phone_number: ['', {
-        validators: [
-          Validators.required,
-          Validators.pattern(/^(\+63|0)9\d{9}$/),
-        ],
-        asyncValidators: [this.userService.uniqueValidator('phone_number', '')]
-      }],
+      phone_number: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            Validators.pattern(/^(\+63|0)9\d{9}$/),
+          ],
+          asyncValidators: [
+            this.userService.uniqueValidator('phone_number', '')
+          ],
+        },
+      ],
 
-      email: ['', {
-        validators: [Validators.required, Validators.email],
-        asyncValidators: [this.userService.uniqueValidator('email', '')]
-      }],
+      email: [
+        '',
+        {
+          validators: [Validators.required, Validators.email],
+          asyncValidators: [
+            this.userService.uniqueValidator('email', '')
+          ],
+        },
+      ],
 
-      password: ['', {
-        validators: [
-          Validators.required,
-          Validators.minLength(8),
-          strongPasswordValidator(),
-        ]
-      }],
+      password: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            Validators.minLength(8),
+            strongPasswordValidator(),
+          ],
+        },
+      ],
 
-      confirmPassword: ['', {
-        validators: [Validators.required]
-      }],
+      confirmPassword: [
+        '',
+        {
+          validators: [Validators.required],
+        },
+      ],
     },
     {
       validators: [passwordMatchValidator('password', 'confirmPassword')],
     }
   );
-
-  @Output() formSubmit = new EventEmitter<RegisterRequest>();
-  @Input() isLoading = false;
-  @Input() errorMessage: string | null = null;
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['isLoading'] || changes['errorMessage']) {
-      this.cdr.detectChanges();
-    }
-  }
-
-  passwordFieldType: PasswordFieldType = 'password';
-  confirmPasswordFieldType: PasswordFieldType = 'password';
-  passwordStrength: PasswordStrength = 'none';
 
   constructor() {
     this.registerForm.get('password')?.valueChanges.subscribe((value) => {
@@ -144,23 +167,28 @@ export class RegisterFormComponent implements OnChanges {
     });
   }
 
-  get name() {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isLoading'] || changes['errorMessage']) {
+      this.cdr.detectChanges();
+    }
+  }
+
+  get name(): AbstractControl | null {
     return this.registerForm.get('name');
   }
-  get phone_number() {
+  get phone_number(): AbstractControl | null {
     return this.registerForm.get('phone_number');
   }
-  get email() {
+  get email(): AbstractControl | null {
     return this.registerForm.get('email');
   }
-  get password() {
+  get password(): AbstractControl | null {
     return this.registerForm.get('password');
   }
-  get confirmPassword() {
+  get confirmPassword(): AbstractControl | null {
     return this.registerForm.get('confirmPassword');
   }
 
-  // Method to Calculate Strength
   private updatePasswordStrength(value: string): void {
     if (!value) {
       this.passwordStrength = 'none';
@@ -193,8 +221,8 @@ export class RegisterFormComponent implements OnChanges {
       this.confirmPasswordFieldType === 'password' ? 'text' : 'password';
   }
 
-onSubmit(): void {
-  this.errorMessage = null;
+  onSubmit(): void {
+    this.errorMessage = null;
     if (this.registerForm.valid) {
       this.formSubmit.emit(this.registerForm.getRawValue() as RegisterRequest);
     } else {

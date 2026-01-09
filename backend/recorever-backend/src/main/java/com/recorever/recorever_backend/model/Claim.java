@@ -40,6 +40,10 @@ public class Claim {
     @JsonProperty("created_at")
     private String createdAt;
 
+    @Column(name = "matching_lost_report_id")
+    @JsonProperty("matching_lost_report_id")
+    private Integer matchingLostReportId;
+
     // Hides status from the JSON response
     @Transient
     @JsonIgnore 

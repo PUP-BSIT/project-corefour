@@ -71,7 +71,8 @@
         <div class="carousel-container">
           <img [src]="currentImageUrl()"
                [alt]="item().item_name"
-               class="modal-image">
+               class="modal-image clickable-image"
+               (click)="openZoom()">
 
           @if (hasMultipleImages()) {
             <button mat-icon-button
@@ -102,7 +103,7 @@
       <div class="details-section">
         <h2 class="item-title">{{ item().item_name }}</h2>
 
-        @if (item().expiry_date && (isOwner() || isAdmin())) {
+        @if (item().expiry_date && (isOwner() )) {
           <div class="detail-row expiry-warning">
             <mat-icon color="warn">event_busy</mat-icon>
             <span class="detail-label">Report Expiry:</span>
@@ -171,16 +172,18 @@
                 class="status-btn"
                 [ngClass]="(item().status || 'pending').toLowerCase()"
                 (click)="toggleDropdown($event)">
-              {{ (item().status === 'approved' ? 'Verified' : item().status) | titlecase }}
+                {{ (item().status === 'approved' || item().status === 'matched' 
+                    ? 'Verified' 
+                    : item().status) | titlecase }}
               <span class="arrow">▼</span>
             </button>
 
             @if (isDropdownOpen()) {
-              <div class="dropdown-content"
-                   (click)="$event.stopPropagation()">
+              <div class="dropdown-content" (click)="$event.stopPropagation()">
                 @for (option of STATUS_OPTIONS; track option.value) {
-                  @if (option.value !==
-                      (item().status || 'pending').toLowerCase()) {
+                  @if (option.value !== (item().status || 'pending')
+                        .toLowerCase() && !(option.label === 'Verified' 
+                        && displayStatus() === 'Verified')) {
                     <div
                       [class.disabled-option]="isStatusDisabled(option.value)"
                       [matTooltip]="getOptionTooltip(option.value)"
@@ -206,6 +209,30 @@
     </div>
   </div>
 </div>
+
+@if (isZoomed()) {
+  <div class="zoom-overlay" (click)="closeZoom()">
+    <button class="close-zoom-btn" (click)="closeZoom()">
+      <mat-icon>close</mat-icon>
+    </button>
+    
+    <div class="zoom-content">
+      <img [src]="currentImageUrl()" 
+           class="zoomed-image" 
+           alt="Zoomed Item"
+           (click)="$event.stopPropagation()">
+      
+      @if (hasMultipleImages()) {
+        <button class="nav-btn prev" (click)="previousImage($event)">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button class="nav-btn next" (click)="nextImage($event)">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      }
+    </div>
+  </div>
+}
 
 @if (showClaimModal) {
   <app-codes-modal

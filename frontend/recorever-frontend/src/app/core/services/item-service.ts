@@ -127,6 +127,12 @@ export class ItemService {
     );
   }
 
+  getPotentialMatches(reportId: number, claimantId: number): Observable<Report[]> {
+    return this.http.get<Report[]>(
+      `${this.apiUrl}/reports/${reportId}/potential-matches/${claimantId}`
+    );
+  }
+
   searchLocations(query: string): Observable<string[]> {
     if (this.searchLocationCache.has(query)) {
       return of(this.searchLocationCache.get(query)!);

@@ -1,33 +1,37 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap, timer, map, catchError, switchMap, of } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../auth/auth-service';
 import {
   AbstractControl,
   AsyncValidatorFn,
-  ValidationErrors
+  ValidationErrors,
 } from '@angular/forms';
 
 import type { User, ChangePasswordRequest, UniqueCheckResponse } from '../../models/user-model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserService {
   private API_BASE_URL = environment.apiUrl;
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
+  private uniquenessCache = new Map<string, Observable<boolean>>();
+
   currentUser$ = this.authService.currentUser$;
 
   getProfile(): Observable<User> {
-    return this.http.get<User>(`${this.API_BASE_URL}/get-user-data`)
-    .pipe(
-      tap(user => {
-        this.authService.updateCurrentUser(user);
-      })
-    );
+    return this.http
+      .get<User>(`${this.API_BASE_URL}/get-user-data`)
+      .pipe(
+        tap((user) => {
+          this.authService.updateCurrentUser(user);
+        })
+      );
   }
 
   getUserById(userId: number): Observable<User> {
@@ -39,8 +43,8 @@ export class UserService {
       return of([]);
     }
     const params = new HttpParams().set('query', query);
-    return this.http.get<User[]>(`${this.API_BASE_URL}/users/search`,
-      { params })
+    return this.http
+      .get<User[]>(`${this.API_BASE_URL}/users/search`, { params })
       .pipe(catchError(() => of([])));
   }
 
@@ -48,34 +52,41 @@ export class UserService {
     field: 'email' | 'phone_number' | 'name',
     value: string
   ): Observable<boolean> {
-    const params = new HttpParams()
-      .set('field', field)
-      .set('value', value);
+    const key = `${field}:${value}`;
 
-    return this.http
-      .get<UniqueCheckResponse>(
-        `${this.API_BASE_URL}/check-unique`, { params }
-      )
+    if (this.uniquenessCache.has(key)) {
+      return this.uniquenessCache.get(key)!;
+    }
+
+    const params = new HttpParams().set('field', field).set('value', value);
+
+    const request$ = this.http
+      .get<UniqueCheckResponse>(`${this.API_BASE_URL}/check-unique`, {
+        params,
+      })
       .pipe(
-        map(response => response.isUnique),
-        catchError(() => of(true))
+        map((response) => response.isUnique),
+        catchError(() => of(true)),
+        shareReplay(1)
       );
+
+    this.uniquenessCache.set(key, request$);
+
+    return request$;
   }
 
   uniqueValidator(
     field: 'email' | 'phone_number' | 'name',
     initialValue: string
   ): AsyncValidatorFn {
-    return (
-      control: AbstractControl
-    ): Observable<ValidationErrors | null> => {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
       if (!control.value || control.value === initialValue) {
         return of(null);
       }
 
       return timer(500).pipe(
         switchMap(() => this.checkUniqueness(field, control.value)),
-        map(isUnique => (isUnique ? null : { notUnique: true }))
+        map((isUnique) => (isUnique ? null : { notUnique: true }))
       );
     };
   }
@@ -90,14 +101,13 @@ export class UserService {
       formData.append('profile_picture_file', file);
     }
 
-    return this.http.put<User>(
-      `${this.API_BASE_URL}/update-user-data`,
-      formData
-    ).pipe(
-      tap(updatedUser => {
-        this.authService.updateCurrentUser(updatedUser);
-      })
-    );
+    return this.http
+      .put<User>(`${this.API_BASE_URL}/update-user-data`, formData)
+      .pipe(
+        tap((updatedUser) => {
+          this.authService.updateCurrentUser(updatedUser);
+        })
+      );
   }
 
   changePassword(request: ChangePasswordRequest): Observable<void> {

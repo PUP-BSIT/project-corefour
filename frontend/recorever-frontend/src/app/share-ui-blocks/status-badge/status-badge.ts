@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type ItemStatus = 'Verified' | 'Claimed' | 'Pending' | 'Rejected' | 'Matched';
+export type ItemStatus = 'Verified' | 'Claimed' | 'Pending' | 'Rejected' | 'Matched' | 'Resolved';
 
 @Component({
   selector: 'app-status-badge',

@@ -7,7 +7,6 @@ $verified-green: #2e7d32;
 $denied-red: #ef4444;
 $pending-yellow: #fbbf24;
 $claimed-dark: #333333;
-$matched-color: #1976D2;
 
 :host {
   .full-width, .w-100 { width: 100%; }
@@ -56,6 +55,7 @@ $matched-color: #1976D2;
   animation: zoomIn 0.3s ease;
   display: flex;
   flex-direction: column;
+  z-index: 1001;
 
   @media (max-width: 768px) {
     height: auto;
@@ -222,6 +222,14 @@ $matched-color: #1976D2;
       width: 100%;
       height: 100%;
       object-fit: cover;
+      
+      &.clickable-image {
+        cursor: zoom-in;
+        transition: opacity 0.2s ease;
+        &:hover {
+          opacity: 0.95;
+        }
+      }
     }
 
     .carousel-btn {
@@ -358,12 +366,13 @@ $matched-color: #1976D2;
 
     &:active { transform: scale(0.98); }
 
-    &.verified, &.approved { background-color: $verified-green; }
+    &.verified, &.approved, &.matched { background-color: $verified-green; }
     &.pending { background-color: $pending-yellow; color: black; }
     &.claimed { background-color: $claimed-dark; }
     &.denied, &.rejected { background-color: $denied-red; }
+    &.resolved { background-color: $claimed-dark; }
 
-    // Style for the unarchive button to match ItemDetailModal
+    // Style for the unarchive button
     &.unarchive {
       background-color: #ff9500 !important;
       color: white;
@@ -452,6 +461,84 @@ $matched-color: #1976D2;
         font-size: 11px;
       }
     }
+  }
+
+  // Matching Section
+  .matching-loader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8f8ff;
+    border-radius: 8px;
+    color: $primary-purple;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .matching-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+
+    .matching-card {
+      padding: 2px 12px;
+      border: 1px solid #e5e5ea;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+
+      &:hover {
+        border-color: $primary-purple;
+        background: #f8f8ff;
+      }
+
+      &.selected {
+        border-color: $primary-purple;
+        background: #f0effc;
+        border-width: 2px;
+      }
+
+      ::ng-deep .mat-mdc-radio-button {
+        width: 100%;
+        
+        .mdc-form-field {
+          width: 100%;
+          align-items: center;
+        }
+
+        .mdc-label {
+          padding-left: 8px;
+          flex: 1;
+        }
+      }
+
+      .matching-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .matching-name {
+          font-weight: 600;
+          font-size: 14px;
+          color: $text-main;
+        }
+
+        .matching-meta {
+          font-size: 11px;
+          color: $text-secondary;
+        }
+      }
+    }
+  }
+
+  .no-match-hint {
+    font-size: 12px;
+    color: $text-secondary;
+    font-style: italic;
+    padding: 4px 8px;
   }
 
   .spinning-loader {
@@ -552,3 +639,106 @@ $matched-color: #1976D2;
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; } }
+
+.zoom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(19, 19, 19, 0.95);
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+
+  .close-zoom-btn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: white;
+    z-index: 20002;
+
+    mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+
+    &:hover {
+      opacity: 0.8;
+      transform: scale(1.1);
+      transition: transform 0.2s ease;
+    }
+  }
+
+  .zoom-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20001;
+
+    .zoomed-image {
+      max-width: 90vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: 0 0 30px rgba(19, 19, 19, 0.95);
+    }
+
+    .nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.25);
+      border: none;
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.5);
+        transform: translateY(-50%) scale(1.05);
+      }
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+
+      &.prev { left: 30px; }
+      &.next { right: 30px; }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .close-zoom-btn {
+      top: 15px;
+      right: 15px;
+      mat-icon { font-size: 28px; width: 28px; height: 28px; }
+    }
+
+    .nav-btn {
+      width: 44px;
+      height: 44px;
+      &.prev { left: 10px; }
+      &.next { right: 10px; }
+      mat-icon { font-size: 24px; width: 24px; height: 24px; }
+    }
+  }
+}

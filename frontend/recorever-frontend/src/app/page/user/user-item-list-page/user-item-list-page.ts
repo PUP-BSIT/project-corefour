@@ -246,7 +246,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     const type = this.itemType();
     const statusFilter = type === 'found'
       ? (showResolved ? 'claimed' : 'approved')
-      : (showResolved ? 'matched' : 'approved');
+      : (showResolved ? 'resolved' : 'approved');
 
     this.filters.update(curr => ({ ...curr, status: statusFilter as any }));
     this.resetPagination();
@@ -377,7 +377,6 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
   public getUserProfilePicture(): string | null {
     const item = this.selectedItem();
-    if (!item) return null;
-    return null;
+    return item?.reporter_profile_picture ?? null;
   }
 }

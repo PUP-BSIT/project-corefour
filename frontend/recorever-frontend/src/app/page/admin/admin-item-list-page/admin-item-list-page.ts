@@ -195,7 +195,7 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
         const type = data['type'] || data['itemType'];
         this.itemType.set(type);
         this.isArchiveView.set(data['status'] ===
-            'matched' || data['status'] === 'claimed');
+            'resolved' || data['status'] === 'claimed');
         this.updatePageTitle(data);
         this.isLoading.set(true);
       }),
@@ -256,7 +256,7 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updatePageTitle(data: Data): void {
-    if (data['status'] === 'matched')
+    if (data['status'] === 'resolved')
         this.pageTitle.set('Archive: Resolved Items');
     else if (data['status'] === 'claimed')
         this.pageTitle.set('Archive: Claimed Items');
