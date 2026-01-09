@@ -172,18 +172,15 @@ export class ItemDetailModal {
     this.showClaimModal = true;
   }
 
-  onEdit(event: Event): void {
-    event.stopPropagation();
+  onEdit(): void {
     this.editClicked.emit();
   }
 
-  onDelete(event: Event): void {
-    event.stopPropagation();
+  onDelete(): void {
     this.deleteClicked.emit();
   }
 
-  onViewCode(event: Event): void {
-    event.stopPropagation();
+  onViewCode(): void {
     this.viewCodeClicked.emit();
   }
 

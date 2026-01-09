@@ -98,3 +98,12 @@
     </app-item-detail-modal>
   }
 }
+
+@if (showCodeModal && selectedReport()) {
+  <app-codes-modal
+    title="Reference Code"
+    [code]="selectedReport()!.surrender_code ||
+        selectedReport()!.claim_code || 'N/A'"
+    (close)="showCodeModal = false">
+  </app-codes-modal>
+}

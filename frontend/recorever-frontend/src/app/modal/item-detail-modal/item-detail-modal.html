@@ -35,7 +35,7 @@
               </button>
               <mat-menu #modalMenu="matMenu" xPosition="before">
                 @if (item().type !== 'lost' || item().claim_code) {
-                  <button mat-menu-item (click)="onViewCode($event)">
+                  <button mat-menu-item (click)="onViewCode()">
                     <mat-icon>tag</mat-icon>
                     <span>{{ getCodeButtonLabel() }}</span>
                   </button>
@@ -43,10 +43,11 @@
                 @if (isOwner()) {
                   <button
                     mat-menu-item
-                    (click)="onEdit($event)"
+                    (click)="onEdit()"
                     [disabled]="!isEditable()"
                     [matTooltip]="!isEditable()
-                        ? 'Verified reports are locked and cannot be edited' : ''"
+                        ? 'Verified reports are locked and cannot be edited' :
+                            ''"
                     matTooltipPosition="left">
                     <mat-icon>edit_square</mat-icon>
                     <span>Edit Report</span>
@@ -54,7 +55,7 @@
                   <mat-divider></mat-divider>
                   <button
                     mat-menu-item
-                    (click)="onDelete($event)"
+                    (click)="onDelete()"
                     [disabled]="!isRemovable()"
                     [matTooltip]="removeTooltip()"
                     matTooltipPosition="left"
@@ -174,7 +175,8 @@
                 class="status-btn"
                 [ngClass]="(item().status || 'pending').toLowerCase()"
                 (click)="toggleDropdown($event)">
-              {{ (item().status === 'approved' ? 'Verified' : item().status) | titlecase }}
+              {{ (item().status === 'approved' ? 'Verified' :
+                  item().status) | titlecase }}
               <span class="arrow">▼</span>
             </button>
 

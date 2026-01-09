@@ -20,6 +20,7 @@ import { ToastService } from '../../../core/services/toast-service';
 import { AdminService } from '../../../core/services/admin-service';
 import { ItemDetailModal } from '../../../modal/item-detail-modal/item-detail-modal';
 import { ClaimFormModal } from '../../../modal/claim-form-modal/claim-form-modal';
+import { CodesModal } from '../../../modal/codes-modal/codes-modal'; // Import CodesModal
 import type { UserNotification } from '../../../models/notification-model';
 import type { Report, ReportStatus } from '../../../models/item-model';
 import { Subscription, tap, catchError, of, switchMap } from 'rxjs';
@@ -35,7 +36,8 @@ import { MatchDetailModal } from '../../../modal/match-detail-modal/match-detail
     ItemDetailModal,
     ClaimFormModal,
     MatButtonModule,
-    MatchDetailModal
+    MatchDetailModal,
+    CodesModal // Add to imports
   ],
   templateUrl: './notification-page.html',
   styleUrl: './notification-page.scss',
@@ -63,6 +65,7 @@ export class NotificationPage implements OnInit, OnDestroy {
   selectedReport = signal<Report | null>(null);
   currentUser = toSignal(this.authService.currentUser$);
   isViewingDetails = false;
+  showCodeModal = false;
 
   currentUserId = computed(() => this.currentUser()?.user_id ?? null);
   isAdmin = computed(() => this.currentUser()?.role === 'admin');
@@ -194,7 +197,10 @@ export class NotificationPage implements OnInit, OnDestroy {
   onViewTicket(): void {}
   onEdit(): void {}
   onDelete(): void {}
-  onViewCode(): void {}
+
+  onViewCode(): void {
+    this.showCodeModal = true;
+  }
 
   onStatusChange(status: string): void {
     const report = this.selectedReport();

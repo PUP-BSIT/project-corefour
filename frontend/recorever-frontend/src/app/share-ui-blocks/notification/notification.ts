@@ -19,15 +19,24 @@ import { AuthService } from '../../core/auth/auth-service';
 import { ToastService } from '../../core/services/toast-service';
 import { ItemDetailModal } from '../../modal/item-detail-modal/item-detail-modal';
 import { ClaimFormModal } from '../../modal/claim-form-modal/claim-form-modal';
+import { CodesModal } from '../../modal/codes-modal/codes-modal'; // Import CodesModal
 import type { UserNotification } from '../../models/notification-model';
 import type { Report } from '../../models/item-model';
-import { Subscription, tap, catchError, of, switchMap, filter } from 'rxjs'; // [Update] Added filter
+import { Subscription, tap, catchError, of, switchMap, filter } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { MatchDetailModal } from '../../modal/match-detail-modal/match-detail-modal'; // [Import this]
+import { MatchDetailModal } from '../../modal/match-detail-modal/match-detail-modal';
+
 @Component({
   selector: 'app-notification',
   standalone: true,
-  imports: [TimeAgoPipe, ItemDetailModal, ClaimFormModal, MatButtonModule, MatchDetailModal], // [Added MatchDetailModal]
+  imports: [
+    TimeAgoPipe,
+    ItemDetailModal,
+    ClaimFormModal,
+    MatButtonModule,
+    MatchDetailModal,
+    CodesModal
+  ],
   templateUrl: './notification.html',
   styleUrl: './notification.scss',
 })
@@ -55,6 +64,7 @@ export class Notification implements OnInit, OnDestroy {
   isOnNotificationPage = false;
   currentFilter: 'all' | 'unread' = 'all';
   isViewingDetails = false;
+  showCodeModal = false;
 
   selectedReport = signal<Report | null>(null);
   currentUser = toSignal(this.authService.currentUser$);
@@ -71,9 +81,8 @@ export class Notification implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.checkCurrentRoute(); // [New] Initial check
+    this.checkCurrentRoute();
 
-    // [New] Listen for route changes
     this.routerSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
@@ -84,7 +93,6 @@ export class Notification implements OnInit, OnDestroy {
     this.initSseStream();
   }
 
-  // [New] Helper to determine if we are on the page
   checkCurrentRoute(): void {
     this.isOnNotificationPage = this.router.url.includes('/notifications');
     if (this.isOnNotificationPage) {
@@ -211,6 +219,7 @@ export class Notification implements OnInit, OnDestroy {
   }
 
   onNotificationClick(notification: UserNotification): void {
+    this.isDropdownOpen = false;
     let action$ = of(null);
 
     if (notification.status === 'unread') {
@@ -226,7 +235,6 @@ export class Notification implements OnInit, OnDestroy {
       switchMap(() => this.itemService.getReportById(notification.report_id)),
       tap((report) => {
         this.selectedReport.set(report);
-        this.isDropdownOpen = false;
         this.cdr.markForCheck();
       }),
       catchError((err) => {
@@ -241,7 +249,6 @@ export class Notification implements OnInit, OnDestroy {
     this.isViewingDetails = true;
   }
 
-  // [Updated]
   onModalClose(): void {
     if (this.isViewingDetails) {
       this.isViewingDetails = false;
@@ -262,7 +269,11 @@ export class Notification implements OnInit, OnDestroy {
   onViewTicket(): void {}
   onEdit(): void {}
   onDelete(): void {}
-  onViewCode(): void {}
+
+  onViewCode(): void {
+    this.showCodeModal = true;
+  }
+
   onStatusChange(event: any): void {}
 
   @HostListener('window:resize', ['$event'])
