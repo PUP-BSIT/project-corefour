@@ -23,11 +23,11 @@ import type { UserNotification } from '../../models/notification-model';
 import type { Report } from '../../models/item-model';
 import { Subscription, tap, catchError, of, switchMap, filter } from 'rxjs'; // [Update] Added filter
 import { environment } from '../../../environments/environment';
-
+import { MatchDetailModal } from '../../modal/match-detail-modal/match-detail-modal'; // [Import this]
 @Component({
   selector: 'app-notification',
   standalone: true,
-  imports: [TimeAgoPipe, ItemDetailModal, ClaimFormModal, MatButtonModule],
+  imports: [TimeAgoPipe, ItemDetailModal, ClaimFormModal, MatButtonModule, MatchDetailModal], // [Added MatchDetailModal]
   templateUrl: './notification.html',
   styleUrl: './notification.scss',
 })

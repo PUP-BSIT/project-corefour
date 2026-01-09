@@ -89,14 +89,20 @@
         (close)="onModalClose()"
         (statusChange)="onStatusChange($event)">
       </app-claim-form-modal>
-    } @else {
+    }
+    @else if (!isAdmin() && report.status === 'matched') {
+      <app-match-detail-modal
+        [report]="report"
+        (close)="onModalClose()">
+      </app-match-detail-modal>
+    }
+    @else {
       <app-item-detail-modal
         [item]="report"
         [currentUserId]="currentUserId()"
         [userProfilePicture]="getUserProfilePicture()"
         [isAdmin]="isAdmin()"
-        [isArchiveView]="report.status === 'matched' ||
-            report.status === 'claimed'"
+        [isArchiveView]="report.status === 'matched' || report.status === 'claimed'"
         (close)="onModalClose()"
         (viewTicket)="onViewTicket()"
         (editClicked)="onEdit()"

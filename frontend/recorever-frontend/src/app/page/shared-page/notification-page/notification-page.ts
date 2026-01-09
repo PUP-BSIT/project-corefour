@@ -23,6 +23,7 @@ import type { UserNotification } from '../../../models/notification-model';
 import type { Report } from '../../../models/item-model';
 import { Subscription, tap, catchError, of, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { MatchDetailModal } from '../../../modal/match-detail-modal/match-detail-modal';
 
 @Component({
   selector: 'app-notification-page',
@@ -32,7 +33,8 @@ import { environment } from '../../../../environments/environment';
     TimeAgoPipe,
     ItemDetailModal,
     ClaimFormModal,
-    MatButtonModule
+    MatButtonModule,
+    MatchDetailModal
   ],
   templateUrl: './notification-page.html',
   styleUrl: './notification-page.scss',
