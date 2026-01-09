@@ -72,7 +72,16 @@
       (close)="onModalClose()"
       (statusChange)="onStatusChange($event)">
     </app-claim-form-modal>
-  } @else {
+  }
+  @else if (!isAdmin() && report.status === 'matched'
+      && report.type === 'lost') {
+    <app-match-detail-modal
+      [report]="report"
+      [currentUserId]="currentUserId()"
+      (close)="onModalClose()">
+    </app-match-detail-modal>
+  }
+  @else {
     <app-item-detail-modal
       [item]="report"
       [currentUserId]="currentUserId()"
@@ -84,7 +93,17 @@
       (viewTicket)="onViewTicket()"
       (editClicked)="onEdit()"
       (deleteClicked)="onDelete()"
-      (viewCodeClicked)="onViewCode()">
+      (viewCodeClicked)="onViewCode()"
+      (statusChanged)="onStatusChange($event)">
     </app-item-detail-modal>
   }
+}
+
+@if (showCodeModal && selectedReport()) {
+  <app-codes-modal
+    title="Reference Code"
+    [code]="selectedReport()!.surrender_code ||
+        selectedReport()!.claim_code || 'N/A'"
+    (close)="showCodeModal = false">
+  </app-codes-modal>
 }

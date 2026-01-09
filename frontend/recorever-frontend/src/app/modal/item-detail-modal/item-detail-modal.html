@@ -1,6 +1,6 @@
 <div class="modal-overlay" (click)="onClose()">
   <div class="modal-container"
-      (click)="$event.stopPropagation(); closeDropdown()">
+       (click)="$event.stopPropagation(); closeDropdown()">
 
     @if (isArchiveView() || isAdmin()) {
       <button class="close-btn" (click)="onClose()">
@@ -26,43 +26,46 @@
         <div class="header-actions">
           <app-status-badge [status]="displayStatus()"></app-status-badge>
 
-          @if (isOwner() || item().claim_code) {
-            <button mat-icon-button
-                    [matMenuTriggerFor]="modalMenu"
-                    class="modal-menu-trigger">
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #modalMenu="matMenu" xPosition="before">
-              @if (item().type !== 'lost' || item().claim_code) {
-                <button mat-menu-item (click)="onViewCode($event)">
-                  <mat-icon>tag</mat-icon>
-                  <span>{{ getCodeButtonLabel() }}</span>
-                </button>
-              }
-              @if (isOwner()) {
-                <button
-                  mat-menu-item
-                  (click)="onEdit($event)"
-                  [disabled]="!isEditable()"
-                  [matTooltip]="!isEditable()
-                      ? 'Verified reports are locked and cannot be edited' : ''"
-                  matTooltipPosition="left">
-                  <mat-icon>edit_square</mat-icon>
-                  <span>Edit Report</span>
-                </button>
-                <mat-divider></mat-divider>
-                <button
-                  mat-menu-item
-                  (click)="onDelete($event)"
-                  [disabled]="!isRemovable()"
-                  [matTooltip]="removeTooltip()"
-                  matTooltipPosition="left"
-                  class="delete-option">
-                  <mat-icon color="warn">auto_delete</mat-icon>
-                  <span class="text-danger">Remove</span>
-                </button>
-              }
-            </mat-menu>
+          @if (!isMatchView() && (isOwner() || item().claim_code)) {
+            @if (isAdmin() || item().status !== 'matched') {
+              <button mat-icon-button
+                      [matMenuTriggerFor]="modalMenu"
+                      class="modal-menu-trigger">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #modalMenu="matMenu" xPosition="before">
+                @if (item().type !== 'lost' || item().claim_code) {
+                  <button mat-menu-item (click)="onViewCode()">
+                    <mat-icon>tag</mat-icon>
+                    <span>{{ getCodeButtonLabel() }}</span>
+                  </button>
+                }
+                @if (isOwner()) {
+                  <button
+                    mat-menu-item
+                    (click)="onEdit()"
+                    [disabled]="!isEditable()"
+                    [matTooltip]="!isEditable()
+                        ? 'Verified reports are locked and cannot be edited' :
+                            ''"
+                    matTooltipPosition="left">
+                    <mat-icon>edit_square</mat-icon>
+                    <span>Edit Report</span>
+                  </button>
+                  <mat-divider></mat-divider>
+                  <button
+                    mat-menu-item
+                    (click)="onDelete()"
+                    [disabled]="!isRemovable()"
+                    [matTooltip]="removeTooltip()"
+                    matTooltipPosition="left"
+                    class="delete-option">
+                    <mat-icon color="warn">auto_delete</mat-icon>
+                    <span class="text-danger">Remove</span>
+                  </button>
+                }
+              </mat-menu>
+            }
           }
         </div>
       </div>
@@ -147,7 +150,7 @@
       </div>
 
       <div class="modal-actions">
-        @if (isArchiveView()) {
+        @if (isArchiveView() && isAdmin()) {
           <button mat-raised-button
                   class="action-btn action-btn--unarchive status-btn--matched"
                   (click)="onUnarchive()">
@@ -156,7 +159,8 @@
           </button>
         }
         @else {
-          @if (item().type === 'found' && !isOwner() && !isAdmin()) {
+          @if (!isMatchView() && item().type ===
+              'found' && !isOwner() && !isAdmin()) {
             <button mat-raised-button
                     color="primary"
                     class="action-btn"
@@ -172,9 +176,9 @@
                 class="status-btn"
                 [ngClass]="(item().status || 'pending').toLowerCase()"
                 (click)="toggleDropdown($event)">
-                {{ (item().status === 'approved' || item().status === 'matched' 
-                    ? 'Verified' 
-                    : item().status) | titlecase }}
+                {{ (item().status === 'approved' || item().status === 'matched'
+                  ? 'Verified'
+                  : item().status) | titlecase }}
               <span class="arrow">▼</span>
             </button>
 
@@ -182,7 +186,7 @@
               <div class="dropdown-content" (click)="$event.stopPropagation()">
                 @for (option of STATUS_OPTIONS; track option.value) {
                   @if (option.value !== (item().status || 'pending')
-                        .toLowerCase() && !(option.label === 'Verified' 
+                        .toLowerCase() && !(option.label === 'Verified'
                         && displayStatus() === 'Verified')) {
                     <div
                       [class.disabled-option]="isStatusDisabled(option.value)"
@@ -198,7 +202,7 @@
           </div>
         }
 
-        @if (!isArchiveView() && !isAdmin()) {
+        @if (!isAdmin()) {
           <button mat-stroked-button
                   class="action-btn"
                   (click)="onClose()">
@@ -215,13 +219,13 @@
     <button class="close-zoom-btn" (click)="closeZoom()">
       <mat-icon>close</mat-icon>
     </button>
-    
+
     <div class="zoom-content">
-      <img [src]="currentImageUrl()" 
-           class="zoomed-image" 
+      <img [src]="currentImageUrl()"
+           class="zoomed-image"
            alt="Zoomed Item"
            (click)="$event.stopPropagation()">
-      
+
       @if (hasMultipleImages()) {
         <button class="nav-btn prev" (click)="previousImage($event)">
           <mat-icon>chevron_left</mat-icon>
@@ -239,8 +243,8 @@
       title="Item Reference Details"
       [code]="referenceCodeValue()"
       description="To claim this item, please present this code to the
-                administrator. You will be asked to provide proof of ownership
-                (e.g., describing the contents or showing an ID)"
+           administrator. You will be asked to provide proof of ownership
+           (e.g., describing the contents or showing an ID)"
       (close)="showClaimModal = false">
   </app-codes-modal>
 }

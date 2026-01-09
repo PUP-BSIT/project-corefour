@@ -40,6 +40,8 @@ export class ItemDetailModal {
   isArchiveView = input<boolean>(false);
   isAdmin = input<boolean>(false);
 
+  isMatchView = input<boolean>(false);
+
   @Output() close = new EventEmitter<void>();
   @Output() viewTicket = new EventEmitter<void>();
   @Output() editClicked = new EventEmitter<void>();
@@ -52,7 +54,6 @@ export class ItemDetailModal {
   public isZoomed = signal<boolean>(false);
   showClaimModal = false;
 
-  // Preserved dropdown options for Manage Lost Items
   protected readonly STATUS_OPTIONS = [
     { value: 'pending', label: 'Pending' },
     { value: 'approved', label: 'Verified' },
@@ -138,7 +139,8 @@ export class ItemDetailModal {
     const path = this.item().reporter_profile_picture;
     if (!path) return 'assets/profile-avatar.png';
 
-    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://').replace(/\/$/, '');
+    const secureBaseUrl =
+        environment.apiUrl.replace('http://', 'https://').replace(/\/$/, '');
     return `${secureBaseUrl}/image/download/${path}`;
   }
 
@@ -186,8 +188,10 @@ export class ItemDetailModal {
     this.showClaimModal = true;
   }
 
-  onEdit(event: Event): void {
-    event.stopPropagation();
+  onEdit(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
 
     const reportData = this.item();
     const path = reportData.type === 'lost'
@@ -204,13 +208,11 @@ export class ItemDetailModal {
     this.editClicked.emit();
   }
 
-  onDelete(event: Event): void {
-    event.stopPropagation();
+  onDelete(): void {
     this.deleteClicked.emit();
   }
 
-  onViewCode(event: Event): void {
-    event.stopPropagation();
+  onViewCode(): void {
     this.viewCodeClicked.emit();
   }
 
