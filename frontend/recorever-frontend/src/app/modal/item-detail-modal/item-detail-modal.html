@@ -1,6 +1,6 @@
 <div class="modal-overlay" (click)="onClose()">
   <div class="modal-container"
-      (click)="$event.stopPropagation(); closeDropdown()">
+       (click)="$event.stopPropagation(); closeDropdown()">
 
     @if (isArchiveView() || isAdmin()) {
       <button class="close-btn" (click)="onClose()">
@@ -176,8 +176,8 @@
                 [ngClass]="(item().status || 'pending').toLowerCase()"
                 (click)="toggleDropdown($event)">
                 {{ (item().status === 'approved' || item().status === 'matched'
-                    ? 'Verified'
-                    : item().status) | titlecase }}
+                  ? 'Verified'
+                  : item().status) | titlecase }}
               <span class="arrow">▼</span>
             </button>
 
@@ -217,8 +217,8 @@
       title="Item Reference Details"
       [code]="referenceCodeValue()"
       description="To claim this item, please present this code to the
-                administrator. You will be asked to provide proof of ownership
-                (e.g., describing the contents or showing an ID)"
+           administrator. You will be asked to provide proof of ownership
+           (e.g., describing the contents or showing an ID)"
       (close)="showClaimModal = false">
   </app-codes-modal>
 }

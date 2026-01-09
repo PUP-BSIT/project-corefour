@@ -135,7 +135,12 @@ export class ItemDetailModal {
   }
 
   getUserProfilePicture(): string {
-    return this.userProfilePicture() || 'assets/profile-avatar.png';
+    const path = this.item().reporter_profile_picture;
+    if (!path) return 'assets/profile-avatar.png';
+
+    const secureBaseUrl =
+        environment.apiUrl.replace('http://', 'https://').replace(/\/$/, '');
+    return `${secureBaseUrl}/image/download/${path}`;
   }
 
   getCodeButtonLabel(): string {
@@ -174,8 +179,10 @@ export class ItemDetailModal {
     this.showClaimModal = true;
   }
 
-  onEdit(event: Event): void {
-    event.stopPropagation();
+  onEdit(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
 
     const reportData = this.item();
     const path = reportData.type === 'lost'

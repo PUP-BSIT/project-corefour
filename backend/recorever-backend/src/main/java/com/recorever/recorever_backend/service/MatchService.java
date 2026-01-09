@@ -65,9 +65,6 @@ public class MatchService {
     }
   }
 
-  /**
-   * Finds lost reports for a specific user that match a given found report
-   */
   public List<Report> findPotentialMatchesForUser(
       Report foundReport, int claimantId) {
     List<Report> userLostReports = reportRepo
@@ -94,12 +91,9 @@ public class MatchService {
       confidence = "Low-Confidence Match (Location Conflict)";
     }
 
-    int lostId = type.equals("lost")
-        ? newR.getReportId()
-        : existR.getReportId();
-    int foundId = type.equals("found")
-        ? newR.getReportId()
-        : existR.getReportId();
+    // itemName/userId below
+    Report lostReport = type.equals("lost") ? newR : existR;
+    Report foundReport = type.equals("found") ? newR : existR;
 
     Match match = new Match();
     match.setLostReportId(lostReport.getReportId());
@@ -204,4 +198,5 @@ public class MatchService {
       return true;
     }).orElse(false);
   }
+
 }

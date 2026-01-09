@@ -28,6 +28,7 @@ export type Report = {
   date_resolved: string | null;
   description: string;
   status: ReportStatus;
+  matching_lost_report_id: number | null;
   surrender_code: string | null;
   claim_code: string | null;
   expiry_date?: string;

@@ -67,6 +67,10 @@ public class Report {
     @Transient
     @JsonProperty("expiry_date")
     private String expiryDate;
+    
+    @Transient
+    @JsonProperty("reporter_profile_picture")
+    private String reporterProfilePicture;
 
     @OneToMany(mappedBy = "reportId", fetch = FetchType.LAZY)
     private List<Image> images = new ArrayList<>();
