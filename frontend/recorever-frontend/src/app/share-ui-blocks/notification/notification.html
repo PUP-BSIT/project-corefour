@@ -93,7 +93,7 @@
     @else if (!isAdmin() && report.status === 'matched') {
       <app-match-detail-modal
         [report]="report"
-        (close)="onModalClose()">
+        [currentUserId]="currentUserId()" (close)="onModalClose()">
       </app-match-detail-modal>
     }
     @else {

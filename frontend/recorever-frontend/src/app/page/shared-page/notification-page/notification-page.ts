@@ -60,6 +60,7 @@ export class NotificationPage implements OnInit, OnDestroy {
 
   selectedReport = signal<Report | null>(null);
   currentUser = toSignal(this.authService.currentUser$);
+  isViewingDetails = false;
 
   currentUserId = computed(() => this.currentUser()?.user_id ?? null);
   isAdmin = computed(() => this.currentUser()?.role === 'admin');
@@ -167,8 +168,16 @@ export class NotificationPage implements OnInit, OnDestroy {
     ).subscribe();
   }
 
+  onViewMatchDetails(): void {
+    this.isViewingDetails = true;
+  }
+
   onModalClose(): void {
-    this.selectedReport.set(null);
+    if (this.isViewingDetails) {
+      this.isViewingDetails = false;
+    } else {
+      this.selectedReport.set(null);
+    }
   }
 
   getUserProfilePicture(): string | null {

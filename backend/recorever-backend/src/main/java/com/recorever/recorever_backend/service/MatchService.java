@@ -18,8 +18,7 @@ public class MatchService {
   private static final double MIN_KEYWORD_OVERLAP = 0.5;
   private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
       "a", "an", "the", "in", "on", "at", "and", "or", "to", "for", "of",
-      "with", "is", "was", "has", "i", "my", "me", "found", "lost"
-  ));
+      "with", "is", "was", "has", "i", "my", "me", "found", "lost"));
 
   @Autowired
   private MatchRepository matchRepo;
@@ -31,7 +30,8 @@ public class MatchService {
   private NotificationService notificationService;
 
   private MatchResponseDTO convertToDTO(Match match) {
-    if (match == null) return null;
+    if (match == null)
+      return null;
     MatchResponseDTO dto = new MatchResponseDTO();
     dto.setMatch_id(match.getMatch_id());
     dto.setLost_report_id(match.getLost_report_id());
@@ -99,15 +99,12 @@ public class MatchService {
 
     String msg = String.format(
         "%s found: Your %s linked to report #%d. %s",
-        confidence, newR.getItemName(), lostId, detail
-    );
+        confidence, newR.getItemName(), lostId, detail);
 
     notificationService.create(
-        newR.getUserId(), newR.getReportId(), msg, true
-    );
+        newR.getUserId(), newR.getReportId(), msg, true);
     notificationService.create(
-        existR.getUserId(), existR.getReportId(), msg, true
-    );
+        existR.getUserId(), existR.getReportId(), msg, true);
   }
 
   private boolean checkNameSimilarity(Report report1, Report report2) {
@@ -126,7 +123,8 @@ public class MatchService {
     String d1 = r1.getDescription() != null ? r1.getDescription().toLowerCase() : "";
     String d2 = r2.getDescription() != null ? r2.getDescription().toLowerCase() : "";
 
-    if (d1.isEmpty() || d2.isEmpty()) return false;
+    if (d1.isEmpty() || d2.isEmpty())
+      return false;
 
     Set<String> set1 = tokenize(d1);
     Set<String> set2 = tokenize(d2);
@@ -137,7 +135,8 @@ public class MatchService {
     Set<String> union = new HashSet<>(set1);
     union.addAll(set2);
 
-    if (union.isEmpty()) return false;
+    if (union.isEmpty())
+      return false;
 
     double score = (double) intersect.size() / union.size();
     return score >= MIN_KEYWORD_OVERLAP;
@@ -165,6 +164,12 @@ public class MatchService {
 
   public MatchResponseDTO getMatchById(int id) {
     return matchRepo.findById(id)
+        .map(this::convertToDTO)
+        .orElse(null);
+  }
+
+  public MatchResponseDTO getMatchByReportId(int reportId) {
+    return matchRepo.findByReportId(reportId)
         .map(this::convertToDTO)
         .orElse(null);
   }

@@ -13,80 +13,109 @@
     </div>
 
     <div class="modal-body">
-      @if (step === 'confirm') {
-        <div class="step-content">
-          <p class="instruction-text">
-            An item has been found that matches your report.
-                Please review the details below.
-            <br><strong>Is this the item you lost?</strong>
-          </p>
+      @if (isLoading()) {
+        <div class="loading-state">Finding your match details...</div>
+      }
+      @else if (matchedItem(); as item) {
 
-          <div class="item-card">
-            @if (imageUrl) {
-              <img [src]="imageUrl" alt="Item Image" class="item-image">
-            } @else {
-              <div class="no-image-placeholder">No Image Available</div>
-            }
+        @if (step === 'confirm') {
+          <div class="step-content">
+            <p class="instruction-text">
+              We found an item that matches your report!
+              <br><strong>Is this the item?</strong>
+            </p>
 
-            <div class="item-info">
-              <h3>{{ report.item_name }}</h3>
-              <p class="description">{{ report.description }}</p>
+            <div class="item-card clickable"
+                 (click)="onItemClick()"
+                 title="Click to view full details">
 
-              <div class="meta-row">
-                <span class="label">Location found:</span>
-                <span class="value">{{ report.location }}</span>
+              @if (matchedImageUrl) {
+                <img [src]="matchedImageUrl" alt="Item Image"
+                    class="item-image">
+              } @else {
+                <div class="no-image-placeholder">No Image Available</div>
+              }
+
+              <div class="item-info">
+                <h3>{{ item.item_name }}</h3>
+                <p class="description">{{ item.description }}</p>
+
+                <div class="meta-row">
+                  <span class="label">Location:</span>
+                  <span class="value">{{ item.location }}</span>
+                </div>
+
+                <div class="meta-row">
+                  <span class="label">Date:</span>
+                  <span class="value">{{ (item.date_lost_found ||
+                      item.date_reported) | date:'mediumDate' }}</span>
+                </div>
               </div>
 
-              <div class="meta-row">
-                <span class="label">Date:</span>
-                <span class="value">{{ (report.date_lost_found ||
-                    report.date_reported) | date:'mediumDate' }}</span>
+              <div class="chevron">
+                <img src="assets/arrow-right.png" alt="View">
               </div>
             </div>
-          </div>
 
-          <div class="actions-row">
-            <button mat-stroked-button color="warn" (click)="onClose()">
-              No, not mine
-            </button>
-            <button mat-flat-button color="primary"
-                (click)="onConfirmOwnership()"> Yes, it's mine
-            </button>
+            <div class="actions-row">
+              <button mat-stroked-button color="warn" (click)="onClose()">
+                No, not mine
+              </button>
+              <button mat-flat-button color="primary"
+                  (click)="onConfirmOwnership()">
+                Yes, it's mine
+              </button>
+            </div>
           </div>
-        </div>
+        }
+
+        @if (step === 'success') {
+          <div class="step-content success-view">
+            <div class="success-icon">
+              <img src="assets/check-icon.png" alt="Success">
+            </div>
+
+            <h3>Verification Successful</h3>
+            <p class="sub-text">
+              Please present this <strong>Reference Code</strong> to the
+              <strong>OSAS Office</strong> to claim your item.
+            </p>
+
+            <div class="reference-code-box">
+              <span class="label">ITEM REF CODE</span>
+              <span class="code">REF-{{ item.report_id }}</span>
+            </div>
+
+            <div class="reminder-box">
+              <p><strong>Note:</strong> You may be asked to provide additional
+                  proof of ownership.</p>
+            </div>
+
+            <div class="actions-row single-action">
+              <button mat-flat-button color="primary" (click)="onClose()">
+                Done
+              </button>
+            </div>
+          </div>
+        }
+
       }
-
-      @if (step === 'success') {
-        <div class="step-content success-view">
-          <div class="success-icon">
-            <img src="assets/check-icon.png" alt="Success">
-          </div>
-
-          <h3>Verification Successful</h3>
-          <p class="sub-text">
-            Please present this <strong>Reference Code</strong> to the
-            <strong>OSAS Office</strong> to claim your item.
-          </p>
-
-          <div class="reference-code-box">
-            <span class="label">REFERENCE CODE</span>
-            <span class="code">REF-{{ report.report_id }}</span>
-          </div>
-
-          <div class="reminder-box">
-            <p><strong>Note:</strong> You may be asked to provide additional
-                proof of ownership (e.g., ID, specific description) upon
-                claiming.</p>
-          </div>
-
-          <div class="actions-row single-action">
-            <button mat-flat-button color="primary" (click)="onClose()">
-              Done
-            </button>
-          </div>
+      @else {
+        <div class="error-state">
+          <p>Could not load match details. Please try again later.</p>
+          <button mat-button (click)="onClose()">Close</button>
         </div>
       }
     </div>
-
   </div>
 </div>
+
+@if (showItemDetails && matchedItem()) {
+  <app-item-detail-modal
+    [item]="matchedItem()!"
+    [currentUserId]="currentUserId"
+    [isAdmin]="false"
+    [isArchiveView]="false"
+    (close)="onItemDetailClose()">
+  </app-item-detail-modal>
+}

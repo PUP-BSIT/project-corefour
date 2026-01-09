@@ -54,6 +54,7 @@ export class Notification implements OnInit, OnDestroy {
 
   isOnNotificationPage = false;
   currentFilter: 'all' | 'unread' = 'all';
+  isViewingDetails = false;
 
   selectedReport = signal<Report | null>(null);
   currentUser = toSignal(this.authService.currentUser$);
@@ -236,8 +237,17 @@ export class Notification implements OnInit, OnDestroy {
     ).subscribe();
   }
 
+  onViewMatchDetails(): void {
+    this.isViewingDetails = true;
+  }
+
+  // [Updated]
   onModalClose(): void {
-    this.selectedReport.set(null);
+    if (this.isViewingDetails) {
+      this.isViewingDetails = false;
+    } else {
+      this.selectedReport.set(null);
+    }
   }
 
   getUserProfilePicture(): string | null {

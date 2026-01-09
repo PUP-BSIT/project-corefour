@@ -13,32 +13,42 @@ import java.util.Map;
 @RequestMapping("/api")
 public class MatchController {
 
-    @Autowired
-    private MatchService service;
+  @Autowired
+  private MatchService service;
 
-    @GetMapping("/matches")
-    public ResponseEntity<List<MatchResponseDTO>> getAllMatches() {
-        return ResponseEntity.ok(service.listAllMatches());
+  @GetMapping("/matches")
+  public ResponseEntity<List<MatchResponseDTO>> getAllMatches() {
+    return ResponseEntity.ok(service.listAllMatches());
+  }
+
+  @GetMapping("/match/{id}")
+  public ResponseEntity<?> getMatch(@PathVariable int id) {
+    MatchResponseDTO match = service.getMatchById(id);
+    if (match == null)
+      return ResponseEntity.status(404).body("Match not found");
+    return ResponseEntity.ok(match);
+  }
+
+  @GetMapping("/match/report/{reportId}")
+  public ResponseEntity<?> getMatchByReportId(@PathVariable int reportId) {
+    MatchResponseDTO match = service.getMatchByReportId(reportId);
+    if (match == null)
+      return ResponseEntity.status(404).body("Match not found");
+    return ResponseEntity.ok(match);
+  }
+
+  @PutMapping("/match/{id}")
+  public ResponseEntity<?> updateMatchStatus(@PathVariable int id,
+      @RequestBody Map<String, String> body) {
+    String status = body.get("status");
+    if (status == null || status.isEmpty()) {
+      return ResponseEntity.badRequest().body("Status field is required.");
     }
 
-    @GetMapping("/match/{id}")
-    public ResponseEntity<?> getMatch(@PathVariable int id) {
-        MatchResponseDTO match = service.getMatchById(id);
-        if (match == null) return ResponseEntity.status(404).body("Match not found");
-        return ResponseEntity.ok(match);
-    }
+    boolean updated = service.updateMatchStatus(id, status);
+    if (!updated)
+      return ResponseEntity.badRequest().body("Match update failed.");
 
-    @PutMapping("/match/{id}")
-    public ResponseEntity<?> updateMatchStatus(@PathVariable int id,
-                                               @RequestBody Map<String, String> body) {
-        String status = body.get("status");
-        if (status == null || status.isEmpty()) {
-            return ResponseEntity.badRequest().body("Status field is required.");
-        }
-
-        boolean updated = service.updateMatchStatus(id, status);
-        if (!updated) return ResponseEntity.badRequest().body("Match update failed.");
-
-        return ResponseEntity.ok(Map.of("success", true, "message", "Match status updated to " + status));
-    }
+    return ResponseEntity.ok(Map.of("success", true, "message", "Match status updated to " + status));
+  }
 }
