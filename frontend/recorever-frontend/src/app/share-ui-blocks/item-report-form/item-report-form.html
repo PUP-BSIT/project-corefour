@@ -161,4 +161,18 @@
       Reset
     </button>
   </div>
+
+  @if (showConfirmationModal) {
+  <app-confirmation-modal
+    [title]="isEditMode ? 'Confirm Changes' : 'Confirm Submission'"
+    [message]="isEditMode 
+      ? 'Are you sure you want to update this report details?' 
+      : 'Are you sure you want to submit this report?'"
+    [confirmLabel]="isEditMode ? 'Save Changes' : 'Submit'"
+    cancelLabel="Cancel"
+    variant="primary"
+    (confirm)="onConfirmSubmission()"
+    (cancel)="onCancelSubmission()">
+  </app-confirmation-modal>
+}
 </form>

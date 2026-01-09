@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import type { Report } from '../../models/item-model';
 import { ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
 import { StatusBadge } from '../../share-ui-blocks/status-badge/status-badge';
@@ -22,6 +23,7 @@ import { CodesModal } from '../codes-modal/codes-modal';
     MatIconModule,
     MatMenuModule,
     MatDividerModule,
+    MatTooltipModule,
     StatusBadge,
     TimeAgoPipe,
     CodesModal,
@@ -46,13 +48,32 @@ export class ItemDetailModal {
   @Output() unarchiveClicked = new EventEmitter<void>();
   @Output() statusChanged = new EventEmitter<string>();
 
-  public isStatusMenuOpen = signal<boolean>(false);
+  public isDropdownOpen = signal<boolean>(false);
   showClaimModal = false;
 
-  protected readonly availableStatuses: string[] = 
-    ['pending', 'approved', 'rejected', 'matched'];
+  // Preserved dropdown options for Manage Lost Items
+  protected readonly STATUS_OPTIONS = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'approved', label: 'Verified' },
+    { value: 'rejected', label: 'Rejected' }
+  ];
 
   protected currentImageIndex = signal<number>(0);
+
+  isEditable = computed((): boolean => {
+    const status = this.item().status;
+    return status === 'pending';
+  });
+
+  isRemovable = computed((): boolean => {
+    return this.item().type === 'lost';
+  });
+
+  removeTooltip = computed((): string => {
+    return !this.isRemovable()
+      ? 'Found item reports are protected and cannot be removed directly.'
+      : 'Remove this report';
+  });
 
   photoUrls = computed((): string[] => {
     const report = this.item();
@@ -72,7 +93,7 @@ export class ItemDetailModal {
 
   currentImageUrl = computed((): string => {
     const urls = this.photoUrls();
-    
+
     if (urls.length === 0) {
       return 'assets/temp-photo-item.png';
     }
@@ -84,13 +105,16 @@ export class ItemDetailModal {
     }
 
     const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
-    return `${secureBaseUrl}/image/download/${url}`; 
+    return `${secureBaseUrl}/image/download/${url}`;
   });
 
   displayStatus = computed((): ItemStatus => {
     const s = this.item().status;
     if (s === 'approved' || s === 'matched') {
       return 'Verified';
+    }
+    if (s === 'resolved') {
+      return 'Resolved';
     }
     return (s.charAt(0).toUpperCase() + s.slice(1)) as ItemStatus;
   });
@@ -124,7 +148,7 @@ export class ItemDetailModal {
     const userId = this.item().user_id;
     if (userId) {
       this.onClose();
-      this.router.navigate(['/app/profile', userId]); 
+      this.router.navigate(['/app/profile', userId]);
     }
   }
 
@@ -151,6 +175,19 @@ export class ItemDetailModal {
 
   onEdit(event: Event): void {
     event.stopPropagation();
+
+    const reportData = this.item();
+    const path = reportData.type === 'lost'
+      ? '/app/report-lost'
+      : '/app/report-found';
+
+    this.router.navigate([path], {
+      state: {
+        data: reportData,
+        mode: 'EDIT'
+      }
+    });
+
     this.editClicked.emit();
   }
 
@@ -167,8 +204,29 @@ export class ItemDetailModal {
   onUnarchive(): void {
     this.unarchiveClicked.emit();
   }
-  
-  public onUpdateStatus(newStatus: string): void {
-    this.statusChanged.emit(newStatus);
+
+  protected toggleDropdown(event: Event): void {
+    event.stopPropagation();
+    if (this.isArchiveView()) return;
+    this.isDropdownOpen.update(v => !v);
   }
-}   
+
+  protected closeDropdown(): void {
+    this.isDropdownOpen.set(false);
+  }
+
+  protected onStatusOptionClick(status: string): void {
+    if (this.isArchiveView()) return;
+
+    this.statusChanged.emit(status);
+    this.closeDropdown();
+  }
+
+  protected isStatusDisabled(status: string): boolean {
+    return false;
+  }
+
+  protected getOptionTooltip(status: string): string {
+    return '';
+  }
+}

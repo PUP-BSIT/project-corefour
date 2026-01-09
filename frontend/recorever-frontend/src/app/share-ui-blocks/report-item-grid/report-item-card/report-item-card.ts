@@ -47,6 +47,8 @@ export class ReportItemCard {
   isArchiveView = input<boolean>(false);
   isAdmin = input<boolean>(false);
 
+  isHighlighted = input<boolean>(false);
+
   private router = inject(Router);
 
   @Output() cardClicked = new EventEmitter<void>();
@@ -127,6 +129,10 @@ export class ReportItemCard {
     if (s === 'approved' || s === 'matched') {
       return 'Verified';
     }
+
+    if (s === 'resolved') {
+      return 'Resolved';
+    }
     return (s.charAt(0).toUpperCase() + s.slice(1)) as ItemStatus;
   });
 
@@ -181,16 +187,16 @@ export class ReportItemCard {
   }
 
   public onEdit(event: Event): void {
-    
+
     const reportData = this.report();
-    const path = reportData.type === 'lost' 
-      ? '/app/report-lost' 
+    const path = reportData.type === 'lost'
+      ? '/app/report-lost'
       : '/app/report-found';
 
     this.router.navigate([path], {
-      state: { 
-        data: reportData, 
-        mode: 'EDIT' 
+      state: {
+        data: reportData,
+        mode: 'EDIT'
       }
     });
 

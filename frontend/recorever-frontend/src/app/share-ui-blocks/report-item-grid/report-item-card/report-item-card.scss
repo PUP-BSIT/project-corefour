@@ -25,6 +25,11 @@ $danger-red: #d32f2f;
       transform: translateY(-8px);
       box-shadow: 0 12px 30px rgba(93, 80, 208, 0.15);
     }
+
+    &.highlighted-item {
+      border: 2px solid $primary-purple;
+      animation: pulse-highlight 2s infinite;
+    }
   }
 
   .card-media {
@@ -94,6 +99,13 @@ $danger-red: #d32f2f;
       top: 12px;
       left: 12px;
       z-index: 2;
+
+      ::ng-deep .status-badge {
+        &.claimed, &.resolved {
+          background-color: #000000 !important;
+          color: #ffffff !important;
+        }
+      }
     }
 
     .floating-menu-trigger {
@@ -239,6 +251,12 @@ $danger-red: #d32f2f;
   }
 }
 
+@keyframes pulse-highlight {
+  0% { box-shadow: 0 0 0 0 rgba(93, 80, 208, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(93, 80, 208, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(93, 80, 208, 0); }
+}
+
 @media (max-width: 640px) {
   :host {
     .modern-item-card {
@@ -321,10 +339,10 @@ $danger-red: #d32f2f;
     .detail-item {
       font-size: 0.75rem;
 
-      &:not(:first-child):not(.expiry-highlight) { 
-        display: none; 
+      &:not(:first-child):not(.expiry-highlight) {
+        display: none;
       }
-      
+
       &.expiry-highlight {
         margin-top: 2px;
         mat-icon { font-size: 14px; width: 14px; height: 14px; }

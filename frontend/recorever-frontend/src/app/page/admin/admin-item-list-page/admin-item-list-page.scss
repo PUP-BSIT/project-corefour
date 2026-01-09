@@ -41,6 +41,10 @@
   margin: 0 10.5rem 0 0.5rem;
 }
 
+.filter-section {
+  margin-bottom: 2rem;
+}
+
 .content-section {
   margin-top: 2rem;
   min-height: 400px;
@@ -105,5 +109,6 @@
   .page-title {
     font-size: 2rem;
     text-align: center;
+    line-height: normal;
   }
 }

@@ -6,14 +6,14 @@ import com.recorever.recorever_backend.model.Claim;
 import com.recorever.recorever_backend.model.Report;
 import com.recorever.recorever_backend.repository.ClaimRepository;
 import com.recorever.recorever_backend.repository.ReportRepository;
+import com.recorever.recorever_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ClaimService {
@@ -27,122 +27,118 @@ public class ClaimService {
   @Autowired
   private NotificationService notificationService;
 
-  private static final int ADMIN_USER_ID = 1;
+  @Autowired
+  private UserRepository userRepository;
+
+  public List<ClaimResponseDTO> getClaimsForReport(int reportId) {
+    return repo.findByReportId(reportId).stream()
+        .map(this::mapToClaimResponseDTO)
+        .collect(Collectors.toList());
+  }
+
+  public String getClaimCode(int userId, int reportId) {
+    return repo.findClaimCode(userId, reportId).orElse(null);
+  }
+
+  public Claim getClaimByReportId(int reportId) {
+    Claim claim = repo.findTopByReportId(reportId).orElse(null);
+    if (claim != null) {
+      populateTransientUserData(claim);
+    }
+    return claim;
+  }
+
+  public List<ClaimResponseDTO> getClaimsByUserId(int userId) {
+    return repo.findByUserId(userId).stream()
+        .map(this::mapToClaimResponseDTO)
+        .collect(Collectors.toList());
+  }
 
   public List<ClaimResponseDTO> listAllClaimsForAdmin() {
-    return repo.getAllClaimsWithDetails();
+    return repo.findAllOrderByCreatedAtDesc().stream()
+        .map(this::mapToClaimResponseDTO)
+        .collect(Collectors.toList());
   }
 
   @Transactional
   public Claim createManualClaim(ManualClaimRequestDTO req) {
-    int reportId = req.getReport_id().intValue();
+      int reportId = req.getReport_id().intValue();
+      Report foundReport = reportRepo.findByReportIdAndIsDeletedFalse(reportId)
+              .orElseThrow(() -> new RuntimeException("Found report not found"));
 
-    Report report = reportRepo.getReportById(reportId);
-    if (report == null) {
-      throw new RuntimeException("Target Report not found");
+      Claim claim = new Claim();
+      claim.setReportId(reportId);
+      claim.setClaimantName(req.getClaimant_name());
+      claim.setContactEmail(req.getContact_email());
+      claim.setContactPhone(req.getContact_phone());
+      claim.setAdminRemarks(req.getAdmin_remarks());
+      claim.setCreatedAt(LocalDateTime.now().toString());
+
+      if (req.getMatching_lost_report_id() != null) {
+          int lostId = req.getMatching_lost_report_id().intValue();
+          claim.setMatchingLostReportId(lostId);
+
+          Report lostReport = reportRepo.findByReportIdAndIsDeletedFalse(lostId)
+                  .orElseThrow(() -> new RuntimeException(
+                          "Matching lost report not found"));
+
+          lostReport.setStatus("resolved");
+          lostReport.setDateResolved(LocalDateTime.now().toString());
+          reportRepo.save(lostReport);
+
+          // NOTIFICATION: To the user who LOST the item
+          String lostMsg = String.format(
+                  "Your lost item '%s' has been resolved. " +
+                  "We're glad we could help you find it!",
+                  lostReport.getItemName());
+
+          notificationService.create(
+                  lostReport.getUserId(), lostId, lostMsg, true);
+      }
+
+      Claim saved = repo.save(claim);
+      foundReport.setStatus("claimed");
+      reportRepo.save(foundReport);
+
+      // NOTIFICATION: To the user who FOUND the item
+      String foundMsg = String.format(
+          "Good news! Your found item '%s' has been successfully claimed. " +
+          "Thank you for your honesty and for being a hero in our community!",
+          foundReport.getItemName());
+
+      notificationService.create(
+              foundReport.getUserId(), reportId, foundMsg, true);
+
+      return saved;
+  }
+
+  private void populateTransientUserData(Claim claim) {
+    if (claim.getUserId() != null) {
+      userRepository.findById(claim.getUserId()).ifPresent(u -> {
+        if (claim.getClaimantName() == null)
+          claim.setClaimantName(u.getName());
+        if (claim.getContactEmail() == null)
+          claim.setContactEmail(u.getEmail());
+        if (claim.getContactPhone() == null)
+          claim.setContactPhone(u.getPhoneNumber());
+      });
+
+      repo.findClaimCode(claim.getUserId(), claim.getReportId())
+          .ifPresent(code -> claim.setClaimCode(code));
     }
-
-    Claim claim = new Claim();
-    claim.setReport_id(reportId);
-    claim.setClaimant_name(req.getClaimant_name());
-    claim.setContact_email(req.getContact_email());
-    claim.setContact_phone(req.getContact_phone());
-    claim.setAdmin_remarks(req.getAdmin_remarks());
-    claim.setCreated_at(LocalDateTime.now());
-
-    Claim savedClaim = repo.save(claim);
-
-    reportRepo.updateStatus(reportId, "claimed");
-
-    return savedClaim;
   }
 
-  public Map<String, Object> create(int reportId, int userId) {
-    Report targetReport = reportRepo.getReportById(reportId);
+  private ClaimResponseDTO mapToClaimResponseDTO(Claim claim) {
+    ClaimResponseDTO dto = new ClaimResponseDTO();
 
-    if (targetReport == null) {
-      throw new RuntimeException("Target Report ID " + reportId + " not found.");
-    }
+    dto.setClaim_id(claim.getClaimId());
+    dto.setReport_id(claim.getReportId());
+    dto.setAdmin_remarks(claim.getAdminRemarks());
+    dto.setCreated_at(claim.getCreatedAt());
+    dto.setClaimant_name(claim.getClaimantName());
+    dto.setContact_email(claim.getContactEmail());
+    dto.setContact_phone(claim.getContactPhone());
 
-    String claimCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-
-    int id = repo.createClaim(reportId, userId, claimCode);
-
-    String itemName = targetReport.getItem_name();
-    notificationService.create(ADMIN_USER_ID, reportId,
-        String.format("New Claim #%d submitted for item: %s. Code: %s", id, itemName, claimCode), false);
-
-    return Map.of(
-        "claim_id", id,
-        "claim_code", claimCode,
-        "status", "pending",
-        "message", "Claim ticket created successfully.");
-  }
-
-  public List<ClaimResponseDTO> getClaimsForReport(int reportId) {
-    return repo.getClaimsForReport(reportId);
-  }
-
-  public String getClaimCode(int userId, int reportId) {
-    return repo.getClaimCode(userId, reportId);
-  }
-
-  // for future cleaning up
-  // public boolean updateStatus(int claimId, String status, String remarks) {
-  // Claim claim = repo.getClaimById(claimId);
-  // if (claim == null) return false;
-
-  // String dbStatus = status;
-  // if ("claimed".equalsIgnoreCase(status)) {
-  // dbStatus = "approved";
-  // }
-
-  // boolean updated = repo.updateClaimStatus(claimId, dbStatus, remarks);
-  // if (!updated) return false;
-
-  // if ("claimed".equalsIgnoreCase(status)) {
-  // reportRepo.updateStatus(claim.getReport_id(), "claimed");
-
-  // String msg = String.format("Success! You have successfully collected the item
-  // for Claim #%d.", claimId);
-  // notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
-
-  // List<ClaimResponseDTO> allClaims =
-  // repo.getClaimsForReport(claim.getReport_id());
-  // for (ClaimResponseDTO otherClaim : allClaims) {
-  // if (otherClaim.getClaim_id() != claimId &&
-  // !otherClaim.getStatus().equals("rejected")) {
-  // String autoRejectReason = "System Auto-Rejection: Item has been claimed by
-  // another user.";
-  // repo.updateClaimStatus(otherClaim.getClaim_id(), "rejected",
-  // autoRejectReason);
-
-  // String loserMsg = String.format("Update: Your claim for item '%s' was closed
-  // because the item was claimed by another user.",
-  // otherClaim.getItem_name());
-  // notificationService.create(otherClaim.getUser_id(),
-  // otherClaim.getReport_id(), loserMsg);
-  // }
-  // }
-  // } else if ("rejected".equalsIgnoreCase(status)) {
-  // String msg = String.format("Update: Your claim #%d was rejected. Admin
-  // Remarks: %s",
-  // claimId, remarks);
-  // notificationService.create(claim.getUser_id(), claim.getReport_id(), msg);
-  // }
-
-  // return updated;
-  // }
-
-  public List<ClaimResponseDTO> getClaimsByUserId(int userId) {
-    return repo.getClaimsByUserIdDTO(userId);
-  }
-
-  public Claim getById(int claimId) {
-    return repo.getClaimById(claimId);
-  }
-
-  public Claim getClaimByReportId(int reportId) {
-    return repo.getClaimByReportId(reportId);
+    return dto;
   }
 }

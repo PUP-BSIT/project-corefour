@@ -29,20 +29,27 @@ public class AdminController {
     }
 
     @PutMapping("/report/{id}/status")
-    public ResponseEntity<?> updateReportStatus(@PathVariable int id, 
-                                               @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> updateReportStatus(
+            @PathVariable int id, 
+            @RequestBody Map<String, String> body) {
+        
         String status = body.get("status");
         
         if (status == null || status.isEmpty()) {
-            return ResponseEntity.badRequest().body("Status field is required.");
+            return ResponseEntity.badRequest()
+                    .body("Status field is required.");
         }
 
         boolean updated = reportService.adminUpdateStatus(id, status);
         if (!updated) {
-            return ResponseEntity.badRequest().body("Report not found or status update failed.");
+            return ResponseEntity.badRequest()
+                    .body("Report not found or status update failed.");
         }
         
-        return ResponseEntity.ok(Map.of("success", true, "message", "Report status updated to " + status));
+        return ResponseEntity.ok(Map.of(
+                "success", true, 
+                "message", "Report status updated to " + status
+        ));
     }
 
     // --- CLAIM MANAGEMENT ENDPOINTS ---
@@ -52,50 +59,8 @@ public class AdminController {
     }
 
     @GetMapping("/dashboard-stats")
-    public ResponseEntity<?> getDashboardStats(@RequestParam(defaultValue = "15") int days) {
+    public ResponseEntity<?> getDashboardStats(
+            @RequestParam(defaultValue = "15") int days) {
         return ResponseEntity.ok(reportService.getDashboardData(days));
     }
-
-    // for future cleaning up
-    // @PutMapping("/claim/{id}/approve")
-    // public ResponseEntity<?> approveClaim(@PathVariable int id, @RequestBody(required = false) Map<String, String> body) {
-    //     String remarks = (body != null && body.containsKey("admin_remarks")) 
-    //         ? body.get("admin_remarks") 
-    //         : "Approved by Admin";
-            
-    //     boolean updated = claimService.updateStatus(id, "approved", remarks);
-        
-    //     if (!updated) {
-    //         return ResponseEntity.badRequest().body("Claim not found or approval failed.");
-    //     }
-    //     return ResponseEntity.ok(Map.of("success", true, "message", "Claim approved."));
-    // }
-
-    // @PutMapping("/claim/{id}/finalize")
-    // public ResponseEntity<?> finalizeClaim(@PathVariable int id, @RequestBody(required = false) Map<String, String> body) {
-    //     String remarks = (body != null && body.containsKey("admin_remarks")) 
-    //         ? body.get("admin_remarks") 
-    //         : "Item collected";
-
-    //     boolean updated = claimService.updateStatus(id, "claimed", remarks);
-        
-    //     if (!updated) {
-    //         return ResponseEntity.badRequest().body("Claim not found or finalization failed.");
-    //     }
-    //     return ResponseEntity.ok(Map.of("success", true, "message", "Item successfully collected."));
-    // }
-
-    // @PutMapping("/claim/{id}/reject")
-    // public ResponseEntity<?> rejectClaim(@PathVariable int id, @RequestBody(required = false) Map<String, String> body) {
-    //     String remarks = (body != null && body.containsKey("admin_remarks")) 
-    //         ? body.get("admin_remarks") 
-    //         : "Rejected by Admin";
-
-    //     boolean updated = claimService.updateStatus(id, "rejected", remarks);
-        
-    //     if (!updated) {
-    //         return ResponseEntity.badRequest().body("Claim not found or rejection failed.");
-    //     }
-    //     return ResponseEntity.ok(Map.of("success", true, "message", "Claim rejected."));
-    // }
 }

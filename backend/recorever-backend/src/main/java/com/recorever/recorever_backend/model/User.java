@@ -1,35 +1,78 @@
 package com.recorever.recorever_backend.model;
 
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+@Entity
+@Table(name = "users")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class User implements UserDetails {
-    private int user_id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    @JsonProperty("user_id")
+    private int userId;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false, unique = true)
     private String email;
-    private String password_hash;
+
+    @Column(name = "password_hash", nullable = false)
+    @JsonProperty("password_hash")
+    private String passwordHash;
+
+    @Column(nullable = false)
     private String role;
-    private String profile_picture;
-    private String phone_number;
-    private String created_at;
-    private String refresh_token;
-    private LocalDateTime refresh_token_expiry;
-    private boolean is_deleted;
+
+    @Column(name = "profile_picture")
+    @JsonProperty("profile_picture")
+    private String profilePicture;
+
+    @Column(name = "phone_number")
+    @JsonProperty("phone_number")
+    private String phoneNumber;
+    
+    @Column(name = "created_at", updatable = false)
+    @JsonProperty("created_at")
+    private String createdAt;
+
+    @Column(name = "refresh_token")
+    @JsonProperty("refresh_token")
+    private String refreshToken;
+
+    @Column(name = "refresh_token_expiry")
+    @JsonProperty("refresh_token_expiry")
+    private LocalDateTime refreshTokenExpiry;
+
+    @Column(name = "is_deleted", nullable = false)
+    @JsonProperty("is_deleted")
+    private boolean isDeleted;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String userRole = (this.role == null || this.role.isEmpty()) ? "USER" : this.role.toUpperCase();
+        String userRole = (this.role == null || this.role.isEmpty()) 
+            ? "USER" : this.role.toUpperCase();
         return List.of(new SimpleGrantedAuthority("ROLE_" + userRole));
     }
 
     @Override
     public String getPassword() {
-        return this.password_hash;
+        return this.passwordHash;
     }
 
     @Override
@@ -38,41 +81,7 @@ public class User implements UserDetails {
     }
 
     @Override public boolean isAccountNonExpired() { return true; }
-    @Override public boolean isAccountNonLocked() { return !is_deleted; }
+    @Override public boolean isAccountNonLocked() { return !isDeleted; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return !is_deleted; }
-
-    // --- Existing Getters and Setters ---
-    public int getUser_id() { return user_id; }
-    public void setUser_id(int user_id) { this.user_id = user_id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
-    public String getPassword_hash() { return password_hash; }
-    public void setPassword_hash(String password_hash) { this.password_hash = password_hash; }
-
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
-
-    public String getProfile_picture() { return profile_picture; }
-    public void setProfile_picture(String profile_picture) { this.profile_picture = profile_picture; }
-
-    public String getPhone_number() { return phone_number; }
-    public void setPhone_number(String phone_number) { this.phone_number = phone_number; }
-
-    public String getCreated_at() { return created_at; }
-    public void setCreated_at(String created_at) { this.created_at = created_at; }
-
-    public boolean getIs_deleted() { return is_deleted; }
-    public void setIs_deleted(boolean is_deleted) { this.is_deleted = is_deleted; }
-
-    public String getRefresh_token() { return refresh_token; }
-    public void setRefresh_token(String refresh_token) { this.refresh_token = refresh_token; }
-
-    public LocalDateTime getRefresh_token_expiry() { return refresh_token_expiry; }
-    public void setRefresh_token_expiry(LocalDateTime refresh_token_expiry) { this.refresh_token_expiry = refresh_token_expiry; }
+    @Override public boolean isEnabled() { return !isDeleted; }
 }

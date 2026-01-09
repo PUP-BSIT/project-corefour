@@ -1,39 +1,38 @@
 <div class="modal-overlay" (click)="onCancel()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
 
-    <div class="modal-content">
-      <div class="avatar-section">
-        <div class="avatar-wrapper">
-          <div class="avatar-circle">
-            <img [src]="previewImage || 'assets/profile-avatar.png'"
-                 alt="Profile Avatar"
-                 class="avatar-img">
-          </div>
-
-          <button type="button"
-                  class="edit-icon-btn"
-                  (click)="triggerFileInput()">
-            <img src="assets/profile-edit.png" alt="Edit Avatar">
-          </button>
-
-          <input type="file"
-                 #fileInput
-                 id="avatar-upload"
-                 accept="image/*"
-                 class="hidden-input"
-                 (change)="onFileSelected($event)">
+    <div class="avatar-section">
+      <div class="avatar-wrapper">
+        <div class="avatar-circle">
+          <img [src]="previewImage || 'assets/profile-avatar.png'"
+               alt="Profile Avatar"
+               class="avatar-img">
         </div>
+
+        <button type="button"
+                class="edit-icon-btn"
+                (click)="triggerFileInput()">
+          <img src="assets/profile-edit.png" alt="Edit Avatar">
+        </button>
+
+        <input type="file"
+               #fileInput
+               id="avatar-upload"
+               accept="image/*"
+               class="hidden-input"
+               (change)="onFileSelected($event)">
       </div>
+    </div>
 
-      <form [formGroup]="editForm"
-            (ngSubmit)="onSave()"
-            class="form-section">
+    <form [formGroup]="editForm"
+          (ngSubmit)="onSave()"
+          class="form-section">
 
-        @if (localError) {
-          <div class="global-error-message">
-            {{ localError }}
-          </div>
-        }
+      @if (localError) {
+        <div class="global-error-message">
+          {{ localError }}
+        </div>
+      }
 
         <div class="form-group">
           <label for="name">Name</label>
@@ -46,52 +45,62 @@
             @if (editForm.get('name')?.hasError('required')) {
               <small class="error-text">Name is required.</small>
             }
+            @if (editForm.get('name')?.hasError('maxlength')) {
+              <small class="error-text">
+                  Name must be 30 characters or less.
+              </small>
+            }
             @if (editForm.get('name')?.hasError('notUnique')) {
               <small class="error-text">This name is already taken.</small>
             }
           }
         </div>
 
-        <div class="form-group">
-          <label for="phone">Contact Number</label>
-          <input id="phone"
-                 type="text"
-                 formControlName="phone_number"
-                 placeholder="09xxxxxxxxx"
-                 maxlength="11"
-                 (input)="onPhoneInput($event)">
+      <div class="form-group">
+        <label for="phone">Contact Number</label>
+        <input id="phone"
+               type="text"
+               formControlName="phone_number"
+               placeholder="09xxxxxxxxx"
+               maxlength="11"
+               (input)="onPhoneInput($event)">
 
-          @if (editForm.get('phone_number')?.touched ||
-              editForm.get('phone_number')?.dirty) {
-            @if (editForm.get('phone_number')?.hasError('required')) {
-              <small class="error-text">Phone number is required.</small>
-            }
-            @if (editForm.get('phone_number')?.hasError('invalidPhNumber')) {
-              <small class="error-text">
-                Must start with 09 and contain exactly 11 digits.
-              </small>
-            }
-            @if (editForm.get('phone_number')?.hasError('notUnique')) {
-              <small class="error-text">
-                This phone number is already in use.
-              </small>
-            }
+        @if (editForm.get('phone_number')?.touched ||
+            editForm.get('phone_number')?.dirty) {
+          @if (editForm.get('phone_number')?.hasError('required')) {
+            <small class="error-text">Phone number is required.</small>
           }
-        </div>
+          @if (editForm.get('phone_number')?.hasError('invalidPhNumber')) {
+            <small class="error-text">
+              Must start with 09 and contain exactly 11 digits.
+            </small>
+          }
+          @if (editForm.get('phone_number')?.hasError('notUnique')) {
+            <small class="error-text">
+              This phone number is already in use.
+            </small>
+          }
+        }
+      </div>
 
-        <div class="form-group">
+      <div class="form-group">
           <label for="email">Email</label>
           <input id="email"
                  type="email"
                  formControlName="email"
                  placeholder="example@gmail.com">
 
-          @if (editForm.get('email')?.touched ||
-              editForm.get('email')?.dirty) {
+          @if (editForm.get('email')?.touched || editForm.get('email')?.dirty) {
             @if (editForm.get('email')?.hasError('required')) {
               <small class="error-text">Email is required.</small>
             }
-            @if (editForm.get('email')?.hasError('email')) {
+            @if (editForm.get('email')?.hasError('maxlength')) {
+              <small class="error-text">
+                  Email must be 40 characters or less.
+              </small>
+            }
+            @if (editForm.get('email')?.hasError('email') || editForm.get(
+                    'email')?.hasError('pattern')) {
               <small class="error-text">
                 Please enter a valid email address.
               </small>
@@ -102,28 +111,27 @@
           }
         </div>
 
-        <div class="button-group">
-          <button type="button"
-                  class="btn btn-save"
-                  [disabled]="editForm.invalid || 
-                              (editForm.pristine && !selectedFile) || 
-                              isSubmitting ||
-                              editForm.pending" 
-                  (click)="onSave()">
-            @if (isSubmitting || editForm.pending) {
-              Checking...
-            } @else {
-              Save
-            }
-          </button>
+      <div class="button-group">
+        <button type="button"
+                class="btn btn-primary"
+                [disabled]="editForm.invalid ||
+                            (editForm.pristine && !selectedFile) ||
+                            isSubmitting ||
+                            editForm.pending"
+                (click)="onSave()">
+          @if (isSubmitting || editForm.pending) {
+            Checking...
+          } @else {
+            Save
+          }
+        </button>
 
-          <button type="button"
-                  class="btn btn-cancel"
-                  (click)="onCancel()">
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+        <button type="button"
+                class="btn btn-outline"
+                (click)="onCancel()">
+          Cancel
+        </button>
+      </div>
+    </form>
   </div>
 </div>

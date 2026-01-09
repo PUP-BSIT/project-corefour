@@ -1,4 +1,16 @@
-<div [formGroup]="filterForm" class="filter-bar-container">
+<button
+  type="button"
+  mat-stroked-button
+  class="mobile-toggle-btn"
+  (click)="toggleFilter()">
+  <mat-icon>filter_list</mat-icon>
+  {{ isFilterVisible() ? 'Hide Filters' : 'Show Filters' }}
+</button>
+
+<div
+  [formGroup]="filterForm"
+  class="filter-bar-container"
+  [class.mobile-hidden]="!isFilterVisible()">
 
   @if (isDefaultState()) {
     <button mat-flat-button color="primary" type="button"
@@ -37,6 +49,13 @@
            matInput
            formControlName="location"
            [matAutocomplete]="auto">
+
+    @if (filterForm.get('location')?.value) {
+      <button mat-icon-button matSuffix type="button" 
+            (click)="clearLocation($event)">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
 
     <mat-autocomplete #auto="matAutocomplete">
       @for (loc of filteredLocations$ | async; track loc) {

@@ -1,4 +1,8 @@
-<mat-card class="modern-item-card" (click)="onCardClick()">
+<mat-card
+  class="modern-item-card"
+  [class.highlighted-item]="isHighlighted()"
+  (click)="onCardClick()">
+
   <div class="card-media">
     <div class="carousel-viewport">
       <img mat-card-image
@@ -115,7 +119,8 @@
         UNARCHIVE
       </button>
 
-    } @else if (report().type === 'lost' && report().expiry_date) {
+    } @else if (report().type === 'lost'
+        && report().expiry_date && (isOwner())) {
       <div class="admin-reference-display expiry-highlight">
         <span class="label">EXPIRES:</span>
         <span class="expiry-highlight">

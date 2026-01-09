@@ -8,7 +8,8 @@ import { BehaviorSubject,
         catchError,
         throwError,
         filter,
-        take
+        take,
+        shareReplay
 } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type { LoginRequest,
@@ -26,6 +27,8 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private injector = inject(Injector);
+
+  private profileRequest$: Observable<User | null> | null = null;
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
 
@@ -47,25 +50,32 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  constructor() {
-  }
-
   initAuth(): Observable<User | null> {
     if (!this.getUserFromStorage()) {
-        return of(null);
+      return of(null);
     }
+
+    if (this.profileRequest$) {
+      return this.profileRequest$;
+    }
+
     const userService = this.injector.get(UserService);
 
-    return userService.getProfile().pipe(
+    this.profileRequest$ = userService.getProfile().pipe(
       tap((user) => {
         this.updateCurrentUser(user);
+        this.profileRequest$ = null;
       }),
+      shareReplay(1),
       catchError((err) => {
         console.error('Session token is invalid, logging out.', err);
-        this.logout();
+        this.profileRequest$ = null;
+        this.logout().subscribe();
         return of(null);
       })
     );
+
+    return this.profileRequest$;
   }
 
   login(credentials: LoginRequest): Observable<User> {

@@ -7,6 +7,15 @@ export type PaginatedResponse<T> = {
   totalPages: number;
 };
 
+export type ReportStatus =
+  | 'pending'
+  | 'approved'
+  | 'matched'
+  | 'claimed'
+  | 'closed'
+  | 'rejected'
+  | 'resolved';
+
 export type Report = {
   report_id: number;
   user_id: number;
@@ -18,13 +27,7 @@ export type Report = {
   date_posted?: string;
   date_resolved: string | null;
   description: string;
-  status:
-      | 'pending'
-      | 'approved'
-      | 'matched'
-      | 'claimed'
-      | 'closed'
-      | 'rejected';
+  status: ReportStatus;
   surrender_code: string | null;
   claim_code: string | null;
   expiry_date?: string;
@@ -37,12 +40,11 @@ export type Report = {
 
 export type ReportFilters = {
   type?: 'lost' | 'found';
-  status?: 'pending' | 'approved' | 'matched' | 'claimed'
-      | 'rejected' | 'closed';
+  status?: ReportStatus;
   location?: string;
-  query?: string; 
+  query?: string;
   user_id?: number;
-  page?: number; 
+  page?: number;
   size?: number;
 };
 
