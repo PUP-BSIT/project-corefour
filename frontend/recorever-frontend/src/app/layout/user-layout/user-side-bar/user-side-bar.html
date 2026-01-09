@@ -31,8 +31,8 @@
 
         @for (item of profileDropdownItems; track item.label) {
           @if (item.action === 'navigate') {
-            <a [routerLink]="item.route" 
-              (click)="isProfileDropdownOpen = false; onNavClick()" 
+            <a [routerLink]="item.route"
+              (click)="isProfileDropdownOpen = false; onNavClick()"
               class="dropdown-item">
               <img [src]="item.iconPath" alt="{{ item.label }} Icon"
                   class="dropdown-item-icon">
@@ -52,27 +52,34 @@
   }
 
   <div class="nav-section main-nav">
-    @for (item of mainNav; track item.label) {
-      @if (isProtected(item.route)) {
-        <a class="nav-item cursor-pointer"
-            [class.active]="isRouteActive(item.route)"
-            (click)="onProtectedLinkClick(item.route)">
-          <img [src]="item.iconPath"
-               alt="{{ item.label }} Icon"
-               class="nav-icon">
-          <div class="nav-label">{{ item.label }}</div>
-        </a>
-      } @else {
-        <a [routerLink]="item.route"
-           routerLinkActive="active"
-           class="nav-item"
-           (click)="onNavClick()">
-          <img [src]="item.iconPath"
-               alt="{{ item.label }} Icon"
-               class="nav-icon">
-          <div class="nav-label">{{ item.label }}</div>
-        </a>
-      }
+    @for (group of navGroups; track group.label) {
+      <div class="nav-group">
+        <div class="nav-group-label">{{ group.label }}</div>
+
+        @for (item of group.items; track item.label) {
+          @if (isProtected(item.route)) {
+            <a class="nav-item cursor-pointer"
+                [class.active]="isRouteActive(item.route)"
+                (click)="onProtectedLinkClick(item.route, item.fragment)">
+              <img [src]="item.iconPath"
+                   alt="{{ item.label }} Icon"
+                   class="nav-icon">
+              <div class="nav-label">{{ item.label }}</div>
+            </a>
+          } @else {
+            <a [routerLink]="item.route"
+               [fragment]="item.fragment"
+               routerLinkActive="active"
+               class="nav-item"
+               (click)="onNavClick()">
+              <img [src]="item.iconPath"
+                   alt="{{ item.label }} Icon"
+                   class="nav-icon">
+              <div class="nav-label">{{ item.label }}</div>
+            </a>
+          }
+        }
+      </div>
     }
   </div>
 

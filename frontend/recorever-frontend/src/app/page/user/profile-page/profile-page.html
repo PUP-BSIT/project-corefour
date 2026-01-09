@@ -40,7 +40,7 @@
     }
   </div>
 
-  <div class="profile-page__controls">
+  <div class="profile-page__controls" id="my-reports-section">
     <div class="profile-page__tabs">
       <button type="button"
           class="profile-page__tab-btn"
@@ -80,11 +80,11 @@
             [value]="activeStatus$ | async"
             (change)="setActiveStatus(statusSelect.value)">
           <option value="" disabled selected hidden>Status</option>
-          
+
           @if (isOwnProfile$ | async) {
             <option value="pending">Pending</option>
           }
-          
+
           <option value="approved">Verified</option>
           <option value="claimed">Claimed</option>
           <option value="resolved">Resolved</option>
@@ -145,7 +145,7 @@
       <app-item-detail-modal
           [item]="item"
           [currentUserId]="loggedInUser.user_id"
-          [userProfilePicture]="item.reporter_profile_picture ?? null" 
+          [userProfilePicture]="item.reporter_profile_picture ?? null"
           (close)="selectedItem.set(null)"
           (editClicked)="onModalEdit()"
           (deleteClicked)="onModalDelete()"

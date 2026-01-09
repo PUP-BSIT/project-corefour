@@ -1,32 +1,31 @@
 @use "sass:color";
 
-$sidebar-width: 250px;
-$primary-text: #333;
-$secondary-text: #777777;
-$active-bg: #f0f0f0;
-$border-color: #e0e0e0;
-
-$dropdown-bg: #333;
-$dropdown-text: #fff;
-$dropdown-separator: #555;
-$dropdown-hover: color.adjust($dropdown-bg, $lightness: 10%);
+$sidebar-width: 260px;
+$primary-color: #2c3e50;
+$accent-color: #3498db;
+$text-main: #333;
+$text-muted: #888;
+$bg-hover: #f5f7fa;
+$bg-active: #eef5ff;
+$border-light: #f0f0f0;
 
 .admin-side-bar {
-  width: 100%;
+  width: $sidebar-width;
   height: 100%;
-  background-color: white;
-  box-shadow: none;
-  padding: 0 0 10px 0;
+  background-color: #ffffff;
+  border-right: 1px solid $border-light;
   display: flex;
   flex-direction: column;
-  position: relative;
+  padding: 20px 12px;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
 
   .user-profile-header {
     display: flex;
     align-items: center;
-    padding: 15px 15px 15px 15px;
+    padding: 15px 15px;
     margin-bottom: 10px;
-    border-bottom: 1px solid $border-color;
+    border-bottom: 1px solid $border-light;
     position: relative;
     overflow: visible;
 
@@ -36,42 +35,51 @@ $dropdown-hover: color.adjust($dropdown-bg, $lightness: 10%);
       flex-grow: 1;
       cursor: pointer;
       padding: 5px 10px;
-      margin: -5px 10px -5px -15px;
+      margin: -5px -10px -5px -15px;
+      margin-right: 10px;
       transition: background-color 0.1s ease;
       border-radius: 8px;
 
+      min-width: 0;
+
       &.dropdown-open,
       &:hover {
-        background-color: $active-bg;
-      }
-    }
-
-    .profile-avatar-img {
-      width: 30px;
-      height: 30px;
-      margin-right: 10px;
-      border-radius: 50%;
-    }
-
-    .profile-info {
-      display: flex;
-      align-items: center;
-      max-height: 30px;
-      height: 30px;
-      overflow: hidden;
-      line-height: 1.2;
-
-      .profile-name {
-        font-weight: 700;
-        color: $primary-text;
-        white-space: nowrap;
+        background-color: $bg-hover;
       }
 
-      .profile-dropdown-arrow {
-        margin-left: 5px;
-        font-size: 10px;
-        transition: transform 0.2s ease;
-        transform: rotate(0deg);
+      .profile-avatar-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .profile-info {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        flex: 1;
+
+        .profile-name {
+          font-weight: bold;
+          color: $text-main;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: block;
+          max-width: 100%;
+        }
+
+        .profile-dropdown-arrow {
+          margin-left: 5px;
+          font-size: 10px;
+          transition: transform 0.2s ease;
+          transform: rotate(0deg);
+          flex-shrink: 0;
+          color: $text-muted;
+        }
       }
     }
 
@@ -81,17 +89,18 @@ $dropdown-hover: color.adjust($dropdown-bg, $lightness: 10%);
       margin: -8px;
       border-radius: 50%;
       transition: background-color 0.1s ease;
+      flex-shrink: 0;
 
       @media (max-width: 768px) {
         display: none;
       }
 
       &:hover {
-        background-color: $active-bg;
+        background-color: $bg-hover;
       }
 
       &:active {
-        background-color: color.adjust($active-bg, $lightness: -5%);
+        background-color: color.adjust($bg-hover, $lightness: -5%);
       }
     }
 
@@ -107,15 +116,16 @@ $dropdown-hover: color.adjust($dropdown-bg, $lightness: 10%);
     .profile-dropdown-menu {
       position: absolute;
       top: 100%;
-      left: -5px;
+      left: 10px;
       width: 350px;
-      background-color: $dropdown-bg;
+      background-color: $text-main;
       border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       z-index: 100;
       padding: 10px 0;
       margin-top: 5px;
-      color: $dropdown-text;
+      color: white;
+      animation: fadeIn 0.1s ease-out;
 
       .dropdown-user-info {
         display: flex;
@@ -123,7 +133,7 @@ $dropdown-hover: color.adjust($dropdown-bg, $lightness: 10%);
         align-items: center;
         padding: 10px;
         margin-bottom: 10px;
-        border-bottom: 1px solid $dropdown-separator;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
         .dropdown-avatar-img {
           width: 50px;
@@ -135,150 +145,156 @@ $dropdown-hover: color.adjust($dropdown-bg, $lightness: 10%);
         .dropdown-name {
           font-weight: bold;
           font-size: 16px;
+          max-width: 100%;
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          padding: 0 10px;
         }
 
         .dropdown-email {
           font-size: 12px;
-          color: color.adjust($dropdown-text, $lightness: 20%);
+          color: color.adjust($text-muted, $lightness: 20%);
+          max-width: 100%;
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          padding: 0 10px;
         }
       }
 
-      .dropdown-item,
-      a.dropdown-item,
-      button.dropdown-item {
+      .dropdown-item {
         display: flex;
         align-items: center;
-        width: 100%;
         padding: 10px 15px;
         cursor: pointer;
         text-decoration: none;
-        color: $dropdown-text;
-        transition: background-color 0.1s ease, box-shadow 0.08s ease;
-      }
-
-      button.dropdown-item {
-        appearance: none;
-        -webkit-appearance: none;
+        color: white;
+        transition: background-color 0.1s ease;
+        background: none;
         border: none;
-        background: transparent;
-        font: inherit;
+        width: 100%;
         text-align: left;
-        padding: 10px 15px;
-      }
+        font-size: 14px;
 
-      .dropdown-item:hover {
-        background-color: $dropdown-hover;
-      }
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
 
-      .dropdown-item:active {
-        background-color: color.adjust($dropdown-hover, $lightness: -6%);
-      }
-
-      .dropdown-item:focus,
-      .dropdown-item:focus-visible {
-        outline: none;
-        box-shadow: 0 0 0 3px color.adjust($dropdown-bg, $lightness: 45%);
-      }
-
-      .dropdown-item-icon {
-        width: 20px;
-        height: 20px;
-        margin-right: 10px;
-        flex-shrink: 0;
-      }
-
-      /* keep labels tidy */
-      .dropdown-item > :not(.dropdown-item-icon) {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        .dropdown-item-icon {
+          width: 20px;
+          height: 20px;
+          margin-right: 10px;
+        }
       }
 
       .dropdown-divider {
         height: 1px;
-        background-color: $dropdown-separator;
+        background-color: rgba(255, 255, 255, 0.1);
         margin: 5px 0;
       }
     }
   }
 
-  .section-title-link {
-    display: flex;
-    align-items: center;
-    flex-grow: 1;
-
-    font-weight: bold;
-    color: $primary-text;
-    font-size: 14px;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    padding: 10px 15px 5px;
-  }
-
-  .toggle-icon {
-    transition: transform 0.2s ease;
-    font-size: 10px;
-    transform: rotate(0deg);
-  }
-
-  .section-header[aria-expanded="true"] .toggle-icon {
-    transform: rotate(180deg);
-  }
-
   .nav-section {
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      margin-bottom: 4px;
+      border-radius: 10px;
+      color: $text-main;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+
+      .nav-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 12px;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        object-fit: contain;
+      }
+
+      &:hover {
+        background-color: $bg-hover;
+        color: black;
+        transform: translateX(3px);
+
+        .nav-icon { opacity: 1; }
+      }
+
+      &.active {
+        background-color: $bg-active;
+        color: $accent-color;
+        font-weight: 600;
+
+        .nav-icon {
+          opacity: 1;
+          filter: invert(47%) sepia(66%) saturate(1996%) hue-rotate(187deg) brightness(96%) contrast(92%);
+        }
+      }
+    }
+
     &.archive-nav {
       flex-grow: 1;
-    }
-  }
+      margin-top: 10px;
 
-  .nav-item {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    color: $primary-text;
-    padding: 10px 15px;
-    transition: background-color 0.1s ease;
-    cursor: pointer;
+      .section-header {
+        justify-content: space-between;
 
-    .nav-icon {
-      width: 24px;
-      height: 24px;
-      margin-right: 15px;
-      object-fit: contain;
-    }
+        .section-title-link {
+          display: flex;
+          align-items: center;
+          font-weight: inherit;
+        }
 
-    .tracking-icon-sm {
-      width: 24px;
-      height: 24px;
-      margin-right: 18px;
-      margin-left: 10px;
-    }
+        .toggle-icon {
+          font-size: 10px;
+          color: $text-muted;
+          transition: transform 0.2s;
+        }
 
-    &.archive-item {
-      padding-left: 30px;
-    }
+        &[aria-expanded="true"] .toggle-icon {
+          transform: rotate(180deg);
+        }
+      }
 
-    &.active,
-    &:hover {
-      background-color: $active-bg;
-    }
+      .archive-list-content {
+        padding-top: 2px;
 
-    &[aria-current="page"] {
-      background-color: $active-bg;
-      font-weight: bold;
+        .nav-item.archive-item {
+          padding-left: 32px;
+          font-size: 13px;
+
+          .nav-icon {
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
     }
   }
 
   .nav-divider-mock {
     height: 1px;
-    background: $border-color;
+    background: linear-gradient(to right, transparent,
+        $border-light, transparent);
     margin: 10px 0;
+    flex-shrink: 0;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
