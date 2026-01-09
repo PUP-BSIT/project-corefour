@@ -1,26 +1,51 @@
 <div class="notification-wrapper">
-  <button (click)="toggleDropdown()" class="icon-button">
-    <img src="assets/notification.png" alt="Notification">
+  <button
+    (click)="toggleDropdown()"
+    class="icon-button"
+    [class.active]="isOnNotificationPage"> <img src="assets/notification.png"
+        alt="Notification">
 
-    @if (hasUnreadNotifications) {
-      <div class="notification-dot"></div>
+    @if (unreadCount() > 0) {
+      <div class="notification-badge">
+        {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+      </div>
     }
   </button>
 
   @if (isDropdownOpen) {
     <div class="dropdown-menu">
-      
+
       <div class="dropdown-header">
-        <h3>Notification</h3>
+        <h3>Notifications</h3>
+        <button mat-button
+                class="mark-read-btn"
+                [disabled]="unreadCount() === 0"
+                (click)="onMarkAllRead($event)">
+          Mark all as read
+        </button>
       </div>
-      
+
+      <div class="dropdown-subheader">
+        <div class="filters">
+          <span (click)="setFilter('all')"
+                [class.active]="currentFilter === 'all'"
+                class="filter-link">All</span>
+          &bull;
+          <span (click)="setFilter('unread')"
+                [class.active]="currentFilter === 'unread'"
+                class="filter-link">{{ unreadCount() }} Unread</span>
+        </div>
+
+        <span class="see-all-link" (click)="onSeeAll()">See all</span>
+      </div>
+
       <div class="dropdown-list">
         @for (notification of notifications; track notification.notif_id) {
-          <div 
+          <div
             class="notification-item"
             (click)="onNotificationClick(notification)">
 
-            <p class="message" 
+            <p class="message"
                 [class.unread]="notification.status === 'unread'"
                 [innerHTML]="notification.message">
             </p>
@@ -31,7 +56,13 @@
           </div>
         } @empty {
           <div class="empty-state">
-            <p>You have no new notifications.</p>
+            <p>
+              @if (currentFilter === 'unread') {
+                No unread notifications.
+              } @else {
+                You have no new notifications.
+              }
+            </p>
           </div>
         }
       </div>
@@ -39,7 +70,7 @@
       @if (currentPage < totalPages) {
         <div class="dropdown-footer">
           <button class="view-more-btn" (click)="onViewMore()">
-            View more
+            See previous notifications
           </button>
         @if(isLoading && currentPage > 1) {
           <div class="loading-spinner">Loading...</div>
@@ -47,5 +78,49 @@
         </div>
       }
     </div>
+  }
+
+  @if (selectedReport(); as report) {
+    @if (isAdmin() && report.type === 'found') {
+      <app-claim-form-modal
+        [claimData]="report"
+        [isArchive]="report.status === 'claimed'"
+        [isReadOnly]="report.status === 'claimed'"
+        (close)="onModalClose()"
+        (statusChange)="onStatusChange($event)">
+      </app-claim-form-modal>
+    }
+    @else if (!isAdmin() && report.status === 'matched'
+        && report.type === 'lost') {
+      <app-match-detail-modal
+        [report]="report"
+        [currentUserId]="currentUserId()"
+        (close)="onModalClose()">
+      </app-match-detail-modal>
+    }
+    @else {
+      <app-item-detail-modal
+        [item]="report"
+        [currentUserId]="currentUserId()"
+        [userProfilePicture]="getUserProfilePicture()"
+        [isAdmin]="isAdmin()"
+        [isArchiveView]="report.status === 'matched' ||
+            report.status === 'claimed'"
+        (close)="onModalClose()"
+        (viewTicket)="onViewTicket()"
+        (editClicked)="onEdit()"
+        (deleteClicked)="onDelete()"
+        (viewCodeClicked)="onViewCode()">
+      </app-item-detail-modal>
+    }
+  }
+
+  @if (showCodeModal && selectedReport()) {
+    <app-codes-modal
+      title="Reference Code"
+      [code]="selectedReport()!.surrender_code ||
+          selectedReport()!.claim_code || 'N/A'"
+      (close)="showCodeModal = false">
+    </app-codes-modal>
   }
 </div>

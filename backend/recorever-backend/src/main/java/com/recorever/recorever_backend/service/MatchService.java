@@ -18,8 +18,7 @@ public class MatchService {
   private static final double MIN_KEYWORD_OVERLAP = 0.5;
   private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
       "a", "an", "the", "in", "on", "at", "and", "or", "to", "for", "of",
-      "with", "is", "was", "has", "i", "my", "me", "found", "lost"
-  ));
+      "with", "is", "was", "has", "i", "my", "me", "found", "lost"));
 
   @Autowired
   private MatchRepository matchRepo;
@@ -31,7 +30,8 @@ public class MatchService {
   private NotificationService notificationService;
 
   private MatchResponseDTO convertToDTO(Match match) {
-    if (match == null) return null;
+    if (match == null)
+      return null;
     MatchResponseDTO dto = new MatchResponseDTO();
     dto.setMatch_id(match.getMatch_id());
     dto.setLost_report_id(match.getLost_report_id());
@@ -65,17 +65,13 @@ public class MatchService {
     }
   }
 
-    /**
-   * Finds lost reports for a specific user that match a given found report
-   */
   public List<Report> findPotentialMatchesForUser(
       Report foundReport, int claimantId) {
-      List<Report> userLostReports = reportRepo
-          .findByUserIdAndTypeAndIsDeletedFalse(claimantId, "lost");
+    List<Report> userLostReports = reportRepo
+        .findByUserIdAndTypeAndIsDeletedFalse(claimantId, "lost");
 
     return userLostReports.stream()
-        .filter(lostReport -> 
-            "approved".equalsIgnoreCase(lostReport.getStatus()) || 
+        .filter(lostReport -> "approved".equalsIgnoreCase(lostReport.getStatus()) ||
             "matched".equalsIgnoreCase(lostReport.getStatus()))
         .filter(lostReport -> checkNameSimilarity(foundReport, lostReport))
         .collect(Collectors.toList());
@@ -86,29 +82,22 @@ public class MatchService {
     boolean isDescMatch = checkDescriptionSimilarity(newR, existR);
 
     String confidence;
-    String detail;
 
     if (isLocMatch && isDescMatch) {
       confidence = "High-Confidence Match";
-      detail = "Name, Location, and Description are highly similar.";
     } else if (isLocMatch || isDescMatch) {
       confidence = "Medium-Confidence Match";
-      detail = "Name matched, and either Location or Description matched.";
     } else {
       confidence = "Low-Confidence Match (Location Conflict)";
-      detail = "Name matched, but location/description differ. Check.";
     }
 
-    int lostId = type.equals("lost") 
-        ? newR.getReportId() 
-        : existR.getReportId();
-    int foundId = type.equals("found") 
-        ? newR.getReportId()
-        : existR.getReportId();
+    // itemName/userId below
+    Report lostReport = type.equals("lost") ? newR : existR;
+    Report foundReport = type.equals("found") ? newR : existR;
 
     Match match = new Match();
-    match.setLostReportId(lostId);
-    match.setFoundReportId(foundId);
+    match.setLostReportId(lostReport.getReportId());
+    match.setFoundReportId(foundReport.getReportId());
     match.setStatus("pending");
     matchRepo.save(match);
 
@@ -117,17 +106,17 @@ public class MatchService {
     reportRepo.save(newR);
     reportRepo.save(existR);
 
-    String msg = String.format(
-        "%s found: Your %s linked to report #%d. %s",
-        confidence, newR.getItemName(), lostId, detail
-    );
+    String msgLost = String.format(
+        "Match Found: We found a potential match (%s) for your lost %s. Click to verify.",
+        confidence, lostReport.getItemName());
+    notificationService.create(
+        lostReport.getUserId(), lostReport.getReportId(), msgLost, true);
 
+    String msgFound = String.format(
+        "Update: The %s you found has been matched to a lost report. Thank you for helping!",
+        foundReport.getItemName());
     notificationService.create(
-        newR.getUserId(), newR.getReportId(), msg, true
-    );
-    notificationService.create(
-        existR.getUserId(), existR.getReportId(), msg, true
-    );
+        foundReport.getUserId(), foundReport.getReportId(), msgFound, true);
   }
 
   private boolean checkNameSimilarity(Report report1, Report report2) {
@@ -143,12 +132,15 @@ public class MatchService {
   }
 
   private boolean checkDescriptionSimilarity(Report r1, Report r2) {
-    String d1 = r1.getDescription() != null 
-        ? r1.getDescription().toLowerCase() : "";
-    String d2 = r2.getDescription() != null 
-        ? r2.getDescription().toLowerCase() : "";
+    String d1 = r1.getDescription() != null
+        ? r1.getDescription().toLowerCase()
+        : "";
+    String d2 = r2.getDescription() != null
+        ? r2.getDescription().toLowerCase()
+        : "";
 
-    if (d1.isEmpty() || d2.isEmpty()) return false;
+    if (d1.isEmpty() || d2.isEmpty())
+      return false;
 
     Set<String> set1 = tokenize(d1);
     Set<String> set2 = tokenize(d2);
@@ -159,7 +151,8 @@ public class MatchService {
     Set<String> union = new HashSet<>(set1);
     union.addAll(set2);
 
-    if (union.isEmpty()) return false;
+    if (union.isEmpty())
+      return false;
 
     double score = (double) intersect.size() / union.size();
     return score >= MIN_KEYWORD_OVERLAP;
@@ -191,6 +184,12 @@ public class MatchService {
         .orElse(null);
   }
 
+  public MatchResponseDTO getMatchByReportId(int reportId) {
+    return matchRepo.findByReportId(reportId)
+        .map(this::convertToDTO)
+        .orElse(null);
+  }
+
   @Transactional
   public boolean updateMatchStatus(int id, String status) {
     return matchRepo.findById(id).map(match -> {
@@ -199,4 +198,5 @@ public class MatchService {
       return true;
     }).orElse(false);
   }
+
 }

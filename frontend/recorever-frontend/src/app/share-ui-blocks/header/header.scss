@@ -46,8 +46,10 @@
           line-height: 1.1;
           color: #333;
 
-          &.hidden {
-            display: none;
+          &.on-homepage {
+            @media (max-width: 600px) {
+              display: none;
+            }
           }
         }
 

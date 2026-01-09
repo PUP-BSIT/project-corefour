@@ -94,7 +94,7 @@ public class ReportService {
         }
 
         notificationService.create(ADMIN_USER_ID, id, String.format(
-                "New PENDING report (ID #%d) submitted: %s.", id, itemName),
+                "New PENDING %s report submitted: %s.", type.toUpperCase(), itemName),
                 false);
 
         return Map.of(

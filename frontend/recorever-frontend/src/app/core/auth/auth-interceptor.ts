@@ -26,13 +26,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   return next(req).pipe(
-    catchError(error => {
+    catchError((error: HttpErrorResponse) => {
       if (error instanceof HttpErrorResponse) {
         
         const isAuthError = (error.status === 401 || error.status === 403);
         const isRefreshUrl = req.url.includes('/refresh-token');
+        const isLoginUrl = req.url.includes('/login-user');
 
-        if (isAuthError && !isRefreshUrl) {
+        if (isAuthError && !isRefreshUrl && !isLoginUrl) {
             return handle401Error(req, next, authService);
 
         }
@@ -45,14 +46,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 };
 
 function handle401Error(
-  req: HttpRequest<any>,
+  req: HttpRequest<unknown>, 
   next: HttpHandlerFn,
   authService: AuthService
-): Observable<HttpEvent<any>> {
+): Observable<HttpEvent<unknown>> {
 
   if (authService.isRefreshing) {
     return authService.refreshTokenSubject.pipe(
-      filter(val => val),
+      filter((val) => val),
       take(1),
       switchMap(() => {
         return next(req.clone()); 

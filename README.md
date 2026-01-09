@@ -12,19 +12,20 @@ delays, improves item recovery, and prevents permanent loss.
 
 ---
 
-## Features
+## 🚀 Features
 
-- 📌 **Centralized Lost & Found Platform** – Report lost items and post found 
-items in one place.
-- 🔎 **Search & Filter** – Quickly find reported items by category, date, or
-location.
-- 👤 **User Accounts** – Create a personal account to track lost and found
-reports.
-- 📷 **Media Uploads** – Attach photos of lost or found items for better
-identification.
-- 🔔 **Notifications** – Get updates when items matching your report are found.
-- 🛡 **Admin Dashboard** – Manage and verify reports to keep the platform 
-organized.
+### 👤 User
+* **Report Management:** Easily report lost items or list found items with detailed descriptions.
+* **Image Uploads:** Attach photos to reports to improve identification accuracy.
+* **Smart Matching:** View potential matches for lost items based on system algorithms.
+* **Notifications:** Receive real-time alerts when a matching item is found or a claim status changes.
+* **Profile Management:** Manage personal details and view history of reported items.
+
+### 🛡 Admin
+* **Dashboard & Analytics:** Visual insights into lost vs. found statistics using **Chart.js**.
+* **Item Moderation:** Approve, reject, or manage reported items to ensure data quality.
+* **Claim Verification:** Oversee the claim process and verify proof of ownership before releasing items.
+* **Status Management:** Track items through their lifecycle (Lost → Found → Claimed/Resolved).
 
 ---
 
@@ -36,12 +37,12 @@ organized.
 ## 🔑 Sample User Accounts
 
 ### Admin Account
-- **Email:** admin@example.com  
+- **Email:** admin@gmail.com  
 - **Password:** Admin123  
 
 ### Test User Account
-- **Email:** janedee@gmail.com
-- **Password:** password123
+- **Email:** johndoe@gmail.com
+- **Password:** Johndoe#1
 
 ---
 

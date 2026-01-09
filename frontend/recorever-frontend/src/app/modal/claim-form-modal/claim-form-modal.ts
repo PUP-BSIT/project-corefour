@@ -113,6 +113,7 @@ export class ClaimFormModal implements OnInit {
   protected activeReport = signal<Report | null>(null);
   protected report = signal<Report | null>(null);
   protected reportOwnerName = signal<string>('Loading...');
+  protected reportOwnerPicture = signal<string | null>(null);
   protected isLoading = signal(true);
   protected isSaving = signal(false);
   protected activeImageIndex = signal(0);
@@ -122,6 +123,9 @@ export class ClaimFormModal implements OnInit {
   protected matchingLostReports = signal<Report[]>([]);
   protected isSearchingReports = signal(false);
   protected selectedLostReportId = signal<number | null>(null);
+  
+  // Signal to control zoom state
+  protected isZoomed = signal(false);
 
   protected isReportType = computed(() => 'type' in this.claimData);
 
@@ -296,16 +300,20 @@ export class ClaimFormModal implements OnInit {
           switchMap(() => this.userService.getUserById(report.user_id)),
           finalize(() => this.isLoading.set(false))
         ).subscribe({
-          next: (user) => 
-            this.reportOwnerName.set(user?.name || 'Unknown User'),
+          next: (user) => {
+            this.reportOwnerName.set(user?.name || 'Unknown User');
+            this.reportOwnerPicture.set(user?.profile_picture || null); 
+          },
           error: () => this.isLoading.set(false)
         });
       } else {
         this.userService.getUserById(report.user_id).pipe(
           finalize(() => this.isLoading.set(false))
         ).subscribe({
-          next: (user) => 
-            this.reportOwnerName.set(user?.name || 'Unknown User'),
+          next: (user) => {
+            this.reportOwnerName.set(user?.name || 'Unknown User');
+            this.reportOwnerPicture.set(user?.profile_picture || null); 
+          },
           error: (err) => console.error('Error loading report owner', err)
         });
       }
@@ -317,17 +325,36 @@ export class ClaimFormModal implements OnInit {
           const foundReport = reports.items.find(r => r.report_id === claim.report_id);
           this.report.set(foundReport || null);
           this.patchFormForExistingClaim(claim);
-          return foundReport ? this.userService
-              .getUserById(foundReport.user_id) : of(null);
+          return foundReport ? this.userService.getUserById(foundReport.user_id) : of(null);
         }),
         finalize(() => this.isLoading.set(false))
       ).subscribe({
         next: (owner) => {
-          if (owner) this.reportOwnerName.set(owner.name || 'Unknown User');
+          if (owner) {
+            this.reportOwnerName.set(owner.name || 'Unknown User');
+            // Capture the reporter's profile picture filename
+            this.reportOwnerPicture.set(owner.profile_picture || null);
+          }
         },
         error: (err) => console.error('Error loading claim data', err)
       });
     }
+  }
+
+  protected getReportOwnerPicture(): string {
+    const path = this.reportOwnerPicture();
+
+    if (!path) {
+        return 'assets/profile-avatar.png'; // Fallback if no picture
+    }
+
+    if (path.startsWith('http')) {
+        return path.replace('http://', 'https://');
+    }
+
+    // Connects to your Spring Boot image controller
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://').replace(/\/$/, '');
+    return `${secureBaseUrl}/image/download/${path}`;
   }
 
   private patchFormForExistingClaim(claim: Claim): void {
@@ -463,6 +490,14 @@ export class ClaimFormModal implements OnInit {
     event.stopPropagation();
     const len = this.photoUrls().length;
     if (len > 0) this.activeImageIndex.update((i) => (i - 1 + len) % len);
+  }
+
+  protected openZoom(): void {
+    this.isZoomed.set(true);
+  }
+
+  protected closeZoom(): void {
+    this.isZoomed.set(false);
   }
 
   onClose(): void {

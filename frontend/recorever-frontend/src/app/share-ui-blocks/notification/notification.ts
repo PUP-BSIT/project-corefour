@@ -5,39 +5,77 @@ import {
   OnInit,
   ChangeDetectorRef,
   ElementRef,
-  HostListener
+  HostListener,
+  signal,
+  computed,
+  WritableSignal
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 import { NotificationService } from '../../core/services/notification-service';
+import { ItemService } from '../../core/services/item-service';
+import { AuthService } from '../../core/auth/auth-service';
+import { ToastService } from '../../core/services/toast-service';
+import { ItemDetailModal } from '../../modal/item-detail-modal/item-detail-modal';
+import { ClaimFormModal } from '../../modal/claim-form-modal/claim-form-modal';
+import { CodesModal } from '../../modal/codes-modal/codes-modal';
 import type { UserNotification } from '../../models/notification-model';
-import { Subscription, tap, catchError, of } from 'rxjs';
+import type { Report } from '../../models/item-model';
+import { Subscription, tap, catchError, of, filter } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { MatchDetailModal } from '../../modal/match-detail-modal/match-detail-modal';
 
 @Component({
   selector: 'app-notification',
   standalone: true,
-  imports: [TimeAgoPipe],
+  imports: [
+    TimeAgoPipe,
+    ItemDetailModal,
+    ClaimFormModal,
+    MatButtonModule,
+    MatchDetailModal,
+    CodesModal
+  ],
   templateUrl: './notification.html',
   styleUrl: './notification.scss',
 })
 export class Notification implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
+  private itemService = inject(ItemService);
+  private authService = inject(AuthService);
+  private toastService = inject(ToastService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private eRef = inject(ElementRef);
-  
+
   private streamSub!: Subscription;
   private notificationSub!: Subscription;
+  private routerSub!: Subscription;
 
   notifications: UserNotification[] = [];
   currentPage = 1;
   totalPages = 1;
+  totalItems = 0;
   isLoading = false;
   isDropdownOpen = false;
-  hasUnreadNotifications = false;
+
+  unreadCount: WritableSignal<number> = signal(0);
+
+  isOnNotificationPage = false;
+  currentFilter: 'all' | 'unread' = 'all';
+  isViewingDetails = false;
+  showCodeModal = false;
+
+  selectedReport = signal<Report | null>(null);
+  currentUser = toSignal(this.authService.currentUser$);
+
+  currentUserId = computed(() => this.currentUser()?.user_id ?? null);
+  isAdmin = computed(() => this.currentUser()?.role === 'admin');
 
   @HostListener('document:click', ['$event'])
-  clickout(event: Event) {
+  clickout(event: Event): void {
     if (!this.eRef.nativeElement.contains(event.target)) {
       this.isDropdownOpen = false;
       this.cdr.markForCheck();
@@ -45,28 +83,45 @@ export class Notification implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.checkCurrentRoute();
+
+    this.routerSub = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.checkCurrentRoute();
+    });
+
     this.loadPage(1);
     this.initSseStream();
+  }
+
+  checkCurrentRoute(): void {
+    this.isOnNotificationPage = this.router.url.includes('/notifications');
+    if (this.isOnNotificationPage) {
+      this.isDropdownOpen = false;
+    }
+    this.cdr.markForCheck();
   }
 
   initSseStream(): void {
     this.streamSub = this.notificationService
       .getNotificationStream()
       .subscribe({
-        next: (newNotif) => {
+        next: (newNotif: UserNotification) => {
           this.notifications = [newNotif, ...this.notifications];
 
-          this.hasUnreadNotifications = true;
-
+          this.unreadCount.update(count => count + 1);
+          this.totalItems++;
           this.cdr.markForCheck();
         },
-        error: (err) => console.error('SSE connection failed', err)
+        error: (err: any) => console.error('SSE connection failed', err)
       });
   }
 
   ngOnDestroy(): void {
     if (this.streamSub) this.streamSub.unsubscribe();
     if (this.notificationSub) this.notificationSub.unsubscribe();
+    if (this.routerSub) this.routerSub.unsubscribe();
   }
 
   loadPage(page: number, silentLoad = false): void {
@@ -81,7 +136,7 @@ export class Notification implements OnInit, OnDestroy {
     }
 
     this.notificationSub = this.notificationService
-      .getNotifications(page, 5)
+      .getNotifications(page, 5, this.currentFilter)
       .pipe(
         tap((response) => {
           if (page === 1) {
@@ -92,9 +147,9 @@ export class Notification implements OnInit, OnDestroy {
 
           this.currentPage = response.currentPage;
           this.totalPages = response.totalPages;
-          this.hasUnreadNotifications = this.notifications.some(
-            (notif) => notif.status === 'unread'
-          );
+          this.totalItems = response.totalItems;
+
+          this.unreadCount.set(response.unreadCount);
 
           this.isLoading = false;
           this.cdr.markForCheck();
@@ -109,12 +164,20 @@ export class Notification implements OnInit, OnDestroy {
       .subscribe();
   }
 
+  setFilter(filter: 'all' | 'unread'): void {
+    this.currentFilter = filter;
+    this.loadPage(1);
+  }
+
   toggleDropdown(): void {
+    if (this.isOnNotificationPage) {
+      return;
+    }
+
     const isMobile = window.innerWidth < 768;
 
     if (isMobile) {
-      const role = this.router.url.includes('/admin') ? 'admin' : 'user';
-      this.router.navigate([`/${role}/notifications`]);
+      this.navigateToNotificationsPage();
     } else {
       this.isDropdownOpen = !this.isDropdownOpen;
       if (this.isDropdownOpen) {
@@ -123,32 +186,122 @@ export class Notification implements OnInit, OnDestroy {
     }
   }
 
+  onSeeAll(): void {
+    this.navigateToNotificationsPage();
+    this.isDropdownOpen = false;
+  }
+
+  private navigateToNotificationsPage(): void {
+    const prefix = this.isAdmin() ? 'admin' : 'app';
+    this.router.navigate([`/${prefix}/notifications`]);
+  }
+
   onViewMore(): void {
     this.loadPage(this.currentPage + 1);
   }
 
-  onNotificationClick(notification: UserNotification): void {
-    if (notification.status === 'unread') {
-      this.notificationService.markAsRead(notification.notif_id)
-      .subscribe(() => {
-        notification.status = 'read';
-        this.hasUnreadNotifications = this.notifications
-        .some(n => n.status === 'unread');
-      });
+  onMarkAllRead(event: Event): void {
+    event.stopPropagation();
+    if (this.unreadCount() === 0) return;
+
+    const previousCount = this.unreadCount();
+    const previousStatus = this.notifications.map(n => ({ id: n.notif_id, status: n.status }));
+
+    if (this.currentFilter === 'unread') {
+      this.notifications = [];
+    } else {
+      this.notifications.forEach(n => n.status = 'read');
     }
-    // TODO(Florido, Maydelyn): Add navigation logic when the viewing
-    //                          notification feature is implemented.
-    this.isDropdownOpen = false;
+    this.unreadCount.set(0);
+    this.cdr.markForCheck();
+
+    this.notificationService.markAllAsRead().pipe(
+      tap(() => {
+        this.toastService.showSuccess('All notifications marked as read');
+      }),
+      catchError((err) => {
+        console.error('Failed to mark all as read', err);
+        // Revert on error
+        this.unreadCount.set(previousCount);
+        this.notifications.forEach(n => {
+          const prev = previousStatus.find(p => p.id === n.notif_id);
+          if (prev) n.status = prev.status as 'read' | 'unread';
+        });
+        this.cdr.markForCheck();
+        this.toastService.showError('Failed to update notifications');
+        return of(null);
+      })
+    ).subscribe();
   }
 
+  onNotificationClick(notification: UserNotification): void {
+    this.isDropdownOpen = false;
+
+    if (notification.status === 'unread') {
+      notification.status = 'read';
+      this.unreadCount.update(count => Math.max(0, count - 1));
+
+      this.notificationService.markAsRead(notification.notif_id)
+        .pipe(catchError(err => {
+          console.error('Failed to mark as read', err);
+          notification.status = 'unread';
+          this.unreadCount.update(count => count + 1);
+          return of(null);
+        }))
+        .subscribe();
+    }
+
+    this.itemService.getReportById(notification.report_id).pipe(
+      tap((report) => {
+        this.selectedReport.set(report);
+        this.cdr.markForCheck();
+      }),
+      catchError((err) => {
+        console.error('Failed to load report details', err);
+        this.toastService.showError('This item is no longer available.');
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  onViewMatchDetails(): void {
+    this.isViewingDetails = true;
+  }
+
+  onModalClose(): void {
+    if (this.isViewingDetails) {
+      this.isViewingDetails = false;
+    } else {
+      this.selectedReport.set(null);
+    }
+  }
+
+  getUserProfilePicture(): string | null {
+    const report = this.selectedReport();
+    if (report && report.reporter_profile_picture) {
+      const baseUrl = environment.apiUrl.replace('http://', 'https://');
+      return `${baseUrl}/image/download/${report.reporter_profile_picture}`;
+    }
+    return null;
+  }
+
+  onViewTicket(): void {}
+  onEdit(): void {}
+  onDelete(): void {}
+
+  onViewCode(): void {
+    this.showCodeModal = true;
+  }
+
+  onStatusChange(event: any): void {}
+
   @HostListener('window:resize', ['$event'])
-  onResize(event: UIEvent) {
+  onResize(event: UIEvent): void {
     const width = (event.target as Window).innerWidth;
 
     if (width < 768 && this.isDropdownOpen) {
       this.isDropdownOpen = false;
-      const role = this.router.url.includes('/admin') ? 'admin' : 'user';
-      this.router.navigate([`/${role}/notifications`]);
+      this.navigateToNotificationsPage();
       this.cdr.markForCheck();
     }
   }
