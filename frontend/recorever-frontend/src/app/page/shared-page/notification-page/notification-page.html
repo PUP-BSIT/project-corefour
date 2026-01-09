@@ -73,10 +73,12 @@
       (statusChange)="onStatusChange($event)">
     </app-claim-form-modal>
   }
-  @else if (!isAdmin() && report.status === 'matched') {
+  @else if (!isAdmin() && report.status === 'matched'
+      && report.type === 'lost') {
     <app-match-detail-modal
       [report]="report"
-      [currentUserId]="currentUserId()" (close)="onModalClose()">
+      [currentUserId]="currentUserId()"
+      (close)="onModalClose()">
     </app-match-detail-modal>
   }
   @else {

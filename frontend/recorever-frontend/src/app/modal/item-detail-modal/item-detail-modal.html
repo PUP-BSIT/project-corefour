@@ -146,7 +146,7 @@
       </div>
 
       <div class="modal-actions">
-        @if (isArchiveView()) {
+        @if (isArchiveView() && isAdmin()) {
           <button mat-raised-button
                   class="action-btn action-btn--unarchive status-btn--matched"
                   (click)="onUnarchive()">
@@ -196,7 +196,7 @@
           </div>
         }
 
-        @if (!isArchiveView() && !isAdmin()) {
+        @if (!isAdmin()) {
           <button mat-stroked-button
                   class="action-btn"
                   (click)="onClose()">
