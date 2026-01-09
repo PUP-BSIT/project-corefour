@@ -41,7 +41,7 @@ export class MatchDetailModal implements OnInit {
 
         this.matchId.set(match.match_id);
 
-        if (match.status === 'Confirmed') {
+        if (match.status && match.status.toLowerCase() === 'confirmed') {
           this.step = 'success';
         }
 
