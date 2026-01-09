@@ -158,7 +158,7 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./page/admin/admin-item-list-page/admin-item-list-page')
             .then(m => m.AdminItemListPage),
-        data: { type: 'lost', status: 'matched' }
+        data: { type: 'lost', status: 'resolved' }
       },
       { path: 'archive/claimed',
         loadComponent: () =>

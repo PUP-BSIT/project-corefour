@@ -129,6 +129,10 @@ export class ReportItemCard {
     if (s === 'approved' || s === 'matched') {
       return 'Verified';
     }
+
+    if (s === 'resolved') {
+      return 'Resolved';
+    }
     return (s.charAt(0).toUpperCase() + s.slice(1)) as ItemStatus;
   });
 

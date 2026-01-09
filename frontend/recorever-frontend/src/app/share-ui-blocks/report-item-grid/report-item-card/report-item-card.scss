@@ -99,6 +99,13 @@ $danger-red: #d32f2f;
       top: 12px;
       left: 12px;
       z-index: 2;
+
+      ::ng-deep .status-badge {
+        &.claimed, &.resolved {
+          background-color: #000000 !important;
+          color: #ffffff !important;
+        }
+      }
     }
 
     .floating-menu-trigger {

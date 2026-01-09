@@ -1,7 +1,7 @@
 <div class="modal-overlay"
-    (click)="onClose()">
+     (click)="onClose()">
   <div class="modal-container"
-      (click)="$event.stopPropagation(); closeDropdown()">
+       (click)="$event.stopPropagation(); closeDropdown()">
 
     <button class="close-btn" (click)="onClose()">
       <mat-icon>close</mat-icon>
@@ -16,15 +16,12 @@
       <div class="content-wrapper">
 
         <div class="left-panel">
-
           <div class="panel-scroll-content">
-
             <div class="modal-header">
               <div class="user-info">
                 <div class="avatar-circle">
-                  @if (report()?.reporter_profile_picture) {
-                    <img [src]="report()?.reporter_profile_picture"
-                        alt="Avatar" class="avatar-img">
+                  @if (reportOwnerPicture()) {
+                    <img [src]="getReportOwnerPicture()" alt="Avatar" class="avatar-img">
                   } @else {
                     {{ reportOwnerName().charAt(0).toUpperCase() }}
                   }
@@ -41,7 +38,7 @@
             <div class="image-section">
               <div class="carousel-container">
                 <img [src]="currentImageUrl()" alt="Item Image"
-                    class="modal-image">
+                     class="modal-image">
 
                 @if (photoUrls().length > 1) {
                   <button
@@ -69,26 +66,22 @@
 
             <div class="details-section">
               <h2 class="item-title">{{ report()?.item_name }}</h2>
-
               <div class="detail-row">
                 <mat-icon>tag</mat-icon>
                 <span class="detail-label">Ref Code:</span>
                 <span class="detail-value">{{ referenceCodeValue() }}</span>
               </div>
-
               <div class="detail-row">
                 <mat-icon>location_on</mat-icon>
                 <span class="detail-label">Location:</span>
                 <span class="detail-value">{{ report()?.location }}</span>
               </div>
-
               <div class="detail-row">
                 <mat-icon>calendar_today</mat-icon>
                 <span class="detail-label">Date Reported:</span>
                 <span class="detail-value">{{
                     report()?.date_reported | date:'mediumDate' }}</span>
               </div>
-
               <div class="description-section">
                 <h3>Description</h3>
                 <p>{{ report()?.description }}</p>
@@ -107,11 +100,13 @@
                 </button>
               } @else {
                 <button
-                    class="status-btn"
-                    [ngClass]="(report()?.status || 'pending').toLowerCase()"
-                    [style.cursor]="isReadOnly ? 'default' : 'pointer'"
-                    (click)="toggleDropdown($event)">
-                  {{ report()?.status || 'Pending' }}
+                  class="status-btn"
+                  [ngClass]="(report()?.status || 'pending').toLowerCase()"
+                  [style.cursor]="isReadOnly ? 'default' : 'pointer'"
+                  (click)="toggleDropdown($event)">
+                  
+                  {{ displayStatus() | titlecase }}
+
                   @if (!isReadOnly) {
                     <span class="arrow">▼</span>
                   }
@@ -119,11 +114,10 @@
               }
 
               @if (isDropdownOpen() && !isReadOnly && !isArchive) {
-                <div class="dropdown-content"
-                    (click)="$event.stopPropagation()">
+                <div class="dropdown-content" (click)="$event.stopPropagation()">
                   @for (option of STATUS_OPTIONS; track option.value) {
-                    @if (option.value !==
-                        (report()?.status || 'pending').toLowerCase()) {
+                    @if (option.value !== (report()?.status || 'pending').toLowerCase() && 
+                        !(option.label === 'Verified' && displayStatus() === 'Verified')) {
                       <div
                         [class.disabled-option]="isStatusDisabled(option.value)"
                         [matTooltip]="getOptionTooltip(option.value)"
@@ -137,7 +131,6 @@
               }
             </div>
           </div>
-
         </div>
 
         <div class="right-panel" [formGroup]="claimForm">
@@ -147,21 +140,18 @@
 
           <div class="form-section">
             <h3 class="section-label">Claimant Information</h3>
-
             <div class="row">
               @if (isReadOnly) {
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Claimant Name</mat-label>
                   <input matInput formControlName="claimantName">
                 </mat-form-field>
-              }
-
-              @if (!isReadOnly) {
+              } @else {
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Claimant Name</mat-label>
                   <input matInput
                         formControlName="claimantName"
-                        placeholder="Enter full name or search existing user"
+                        placeholder="Enter name or search existing user"
                         [matAutocomplete]="auto">
 
                   @if (claimForm.get('claimantName')?.hasError('required')) {
@@ -206,6 +196,51 @@
             </div>
           </div>
 
+          @if (!isReadOnly && !isArchive &&
+              claimForm.get('claimantName')?.value) {
+            <div class="form-section">
+              <h3 class="section-label">
+                Select Matching Lost Report <span class="optional">(Opt)</span>
+              </h3>
+
+              @if (isSearchingReports()) {
+                <div class="matching-loader">
+                  <mat-spinner diameter="20"></mat-spinner>
+                  <span>Checking for matches...</span>
+                </div>
+              } @else if (matchingLostReports().length > 0) {
+                <mat-radio-group
+                    [value]="selectedLostReportId()"
+                    (change)="selectedLostReportId.set($event.value)"
+                    class="matching-list">
+                  @for (report of matchingLostReports();
+                       track report.report_id) {
+                    <div class="matching-card"
+                         [class.selected]="selectedLostReportId() ===
+                          report.report_id"
+                         (click)="selectedLostReportId.set(report.report_id)">
+                      <mat-radio-button [value]="report.report_id">
+                        <div class="matching-info">
+                          <span class="matching-name">
+                            {{ report.item_name }}
+                          </span>
+                          <span class="matching-meta">
+                            Reported: {{ report.date_reported |
+                            date:'mediumDate' }}
+                          </span>
+                        </div>
+                      </mat-radio-button>
+                    </div>
+                  }
+                </mat-radio-group>
+              } @else {
+                <div class="no-match-hint">
+                  No matching lost reports found for this user.
+                </div>
+              }
+            </div>
+          }
+
           <div class="form-section">
             <h3 class="section-label">Contact Details
                 <span class="optional">(Optional)</span></h3>
@@ -219,7 +254,6 @@
                   <mat-error>Invalid email</mat-error>
                 }
               </mat-form-field>
-
               <mat-form-field appearance="outline" class="half-width">
                 <mat-label>Phone</mat-label>
                 <input matInput formControlName="contactPhone"
@@ -244,15 +278,22 @@
               </button>
 
               @if (!isReadOnly) {
-                <button mat-raised-button color="primary"
-                        [disabled]="isSaving() || claimForm.invalid"
-                        (click)="saveItemDetails()">
-                  @if (isSaving()) {
-                    <mat-spinner diameter="20" class="btn-spinner">
-                    </mat-spinner>
-                  }
-                  {{ isSaving() ? 'Saving...' : 'Submit Claim' }}
-                </button>
+                <span [matTooltip]="(report()?.status === 'pending' ||
+                      report()?.status === 'rejected') ?
+                      'Cannot submit claim for Pending/Rejected reports.' : ''"
+                      matTooltipPosition="above">
+                  <button mat-raised-button color="primary"
+                    [disabled]="isSaving() || claimForm.invalid ||
+                    report()?.status === 'pending' ||
+                    report()?.status === 'rejected'"
+                    (click)="saveItemDetails()">
+                    @if (isSaving()) {
+                      <mat-spinner diameter="20" class="btn-spinner">
+                      </mat-spinner>
+                    }
+                    {{ isSaving() ? 'Saving...' : 'Submit Claim' }}
+                  </button>
+                </span>
               }
             </div>
           }

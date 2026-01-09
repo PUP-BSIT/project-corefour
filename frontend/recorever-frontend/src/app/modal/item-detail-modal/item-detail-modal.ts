@@ -56,8 +56,7 @@ export class ItemDetailModal {
   protected readonly STATUS_OPTIONS = [
     { value: 'pending', label: 'Pending' },
     { value: 'approved', label: 'Verified' },
-    { value: 'rejected', label: 'Rejected' },
-    { value: 'matched', label: 'Matched' }
+    { value: 'rejected', label: 'Rejected' }
   ];
 
   protected currentImageIndex = signal<number>(0);
@@ -115,6 +114,9 @@ export class ItemDetailModal {
     if (s === 'approved' || s === 'matched') {
       return 'Verified';
     }
+    if (s === 'resolved') {
+      return 'Resolved';
+    }
     return (s.charAt(0).toUpperCase() + s.slice(1)) as ItemStatus;
   });
 
@@ -133,7 +135,12 @@ export class ItemDetailModal {
   }
 
   getUserProfilePicture(): string {
-    return this.userProfilePicture() || 'assets/profile-avatar.png';
+    const path = this.item().reporter_profile_picture;
+    if (!path) return 'assets/profile-avatar.png';
+
+    const secureBaseUrl =
+        environment.apiUrl.replace('http://', 'https://').replace(/\/$/, '');
+    return `${secureBaseUrl}/image/download/${path}`;
   }
 
   getCodeButtonLabel(): string {
@@ -172,7 +179,23 @@ export class ItemDetailModal {
     this.showClaimModal = true;
   }
 
-  onEdit(): void {
+  onEdit(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    const reportData = this.item();
+    const path = reportData.type === 'lost'
+      ? '/app/report-lost'
+      : '/app/report-found';
+
+    this.router.navigate([path], {
+      state: {
+        data: reportData,
+        mode: 'EDIT'
+      }
+    });
+
     this.editClicked.emit();
   }
 

@@ -14,7 +14,8 @@ import {
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
-  Validators
+  Validators,
+  FormsModule
 } from '@angular/forms';
 import {
   switchMap,
@@ -22,9 +23,10 @@ import {
   tap,
   debounceTime,
   distinctUntilChanged,
-  map
+  map,
+  filter
 } from 'rxjs/operators';
-import { of, Observable, forkJoin } from 'rxjs';
+import { of } from 'rxjs';
 
 // Material Imports
 import { MatButtonModule } from '@angular/material/button';
@@ -37,6 +39,7 @@ import {
   MatAutocompleteSelectedEvent
 } from '@angular/material/autocomplete';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatRadioModule } from '@angular/material/radio';
 
 import { Claim } from '../../models/claim-model';
 import { Report } from '../../models/item-model';
@@ -47,6 +50,7 @@ import { UserService } from '../../core/services/user-service';
 import { AdminService } from '../../core/services/admin-service';
 import { StatusBadge, ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
 import { environment } from '../../../environments/environment';
+import { ToastService } from '../../core/services/toast-service';
 
 export enum ClaimStatus {
   PENDING = 'pending',
@@ -61,6 +65,7 @@ export enum ClaimStatus {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     DatePipe,
     MatButtonModule,
     MatIconModule,
@@ -69,6 +74,7 @@ export enum ClaimStatus {
     MatProgressSpinnerModule,
     MatAutocompleteModule,
     MatTooltipModule,
+    MatRadioModule,
     StatusBadge
   ],
   providers: [DatePipe],
@@ -83,6 +89,7 @@ export class ClaimFormModal implements OnInit {
   private adminService = inject(AdminService);
   private fb = inject(FormBuilder);
   private datePipe = inject(DatePipe);
+  private toastService = inject(ToastService);
 
   @Input({ required: true }) claimData!: Claim | Report;
   @Input() isReadOnly: boolean = false;
@@ -102,19 +109,20 @@ export class ClaimFormModal implements OnInit {
   ];
 
   protected claimForm: FormGroup;
-
   protected activeClaim = signal<Claim | null>(null);
   protected activeReport = signal<Report | null>(null);
   protected report = signal<Report | null>(null);
   protected reportOwnerName = signal<string>('Loading...');
-
+  protected reportOwnerPicture = signal<string | null>(null);
   protected isLoading = signal(true);
   protected isSaving = signal(false);
   protected activeImageIndex = signal(0);
   protected isDropdownOpen = signal(false);
-
   protected filteredUsers = signal<User[]>([]);
   protected isSearchingUsers = signal(false);
+  protected matchingLostReports = signal<Report[]>([]);
+  protected isSearchingReports = signal(false);
+  protected selectedLostReportId = signal<number | null>(null);
 
   protected isReportType = computed(() => 'type' in this.claimData);
 
@@ -127,15 +135,21 @@ export class ClaimFormModal implements OnInit {
 
   protected displayStatus = computed((): ItemStatus => {
     const currentStatus = this.report()?.status;
-    if (currentStatus === 'approved' || currentStatus === 'matched') {
-      return 'Verified';
-    }
     if (currentStatus === 'claimed') {
       return 'Claimed';
     }
+    if (currentStatus === 'resolved') {
+      return 'Resolved';
+    }
+
+    if (currentStatus === 'approved' || currentStatus === 'matched') {
+      return 'Verified';
+    }
+    
     if (currentStatus === 'rejected') {
       return 'Rejected';
     }
+    
     return 'Pending';
   });
 
@@ -148,11 +162,9 @@ export class ClaimFormModal implements OnInit {
   protected photoUrls = computed((): string[] => {
     const report = this.report();
     if (!report) return [];
-
     if (report.images && report.images.length > 0) {
       return report.images.map(img => img.imageUrl);
     }
-
     if (report.photoUrls && report.photoUrls.length > 0) {
       return report.photoUrls;
     }
@@ -161,18 +173,14 @@ export class ClaimFormModal implements OnInit {
 
   protected currentImageUrl = computed((): string => {
     const urls = this.photoUrls();
-
     if (urls.length === 0) {
       return 'assets/temp-photo-item.png';
     }
-
     const index = this.activeImageIndex() % urls.length;
     const url = urls[index];
-
     if (url && url.startsWith('http')) {
       return url.replace('http://', 'https://');
     }
-
     const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
     return `${secureBaseUrl}/image/download/${url}`;
   });
@@ -194,27 +202,33 @@ export class ClaimFormModal implements OnInit {
   }
 
   ngOnInit(): void {
-  this.loadData();
-  this.setupUserSearch();
+    this.loadData();
+    this.setupUserSearch();
   }
 
   private setupUserSearch(): void {
     if (this.isReadOnly) return;
 
     this.claimForm.get('claimantName')?.valueChanges.pipe(
-      debounceTime(300),
+      map(value => typeof value === 'string' ? value.trim() : ''),
+      tap(term => {
+        if (!term) {
+          this.filteredUsers.set([]);
+          this.isSearchingUsers.set(false);
+          this.matchingLostReports.set([]);
+          this.selectedLostReportId.set(null);
+        }
+      }),
+      filter(term => term.length > 0), 
+      debounceTime(500), 
       distinctUntilChanged(),
       tap(() => this.isSearchingUsers.set(true)),
-      switchMap(value => {
-        if (typeof value !== 'string') return of([]);
-        if (value.length < 2) return of([]);
-        return this.userService.searchUsers(value).pipe(
-          tap(() => this.isSearchingUsers.set(false))
-        );
-      })
-    ).subscribe(users => {
-      this.filteredUsers.set(users);
-      this.isSearchingUsers.set(false);
+      switchMap(term => this.userService.searchUsers(term).pipe(
+        finalize(() => this.isSearchingUsers.set(false))
+      ))
+    ).subscribe({
+      next: users => this.filteredUsers.set(users),
+      error: () => this.isSearchingUsers.set(false)
     });
   }
 
@@ -228,6 +242,28 @@ export class ClaimFormModal implements OnInit {
     this.claimForm.patchValue({
       contactEmail: user.email,
       contactPhone: user.phone_number
+    });
+
+    this.fetchMatchingLostReports(user.user_id);
+  }
+
+  private fetchMatchingLostReports(userId: number): void {
+    const currentFoundItem = this.report();
+    if (!currentFoundItem) return;
+
+    this.isSearchingReports.set(true);
+    this.matchingLostReports.set([]);
+    this.selectedLostReportId.set(null);
+
+    this.itemService.getPotentialMatches(currentFoundItem.report_id, userId)
+      .pipe(
+      finalize(() => this.isSearchingReports.set(false))
+    ).subscribe({
+      next: (matches) => {
+        this.matchingLostReports.set(matches);
+      },
+      error: () => this.toastService
+          .showError('Failed to fetch matching reports')
     });
   }
 
@@ -251,18 +287,11 @@ export class ClaimFormModal implements OnInit {
       this.claimForm.patchValue({ claimDate: todayStr });
 
       if (this.isArchive && report.status === 'claimed') {
-
         this.claimService.getClaimByReportId(report.report_id).pipe(
           tap((claim: Claim) => {
-            console.log('🔍 ✅ Claim received from backend:', claim);
-            console.log('🔍 ✅ Claimant name from backend:',
-                claim.claimant_name);
-
             if (claim) {
               this.activeClaim.set(claim);
               this.patchFormForExistingClaim(claim);
-            } else {
-              console.log('🔍 ❌ No claim data received');
             }
           }),
           switchMap(() => this.userService.getUserById(report.user_id)),
@@ -270,76 +299,85 @@ export class ClaimFormModal implements OnInit {
         ).subscribe({
           next: (user) => {
             this.reportOwnerName.set(user?.name || 'Unknown User');
+            this.reportOwnerPicture.set(user?.profile_picture || null); 
           },
-          error: (err) => {
-            this.isLoading.set(false);
-          }
+          error: () => this.isLoading.set(false)
         });
       } else {
         this.userService.getUserById(report.user_id).pipe(
           finalize(() => this.isLoading.set(false))
         ).subscribe({
-          next: (user) =>
-              this.reportOwnerName.set(user?.name || 'Unknown User'),
+          next: (user) => {
+            this.reportOwnerName.set(user?.name || 'Unknown User');
+            this.reportOwnerPicture.set(user?.profile_picture || null); 
+          },
           error: (err) => console.error('Error loading report owner', err)
         });
       }
-    }
-    else {
+    } else {
       const claim = data as Claim;
       this.activeClaim.set(claim);
-
       this.itemService.getReports({ type: 'found' }).pipe(
         switchMap((reports) => {
-          const foundReport =
-              reports.items.find(r => r.report_id === claim.report_id);
+          const foundReport = reports.items.find(r => r.report_id === claim.report_id);
           this.report.set(foundReport || null);
           this.patchFormForExistingClaim(claim);
-
-          return foundReport
-            ? this.userService.getUserById(foundReport.user_id)
-            : of(null);
+          return foundReport ? this.userService.getUserById(foundReport.user_id) : of(null);
         }),
         finalize(() => this.isLoading.set(false))
       ).subscribe({
         next: (owner) => {
-          if (owner) this.reportOwnerName.set(owner.name || 'Unknown User');
+          if (owner) {
+            this.reportOwnerName.set(owner.name || 'Unknown User');
+            // Capture the reporter's profile picture filename
+            this.reportOwnerPicture.set(owner.profile_picture || null);
+          }
         },
         error: (err) => console.error('Error loading claim data', err)
       });
     }
   }
 
-  private patchFormForExistingClaim(claim: Claim): void {
+  protected getReportOwnerPicture(): string {
+    const path = this.reportOwnerPicture();
 
-  const formattedDate =
-      this.datePipe.transform(claim.created_at, 'mediumDate') || '';
+    if (!path) {
+        return 'assets/profile-avatar.png'; // Fallback if no picture
+    }
 
-  const valuesToPatch = {
-    claimantName: claim.claimant_name || '',
-    claimDate: formattedDate,
-    contactEmail: claim.contact_email || '',
-    contactPhone: claim.contact_phone || '',
-    remarks: claim.admin_remarks || ''
-  };
+    if (path.startsWith('http')) {
+        return path.replace('http://', 'https://');
+    }
 
-  this.claimForm.patchValue(valuesToPatch);
-
-  if (this.isReadOnly) {
-    this.claimForm.disable();
+    // Connects to your Spring Boot image controller
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://').replace(/\/$/, '');
+    return `${secureBaseUrl}/image/download/${path}`;
   }
-}
+
+  private patchFormForExistingClaim(claim: Claim): void {
+    const formattedDate = 
+        this.datePipe.transform(claim.created_at, 'mediumDate') || '';
+    this.claimForm.patchValue({
+      claimantName: claim.claimant_name || '',
+      claimDate: formattedDate,
+      contactEmail: claim.contact_email || '',
+      contactPhone: claim.contact_phone || '',
+      remarks: claim.admin_remarks || ''
+    });
+
+    if (this.isReadOnly) {
+      this.claimForm.disable();
+    }
+  }
 
   protected onStatusOptionClick(status: string): void {
     if (this.isReadOnly) return;
-
     if (status === ClaimStatus.CLAIMED) {
-      alert('Please fill out Claimant Details and click' +
+      this.toastService.showError('Please fill out Claimant Details and click' +
           '"Submit" to mark this item as Claimed.');
       this.closeDropdown();
       return;
     }
-
     this.updateStatus(status);
   }
 
@@ -367,14 +405,11 @@ export class ClaimFormModal implements OnInit {
   protected updateStatus(newStatus: string): void {
     this.isSaving.set(true);
     const reportId = this.report()?.report_id;
-
     if (reportId) {
       this.adminService.updateReportStatus(reportId, newStatus).pipe(
         tap(() => {
-          this.report.update(r => {
-             if (!r) return null;
-             return { ...r, status: newStatus as Report['status'] };
-          });
+          this.report.update(r => r ? {
+              ...r, status: newStatus as Report['status'] } : null);
         }),
         finalize(() => {
           this.isSaving.set(false);
@@ -383,13 +418,20 @@ export class ClaimFormModal implements OnInit {
         })
       ).subscribe();
     } else {
-      console.error('No report ID found to update');
       this.isSaving.set(false);
     }
   }
 
   protected saveItemDetails(): void {
     if (this.isReadOnly) return;
+    const currentStatus = this.report()?.status.toLowerCase();
+
+    if (currentStatus === 'pending' || currentStatus === 'rejected') {
+      this.toastService.showError(
+        'Cannot submit a claim for reports that are Pending or Rejected.'
+      );
+      return;
+    }
 
     if (this.claimForm.invalid) {
       this.claimForm.markAllAsTouched();
@@ -405,13 +447,13 @@ export class ClaimFormModal implements OnInit {
 
     if (this.activeReport()) {
       const report = this.activeReport()!;
-
       const payload = {
         report_id: report.report_id,
         claimant_name: cName,
         contact_email: formValues.contactEmail,
         contact_phone: formValues.contactPhone,
-        admin_remarks: formValues.remarks
+        admin_remarks: formValues.remarks,
+        matching_lost_report_id: this.selectedLostReportId()
       };
 
       this.claimService.createManualClaim(payload).pipe(
@@ -425,8 +467,7 @@ export class ClaimFormModal implements OnInit {
           this.onClose();
         })
       ).subscribe();
-    }
-    else if (this.activeClaim()) {
+    } else if (this.activeClaim()) {
        this.isSaving.set(false);
        this.onClose();
     }
@@ -439,17 +480,13 @@ export class ClaimFormModal implements OnInit {
   protected nextImage(event: Event): void {
     event.stopPropagation();
     const len = this.photoUrls().length;
-    if (len > 0) {
-      this.activeImageIndex.update((i) => (i + 1) % len);
-    }
+    if (len > 0) this.activeImageIndex.update((i) => (i + 1) % len);
   }
 
   protected prevImage(event: Event): void {
     event.stopPropagation();
     const len = this.photoUrls().length;
-    if (len > 0) {
-      this.activeImageIndex.update((i) => (i - 1 + len) % len);
-    }
+    if (len > 0) this.activeImageIndex.update((i) => (i - 1 + len) % len);
   }
 
   onClose(): void {

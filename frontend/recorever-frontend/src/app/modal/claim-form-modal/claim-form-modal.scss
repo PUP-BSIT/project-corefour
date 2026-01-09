@@ -7,7 +7,6 @@ $verified-green: #2e7d32;
 $denied-red: #ef4444;
 $pending-yellow: #fbbf24;
 $claimed-dark: #333333;
-$matched-color: #1976D2;
 
 :host {
   .full-width, .w-100 { width: 100%; }
@@ -358,12 +357,13 @@ $matched-color: #1976D2;
 
     &:active { transform: scale(0.98); }
 
-    &.verified, &.approved { background-color: $verified-green; }
+    &.verified, &.approved, &.matched { background-color: $verified-green; }
     &.pending { background-color: $pending-yellow; color: black; }
     &.claimed { background-color: $claimed-dark; }
     &.denied, &.rejected { background-color: $denied-red; }
+    &.resolved { background-color: $claimed-dark; }
 
-    // Style for the unarchive button to match ItemDetailModal
+    // Style for the unarchive button
     &.unarchive {
       background-color: #ff9500 !important;
       color: white;
@@ -452,6 +452,84 @@ $matched-color: #1976D2;
         font-size: 11px;
       }
     }
+  }
+
+  // Matching Section
+  .matching-loader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8f8ff;
+    border-radius: 8px;
+    color: $primary-purple;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .matching-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+
+    .matching-card {
+      padding: 2px 12px;
+      border: 1px solid #e5e5ea;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+
+      &:hover {
+        border-color: $primary-purple;
+        background: #f8f8ff;
+      }
+
+      &.selected {
+        border-color: $primary-purple;
+        background: #f0effc;
+        border-width: 2px;
+      }
+
+      ::ng-deep .mat-mdc-radio-button {
+        width: 100%;
+        
+        .mdc-form-field {
+          width: 100%;
+          align-items: center;
+        }
+
+        .mdc-label {
+          padding-left: 8px;
+          flex: 1;
+        }
+      }
+
+      .matching-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .matching-name {
+          font-weight: 600;
+          font-size: 14px;
+          color: $text-main;
+        }
+
+        .matching-meta {
+          font-size: 11px;
+          color: $text-secondary;
+        }
+      }
+    }
+  }
+
+  .no-match-hint {
+    font-size: 12px;
+    color: $text-secondary;
+    font-style: italic;
+    padding: 4px 8px;
   }
 
   .spinning-loader {

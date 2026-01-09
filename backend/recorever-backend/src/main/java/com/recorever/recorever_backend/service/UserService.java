@@ -3,6 +3,7 @@ package com.recorever.recorever_backend.service;
 import com.recorever.recorever_backend.config.JwtUtil;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.UserRepository;
+import com.recorever.recorever_backend.repository.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,11 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private ReportRepository reportRepo;
+
+    private static final int ADMIN_USER_ID = 1;
+
     public static class ChangePasswordRequest {
         private String oldPassword;
         private String newPassword;
@@ -33,8 +39,16 @@ public class UserService {
 
     @Transactional
     public int register(String name, String phone, String email, String pwd) {
-        if (repo.findByEmailAndIsDeletedFalse(email).isPresent()) {
-            return -1;
+        if (repo.isNameTaken(name, 0)) {
+            throw new IllegalArgumentException("Username is already taken.");
+        }
+
+        if (repo.isPhoneNumberTaken(phone, 0)) {
+            throw new IllegalArgumentException("Phone number is already registered.");
+        }
+
+        if (repo.isEmailTaken(email, 0)) {
+            throw new IllegalArgumentException("Email is already in use.");
         }
 
         User user = new User();
@@ -155,6 +169,8 @@ public class UserService {
 
     @Transactional
     public void deleteAccount(int userId) {
-        repo.softDeleteUser(userId);
+        repo.softDeleteUser(userId);        
+        reportRepo.softDeleteLostReportsByUserId(userId);
+        reportRepo.transferFoundReportsToAdmin(userId, ADMIN_USER_ID);
     }
 }

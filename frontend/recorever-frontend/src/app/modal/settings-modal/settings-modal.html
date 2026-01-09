@@ -192,13 +192,16 @@
 
   @if (currentView() === 'DELETE_ACCOUNT') {
     <app-confirmation-modal
-            title="Delete Account"
-            message="Are you sure you want to delete your account? This action 
-                     cannot be undone."
-            confirmLabel="Delete"
-            variant="danger"
-            (confirm)="onDeleteAccountConfirm()"
-            (cancel)="toggleView('MENU')">
+      title="Delete Account"
+      message="Are you sure you want to delete your account?"
+      subMessage="This action cannot be undone. Your profile and lost item 
+                  reports will be deleted. However, found item reports will be 
+                  transferred to the administrator to ensure they remain 
+                  searchable."
+      confirmLabel="Delete"
+      variant="danger"
+      (confirm)="onDeleteAccountConfirm()"
+      (cancel)="toggleView('MENU')">
     </app-confirmation-modal>
   }
 </div>
