@@ -159,4 +159,17 @@ export class ItemService {
       `${this.apiUrl}/reports/${reportId}/potential-matches/${claimantId}`
     );
   }
+
+  searchLocations(query: string): Observable<string[]> {
+    if (this.searchLocationCache.has(query)) {
+      return of(this.searchLocationCache.get(query)!);
+    }
+
+    const params = new HttpParams().set('query', query);
+    return this.http.get<string[]>(`${this.apiUrl}/reports/locations`,
+        { params }).pipe(
+      tap((locations: string[]) =>
+          this.searchLocationCache.set(query, locations))
+    );
+  }
 }
