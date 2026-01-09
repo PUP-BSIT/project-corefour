@@ -76,6 +76,10 @@ export class ReportItemCard {
 
   protected currentImageIndex = signal<number>(0);
 
+  canShowUnarchive = computed((): boolean => {
+    return this.isArchiveView() && this.report().status !== 'resolved';
+  });
+
   isRemovable = computed((): boolean => {
     return this.report().type === 'lost';
   });

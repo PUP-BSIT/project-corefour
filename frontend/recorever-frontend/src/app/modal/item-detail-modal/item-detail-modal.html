@@ -150,7 +150,7 @@
       </div>
 
       <div class="modal-actions">
-        @if (isArchiveView() && isAdmin()) {
+        @if (canShowUnarchive() && isAdmin()) {
           <button mat-raised-button
                   class="action-btn action-btn--unarchive status-btn--matched"
                   (click)="onUnarchive()">
@@ -159,8 +159,8 @@
           </button>
         }
         @else {
-          @if (!isMatchView() && item().type ===
-              'found' && !isOwner() && !isAdmin()) {
+          @if (item().type === 'found' && !isOwner() && !isAdmin() 
+              && item().status !== 'claimed') {
             <button mat-raised-button
                     color="primary"
                     class="action-btn"

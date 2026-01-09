@@ -237,6 +237,10 @@ export class ItemDetailModal {
     this.closeDropdown();
   }
 
+  canShowUnarchive = computed((): boolean => {
+    return this.isArchiveView() && this.item().status !== 'resolved';
+  });
+
   protected isStatusDisabled(status: string): boolean {
     return false;
   }
