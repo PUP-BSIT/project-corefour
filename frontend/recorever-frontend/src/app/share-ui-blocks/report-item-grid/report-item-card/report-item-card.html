@@ -110,7 +110,7 @@
   </mat-card-content>
 
   <mat-card-actions align="end" class="card-footer">
-    @if (isArchiveView()) {
+    @if (canShowUnarchive()) {
       <button
           mat-button class="unarchive-btn"
           (click)="onUnarchive($event);
