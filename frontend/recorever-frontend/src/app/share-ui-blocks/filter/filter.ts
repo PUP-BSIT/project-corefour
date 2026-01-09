@@ -6,7 +6,11 @@ import {
   Output,
   ViewEncapsulation,
   signal,
-  computed
+  computed,
+  inject,
+  ElementRef,
+  Renderer2,
+  DestroyRef
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -20,14 +24,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { ScrollDispatcher, ScrollingModule } from '@angular/cdk/scrolling';
 
 import {
   debounceTime,
   distinctUntilChanged,
-  map,
+  switchMap,
   startWith
 } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
+import { ItemService } from '../../core/services/item-service';
 
 export type FilterState = {
   sort: 'newest' | 'oldest';
@@ -48,7 +54,8 @@ export type FilterState = {
     MatButtonModule,
     MatIconModule,
     MatInputModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    ScrollingModule
   ],
   templateUrl: './filter.html',
   styleUrl: './filter.scss',
@@ -67,6 +74,12 @@ export class Filter implements OnInit {
   protected filteredLocations$: Observable<string[]> = of([]);
 
   private locations$ = toObservable(this.locations);
+
+  private scrollDispatcher = inject(ScrollDispatcher);
+  private elementRef = inject(ElementRef);
+  private renderer = inject(Renderer2);
+  private destroyRef = inject(DestroyRef);
+  private itemService = inject(ItemService);
 
   protected dateLabel = computed((): string => {
     if (this.genericLabels()) {
@@ -88,6 +101,10 @@ export class Filter implements OnInit {
       date: [null],
       location: ['']
     });
+
+    this.destroyRef.onDestroy(() => {
+      this.toggleParentScroll(true);
+    });
   }
 
   public ngOnInit(): void {
@@ -95,14 +112,22 @@ export class Filter implements OnInit {
 
     if (locControl) {
       this.filteredLocations$ = combineLatest([
-        locControl.valueChanges.pipe(startWith(locControl.value || '')),
+        locControl.valueChanges.pipe(
+          startWith(locControl.value || ''),
+          debounceTime(300),
+          distinctUntilChanged()
+        ),
         this.locations$
       ]).pipe(
-        map(([value, locations]) => {
-          const filterValue = (value || '').toLowerCase();
-          return locations
-            .filter(option => option.toLowerCase().includes(filterValue))
-            .slice(0, 5);
+        switchMap(([value, locations]: [string | null, string[]]): Observable<string[]> => {
+          const filterValue = (value || '').trim();
+
+          if (filterValue.length === 0) {
+            return of(locations);
+          }
+
+          // Otherwise, perform server-side search
+          return this.itemService.searchLocations(filterValue);
         })
       );
     }
@@ -120,6 +145,29 @@ export class Filter implements OnInit {
       });
   }
 
+  protected onLocationPanelOpened(): void {
+    this.toggleParentScroll(false);
+  }
+
+  protected onLocationPanelClosed(): void {
+    this.toggleParentScroll(true);
+  }
+
+  /**
+  @param enable
+   */
+  private toggleParentScroll(enable: boolean): void {
+    const scrollContainers =
+        this.scrollDispatcher.getAncestorScrollContainers(this.elementRef);
+
+    if (scrollContainers && scrollContainers.length > 0) {
+      const containerRef = scrollContainers[0].getElementRef();
+      const value = enable ? '' : 'hidden';
+
+      this.renderer.setStyle(containerRef.nativeElement, 'overflow', value);
+    }
+  }
+
   protected resetFilters(): void {
     this.filterForm.patchValue({
       sort: 'newest',
@@ -135,13 +183,6 @@ export class Filter implements OnInit {
 
   protected toggleFilter(): void {
     this.isFilterVisible.update(value => !value);
-  }
-
-  private filterLocations(value: string): string[] {
-    const filterValue = value.toLowerCase();
-    return this.locations().filter(option =>
-      option.toLowerCase().includes(filterValue)
-    );
   }
 
   private updateDefaultState(formValue: Partial<FilterState>): void {
