@@ -17,10 +17,11 @@ import {
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ToastService } from '../../../core/services/toast-service';
+import { AdminService } from '../../../core/services/admin-service';
 import { ItemDetailModal } from '../../../modal/item-detail-modal/item-detail-modal';
 import { ClaimFormModal } from '../../../modal/claim-form-modal/claim-form-modal';
 import type { UserNotification } from '../../../models/notification-model';
-import type { Report } from '../../../models/item-model';
+import type { Report, ReportStatus } from '../../../models/item-model';
 import { Subscription, tap, catchError, of, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { MatchDetailModal } from '../../../modal/match-detail-modal/match-detail-modal';
@@ -44,6 +45,7 @@ export class NotificationPage implements OnInit, OnDestroy {
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+  private adminService = inject(AdminService);
   private cdr = inject(ChangeDetectorRef);
 
   private streamSub!: Subscription;
@@ -193,5 +195,35 @@ export class NotificationPage implements OnInit, OnDestroy {
   onEdit(): void {}
   onDelete(): void {}
   onViewCode(): void {}
-  onStatusChange(event: any): void {}
+
+  onStatusChange(status: string): void {
+    const report = this.selectedReport();
+    if (!report) return;
+
+    this.adminService.updateReportStatus(report.report_id, status)
+      .pipe(
+        tap((response) => {
+          if (response.success) {
+            this.toastService.showSuccess('Status updated successfully');
+            this.selectedReport.update(current => {
+              if (current) {
+                return { ...current, status: status as ReportStatus };
+              }
+              return null;
+            });
+            this.cdr.markForCheck();
+          } else {
+             this.toastService.showError(response.message ||
+                  'Failed to update status');
+          }
+        }),
+        catchError((err) => {
+          console.error('Status update failed', err);
+          this.toastService.showError('An error occurred while' +
+              'updating status');
+          return of(null);
+        })
+      )
+      .subscribe();
+  }
 }
