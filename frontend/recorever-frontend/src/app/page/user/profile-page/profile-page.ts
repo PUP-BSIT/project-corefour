@@ -1,24 +1,25 @@
-import { 
-  Component, 
-  OnInit, 
-  inject, 
-  signal, 
-  computed, 
-  ViewChild, 
-  ElementRef, 
-  AfterViewInit, 
-  OnDestroy 
+import {
+  Component,
+  OnInit,
+  inject,
+  signal,
+  computed,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  OnDestroy
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, ViewportScroller } from '@angular/common';
 import { Observable, BehaviorSubject, combineLatest, of, Subject } from 'rxjs';
-import { 
+import {
   map,
-  switchMap, 
-  catchError, 
+  switchMap,
+  catchError,
   shareReplay,
-  tap, 
-  takeUntil, 
-  startWith
+  tap,
+  takeUntil,
+  startWith,
+  delay
 } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -42,7 +43,7 @@ import {
 import { ItemService } from '../../../core/services/item-service';
 import { UserService } from '../../../core/services/user-service';
 
-import { PaginatedResponse, Report, ReportFilters } from '../../../models/item-model';
+import { Report, ReportFilters } from '../../../models/item-model';
 import { User } from '../../../models/user-model';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth-service';
@@ -68,12 +69,13 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
   private userService = inject(UserService);
   private destroy$ = new Subject<void>();
   private route = inject(ActivatedRoute);
+  private viewportScroller = inject(ViewportScroller);
 
   loggedInUser$ = this.userService.currentUser$;
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
-  
+
   currentPage = signal(1);
   totalPages = signal(1);
   pageSize = signal(10);
@@ -124,7 +126,7 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
       switchMap(([params]) => {
         const userId = params.get('id');
         if (userId) {
-          return this.userService.getUserById(+userId); 
+          return this.userService.getUserById(+userId);
         }
         return authService.initAuth();
       }),
@@ -133,7 +135,7 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
     );
 
     this.isOwnProfile$ = combineLatest([
-      this.currentUser$, 
+      this.currentUser$,
       this.userService.currentUser$.pipe(startWith(null))
     ]).pipe(
       map(([profileUser, loggedInUser]: [User | null, User | null]): boolean => {
@@ -151,13 +153,13 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
       this.activeStatus$,
       this.isOwnProfile$
     ]).pipe(
-      switchMap(([user, tab, status, isOwn]) => 
+      switchMap(([user, tab, status, isOwn]) =>
         this.refreshTrigger$.pipe(
           startWith(undefined),
           tap(() => this.isItemsLoading.set(true)),
           switchMap(() => {
             if (!user) return of({ items: [], totalPages: 0, totalItems: 0, currentPage: 1 });
-            
+
             const filter: ReportFilters = {
               user_id: user.user_id,
               page: this.currentPage(),
@@ -172,7 +174,7 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
       ),
       takeUntil(this.destroy$)
     ).subscribe(res => {
-      this.displayedItems.update(existing => 
+      this.displayedItems.update(existing =>
         this.currentPage() === 1 ? res.items : [...existing, ...res.items]
       );
       this.totalPages.set(res.totalPages);
@@ -187,7 +189,26 @@ export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
         this.refreshTrigger$.next();
       }
     }, { rootMargin: '150px' });
-    this.observer.observe(this.scrollAnchor.nativeElement);
+
+    if (this.scrollAnchor) {
+      this.observer.observe(this.scrollAnchor.nativeElement);
+    }
+
+    this.route.fragment
+      .pipe(
+        takeUntil(this.destroy$),
+        delay(300)
+      )
+      .subscribe((fragment) => {
+        if (fragment) {
+          const element = document.getElementById(fragment);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+             this.viewportScroller.scrollToAnchor(fragment);
+          }
+        }
+      });
   }
 
   ngOnDestroy(): void {

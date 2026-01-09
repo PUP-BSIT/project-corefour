@@ -13,6 +13,15 @@ import { SettingsModal } from '../../../modal/settings-modal/settings-modal';
 import { LogoutResponse } from '../../../models/auth-model';
 import { environment } from '../../../../environments/environment';
 
+interface SidebarNavItem extends NavItem {
+  fragment?: string;
+}
+
+interface NavGroup {
+  label: string;
+  items: SidebarNavItem[];
+}
+
 @Component({
   selector: 'app-user-side-bar',
   standalone: true,
@@ -44,24 +53,24 @@ export class UserSideBar implements OnDestroy {
 
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
-
   protected showLoginModal = false;
 
   private protectedRoutes = [
     AppRoutePaths.REPORT_LOST,
-    AppRoutePaths.REPORT_FOUND
+    AppRoutePaths.REPORT_FOUND,
+    AppRoutePaths.PROFILE
   ];
 
   private logoutTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
   protected getProfileImageUrl(path: string | null | undefined): string {
-      if (!path) {
-        return 'assets/profile-avatar.png';
-      }
-      if (path.startsWith('http')) {
-        return path.replace('http://', 'https://');
-      }
+    if (!path) {
+      return 'assets/profile-avatar.png';
+    }
+    if (path.startsWith('http')) {
+      return path.replace('http://', 'https://');
+    }
 
     const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
     return `${secureBaseUrl}/image/download/${path}`;
@@ -77,15 +86,36 @@ export class UserSideBar implements OnDestroy {
     { label: 'Log out', iconPath: 'assets/log-out.png', action: 'logout' },
   ];
 
-  protected mainNav: NavItem[] = [
-    { label: 'Lost Items', route: AppRoutePaths.LOST_ITEMS,
-        iconPath: 'assets/lost-items.png' },
-    { label: 'Report Lost Item', route: AppRoutePaths.REPORT_LOST,
-        iconPath: 'assets/reported-lost-items.png' },
-    { label: 'Found Items', route: AppRoutePaths.FOUND_ITEMS,
-        iconPath: 'assets/found-items.png' },
-    { label: 'Report Found Item', route: AppRoutePaths.REPORT_FOUND,
-        iconPath: 'assets/reported-found-item.png' },
+  protected navGroups: NavGroup[] = [
+    {
+      label: 'Browse',
+      items: [
+        { label: 'Lost Items', route: AppRoutePaths.LOST_ITEMS,
+            iconPath: 'assets/lost-items.png' },
+        { label: 'Found Items', route: AppRoutePaths.FOUND_ITEMS,
+            iconPath: 'assets/found-items.png' },
+      ]
+    },
+    {
+      label: 'Submit an Item',
+      items: [
+        { label: 'Report Lost Item', route: AppRoutePaths.REPORT_LOST,
+            iconPath: 'assets/reported-lost-items.png' },
+        { label: 'Report Found Item', route: AppRoutePaths.REPORT_FOUND,
+            iconPath: 'assets/reported-found-item.png' },
+      ]
+    },
+    {
+      label: 'Manage',
+      items: [
+        {
+          label: 'My Reports',
+          route: AppRoutePaths.PROFILE,
+          iconPath: 'assets/recents.png',
+          fragment: 'my-reports-section'
+        }
+      ]
+    }
   ];
 
   protected profileRoute = AppRoutePaths.PROFILE;
@@ -157,10 +187,10 @@ export class UserSideBar implements OnDestroy {
     });
   }
 
-  public onProtectedLinkClick(route: string): void {
+  public onProtectedLinkClick(route: string, fragment?: string): void {
     if (this.currentUser()) {
-
-      this.router.navigate([route]);
+      const navigationExtras = fragment ? { fragment } : {};
+      this.router.navigate([route], navigationExtras);
       this.closeSidebar.emit();
     } else {
       this.showLoginModal = true;
