@@ -71,6 +71,7 @@ export class ItemReportForm implements OnInit {
   protected loadingMessage = 'Submitting...';
   protected submissionError: string | null = null;
   protected showConfirmationModal = false;
+  protected imageError = false;
 
   private fb = inject(FormBuilder);
   private toastService = inject(ToastService);
@@ -236,6 +237,7 @@ export class ItemReportForm implements OnInit {
         this.selectedFilesPreview.push({
             file: file, url: url, name: file.name });
       }
+      this.imageError = false;
       input.value = '';
     }
   }
@@ -252,6 +254,15 @@ export class ItemReportForm implements OnInit {
   }
 
   onSubmit(): void {
+    const totalImages = this.selectedFiles.length 
+        + this.photoUrlsFormArray.length;
+
+    if (totalImages === 0) {
+      this.imageError = true;
+      this.reportForm.markAllAsTouched();
+      return;
+    }
+
     if (this.reportForm.valid && !this.isSubmitting) {
       this.showConfirmationModal = true;
     } else {
@@ -323,7 +334,8 @@ export class ItemReportForm implements OnInit {
     this.reportForm.reset({
       date_lost_found: new Date().toISOString() as any,
     });
-
+    
+    this.imageError = false;
     this.photoUrlsFormArray.clear();
     this.selectedFilesPreview.forEach((p: FilePreview) =>
       URL.revokeObjectURL(p.url));
