@@ -51,6 +51,7 @@ export class ItemDetailModal {
   @Output() statusChanged = new EventEmitter<string>();
 
   public isDropdownOpen = signal<boolean>(false);
+  public isZoomed = signal<boolean>(false);
   showClaimModal = false;
 
   protected readonly STATUS_OPTIONS = [
@@ -169,6 +170,14 @@ export class ItemDetailModal {
     const urls = this.photoUrls();
     this.currentImageIndex
         .update(index => (index - 1 + urls.length) % urls.length);
+  }
+
+  openZoom(): void {
+    this.isZoomed.set(true);
+  }
+
+  closeZoom(): void {
+    this.isZoomed.set(false);
   }
 
   onClose(): void {
