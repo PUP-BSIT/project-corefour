@@ -5,9 +5,9 @@
     [class.active]="isOnNotificationPage"> <img src="assets/notification.png"
         alt="Notification">
 
-    @if (unreadCount > 0) {
+    @if (unreadCount() > 0) {
       <div class="notification-badge">
-        {{ unreadCount > 99 ? '99+' : unreadCount }}
+        {{ unreadCount() > 99 ? '99+' : unreadCount() }}
       </div>
     }
   </button>
@@ -19,7 +19,7 @@
         <h3>Notifications</h3>
         <button mat-button
                 class="mark-read-btn"
-                [disabled]="unreadCount === 0"
+                [disabled]="unreadCount() === 0"
                 (click)="onMarkAllRead($event)">
           Mark all as read
         </button>
@@ -33,7 +33,7 @@
           &bull;
           <span (click)="setFilter('unread')"
                 [class.active]="currentFilter === 'unread'"
-                class="filter-link">{{ unreadCount }} Unread</span>
+                class="filter-link">{{ unreadCount() }} Unread</span>
         </div>
 
         <span class="see-all-link" (click)="onSeeAll()">See all</span>

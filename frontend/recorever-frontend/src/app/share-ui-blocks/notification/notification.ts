@@ -7,7 +7,8 @@ import {
   ElementRef,
   HostListener,
   signal,
-  computed
+  computed,
+  WritableSignal
 } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -19,10 +20,10 @@ import { AuthService } from '../../core/auth/auth-service';
 import { ToastService } from '../../core/services/toast-service';
 import { ItemDetailModal } from '../../modal/item-detail-modal/item-detail-modal';
 import { ClaimFormModal } from '../../modal/claim-form-modal/claim-form-modal';
-import { CodesModal } from '../../modal/codes-modal/codes-modal'; // Import CodesModal
+import { CodesModal } from '../../modal/codes-modal/codes-modal';
 import type { UserNotification } from '../../models/notification-model';
 import type { Report } from '../../models/item-model';
-import { Subscription, tap, catchError, of, switchMap, filter } from 'rxjs';
+import { Subscription, tap, catchError, of, filter } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MatchDetailModal } from '../../modal/match-detail-modal/match-detail-modal';
 
@@ -59,7 +60,8 @@ export class Notification implements OnInit, OnDestroy {
   totalItems = 0;
   isLoading = false;
   isDropdownOpen = false;
-  unreadCount = 0;
+
+  unreadCount: WritableSignal<number> = signal(0);
 
   isOnNotificationPage = false;
   currentFilter: 'all' | 'unread' = 'all';
@@ -73,7 +75,7 @@ export class Notification implements OnInit, OnDestroy {
   isAdmin = computed(() => this.currentUser()?.role === 'admin');
 
   @HostListener('document:click', ['$event'])
-  clickout(event: Event) {
+  clickout(event: Event): void {
     if (!this.eRef.nativeElement.contains(event.target)) {
       this.isDropdownOpen = false;
       this.cdr.markForCheck();
@@ -105,13 +107,14 @@ export class Notification implements OnInit, OnDestroy {
     this.streamSub = this.notificationService
       .getNotificationStream()
       .subscribe({
-        next: (newNotif) => {
+        next: (newNotif: UserNotification) => {
           this.notifications = [newNotif, ...this.notifications];
-          this.unreadCount++;
+
+          this.unreadCount.update(count => count + 1);
           this.totalItems++;
           this.cdr.markForCheck();
         },
-        error: (err) => console.error('SSE connection failed', err)
+        error: (err: any) => console.error('SSE connection failed', err)
       });
   }
 
@@ -145,7 +148,8 @@ export class Notification implements OnInit, OnDestroy {
           this.currentPage = response.currentPage;
           this.totalPages = response.totalPages;
           this.totalItems = response.totalItems;
-          this.unreadCount = response.unreadCount;
+
+          this.unreadCount.set(response.unreadCount);
 
           this.isLoading = false;
           this.cdr.markForCheck();
@@ -198,21 +202,33 @@ export class Notification implements OnInit, OnDestroy {
 
   onMarkAllRead(event: Event): void {
     event.stopPropagation();
-    if (this.unreadCount === 0) return;
+    if (this.unreadCount() === 0) return;
+
+    const previousCount = this.unreadCount();
+    const previousStatus = this.notifications.map(n => ({ id: n.notif_id, status: n.status }));
+
+    if (this.currentFilter === 'unread') {
+      this.notifications = [];
+    } else {
+      this.notifications.forEach(n => n.status = 'read');
+    }
+    this.unreadCount.set(0);
+    this.cdr.markForCheck();
 
     this.notificationService.markAllAsRead().pipe(
       tap(() => {
-        if (this.currentFilter === 'unread') {
-          this.notifications = [];
-        } else {
-          this.notifications.forEach(n => n.status = 'read');
-        }
-        this.unreadCount = 0;
-        this.cdr.markForCheck();
         this.toastService.showSuccess('All notifications marked as read');
       }),
       catchError((err) => {
         console.error('Failed to mark all as read', err);
+        // Revert on error
+        this.unreadCount.set(previousCount);
+        this.notifications.forEach(n => {
+          const prev = previousStatus.find(p => p.id === n.notif_id);
+          if (prev) n.status = prev.status as 'read' | 'unread';
+        });
+        this.cdr.markForCheck();
+        this.toastService.showError('Failed to update notifications');
         return of(null);
       })
     ).subscribe();
@@ -220,19 +236,22 @@ export class Notification implements OnInit, OnDestroy {
 
   onNotificationClick(notification: UserNotification): void {
     this.isDropdownOpen = false;
-    let action$ = of(null);
 
     if (notification.status === 'unread') {
-      action$ = this.notificationService.markAsRead(notification.notif_id).pipe(
-        tap(() => {
-          notification.status = 'read';
-          this.unreadCount = Math.max(0, this.unreadCount - 1);
-        })
-      );
+      notification.status = 'read';
+      this.unreadCount.update(count => Math.max(0, count - 1));
+
+      this.notificationService.markAsRead(notification.notif_id)
+        .pipe(catchError(err => {
+          console.error('Failed to mark as read', err);
+          notification.status = 'unread';
+          this.unreadCount.update(count => count + 1);
+          return of(null);
+        }))
+        .subscribe();
     }
 
-    action$.pipe(
-      switchMap(() => this.itemService.getReportById(notification.report_id)),
+    this.itemService.getReportById(notification.report_id).pipe(
       tap((report) => {
         this.selectedReport.set(report);
         this.cdr.markForCheck();
@@ -277,7 +296,7 @@ export class Notification implements OnInit, OnDestroy {
   onStatusChange(event: any): void {}
 
   @HostListener('window:resize', ['$event'])
-  onResize(event: UIEvent) {
+  onResize(event: UIEvent): void {
     const width = (event.target as Window).innerWidth;
 
     if (width < 768 && this.isDropdownOpen) {
