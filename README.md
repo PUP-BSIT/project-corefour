@@ -46,6 +46,14 @@ delays, improves item recovery, and prevents permanent loss.
 
 ---
 
+
+## 🎦 Project Presentation
+*[Recorever Project Presentation Video](https://youtu.be/DJ9N2T-EanI?si=GbVehEAWRrfQYdd0)*
+
+*[Recorever Project Presentation Q and A Video](https://youtu.be/DNan5SuCCy4?si=XSFJwMJuMzfao2PV)*
+
+---
+
 ## 👥 Project Team
 
 | Name                     | Role(s)                          |
